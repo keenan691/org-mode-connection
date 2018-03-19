@@ -1,0 +1,20 @@
+* node 1 :tag:tag2:
+DEADLINE: <2018-03-12 pon>
+
+Nunc eleifend leo vitae magna.
+
+* node 2
+
+Nunc porta vulputate tellus.
+
+** subnode 2-1 :tag:anotherTag:
+<2018-03-14 pon>
+<2018-03-15 pon>
+
+*** subnode 3-1
+
+Donec posuere augue in quam.
+<2018-03-12 pon>
+
+** subnode 2-2
+DEADLINE: <2018-03-12 pon 12:12>

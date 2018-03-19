@@ -1,0 +1,508 @@
+{
+    "!name": "jest",
+    "!define": {
+        "mockFn": {
+            "getMockName": {
+                "!type": "fn()",
+                "!doc": "Returns the mock name string set by calling mockFn.mockName(value).",
+                "!url": "https://facebook.github.io/jest/docs/en/mock-function-api.html#mockfngetmockname"
+            },
+            "mock": {
+                "calls": {
+                    "!type": "array",
+                    "!doc": "An array that represents all calls that have been made into this mock function. Each call is represented by an array of arguments that were passed during the call.",
+                    "!url": "https://facebook.github.io/jest/docs/en/mock-function-api.html#mockfnmockcalls"
+                },
+                "instances": {
+                    "!type": "array",
+                    "!doc": "An array that contains all the object instances that have been instantiated from this mock function using new.",
+                    "!url": "https://facebook.github.io/jest/docs/en/mock-function-api.html#mockfnmockcalls"
+                }
+            },
+            "mockClear": {
+                "!type": "fn()",
+                "!doc": "Resets all information stored in the mockFn.mock.calls and mockFn.mock.instances arrays.",
+                "!url": "https://facebook.github.io/jest/docs/en/mock-function-api.html#mockfnmockclear"
+            },
+            "mockReset": {
+                "!type": "fn()",
+                "!doc": "Resets all information stored in the mock, including any initial implementation and mock name given.",
+                "!url": "https://facebook.github.io/jest/docs/en/mock-function-api.html#mockfnmockreset"
+            },
+            "mockRestore": {
+                "!type": "fn()",
+                "!doc": "Removes the mock and restores the initial implementation.",
+                "!url": "https://facebook.github.io/jest/docs/en/mock-function-api.html#mockfnmockrestore"
+            },
+            "mockImplementation": {
+                "!type": "fn(fn: function)",
+                "!doc": "Accepts a function that should be used as the implementation of the mock. The mock itself will still record all calls that go into and instances that come from itself – the only difference is that the implementation will also be executed when the mock is called.",
+                "!url": "https://facebook.github.io/jest/docs/en/mock-function-api.html#mockfnmockimplementationfn"
+            },
+            "mockImplementationOnce": {
+                "!type": "fn(fn: function)",
+                "!doc": "Accepts a function that will be used as an implementation of the mock for one call to the mocked function. Can be chained so that multiple function calls produce different results.",
+                "!url": "https://facebook.github.io/jest/docs/en/mock-function-api.html#mockfnmockimplementationoncefn"
+            },
+            "mockName": {
+                "!type": "fn()",
+                "!doc": "Accepts a string to use in test result output in place of 'jest.fn()' to indicate which mock function is being referenced.",
+                "!url": "https://facebook.github.io/jest/docs/en/mock-function-api.html#mockfnmocknamevalue"
+            },
+            "mockReturnThis": {
+                "!type": "fn()",
+                "!doc": "Just a simple sugar function for: jest.fn(function() { return this; });",
+                "!url": "https://facebook.github.io/jest/docs/en/mock-function-api.html#mockfnmockreturnthis"
+            },
+            "mockReturnValue": {
+                "!type": "fn(value: ?)",
+                "!doc": "Accepts a value that will be returned whenever the mock function is called.",
+                "!url": "https://facebook.github.io/jest/docs/en/mock-function-api.html#mockfnmockreturnvaluevalue"
+            },
+            "mockReturnValueOnce": {
+                "!type": "fn(value: ?)",
+                "!doc": "Accepts a value that will be returned for one call to the mock function. Can be chained so that successive calls to the mock function return different values. When there are no more mockReturnValueOnce values to use, calls will return a value specified by mockReturnValue.",
+                "!url": "https://facebook.github.io/jest/docs/en/mock-function-api.html#mockfnmockreturnvalueoncevalue"
+            }
+        }
+    },
+    "jest": {
+        "clearAllTimers": {
+            "!type": "fn()",
+            "!doc": "Removes any pending timers from the timer system.",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestclearalltimers"
+        },
+        "disableAutomock": {
+            "!type": "fn()",
+            "!doc": "Disables automatic mocking in the module loader.",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestdisableautomock"
+        },
+        "enableAutomock": {
+            "!type": "fn()",
+            "!doc": "Enables automatic mocking in the module loader.",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestenableautomock"
+        },
+        "fn": {
+            "!type": "fn(fn: function) -> mockFn",
+            "!doc": "Returns a new, unused mock function. Optionally takes a mock implementation.",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestenableautomock"
+        },
+        "isMockFunction": {
+            "!type": "fn(fn: function)",
+            "!doc": "Determines if the given function is a mocked function.",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestismockfunctionfn"
+        },
+        "genMockFromModule": {
+            "!type": "fn(moduleName)",
+            "!doc": "Given the name of a module, use the automatic mocking system to generate a mocked version of the module for you.",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestgenmockfrommodulemodulename"
+        },
+        "mock": {
+            "!type": "fn(moduleName, factory, options)",
+            "!doc": "Mocks a module with an auto-mocked version when it is being required. factory and options are optional.",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestmockmodulename-factory-options"
+        },
+        "unmock": {
+            "!type": "fn(moduleName)",
+            "!doc": "Indicates that the module system should never return a mocked version of the specified module from require()",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestunmockmodulename"
+        },
+        "doMock": {
+            "!type": "fn(moduleName, factory, options)",
+            "!doc": "When using babel-jest, calls to mock will automatically be hoisted to the top of the code block. Use this method if you want to explicitly avoid this behavior.",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestdomockmodulename-factory-options"
+        },
+        "dontMock": {
+            "!type": "fn(moduleName)",
+            "!doc": "When using babel-jest, calls to unmock will automatically be hoisted to the top of the code block. Use this method if you want to explicitly avoid this behavior.",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestdontmockmodulename"
+        },
+        "clearAllMocks": {
+            "!type": "fn()",
+            "!doc": "Clears the mock.calls and mock.instances properties of all mocks. Equivalent to calling .mockClear() on every mocked function.",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestclearallmocks"
+        },
+        "resetAllMocks": {
+            "!type": "fn()",
+            "!doc": "Resets the state of all mocks. Equivalent to calling .mockReset() on every mocked function.",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestresetallmocks"
+        },
+        "restoreAllMocks": {
+            "!type": "fn()",
+            "!doc": "Restores all mocks back to their original value. Equivalent to calling .mockRestore on every mocked function. Beware that jest.restoreAllMocks() only works when mock was created with jest.spyOn; other mocks will require you to manually restore them.",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestrestoreallmocks"
+        },
+        "resetModules": {
+            "!type": "fn()",
+            "!doc": "Resets the module registry - the cache of all required modules. This is useful to isolate modules where local state might conflict between tests.",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestresetmodules"
+        },
+        "runAllTicks": {
+            "!type": "",
+            "!doc": "Exhausts the micro-task queue (usually interfaced in node via process.nextTick). When this API is called, all pending micro-tasks that have been queued via process.nextTick will be executed. Additionally, if those micro-tasks themselves schedule new micro-tasks, those will be continually exhausted until there are no more micro-tasks remaining in the queue.",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestrunallticks"
+        },
+        "runAllTimers": {
+            "!type": "fn()",
+            "!doc": "Exhausts the macro-task queue (i.e., all tasks queued by setTimeout(), setInterval(), and setImmediate()).",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestrunalltimers"
+        },
+        "runAllImmediates": {
+            "!type": "fn()",
+            "!doc": "Exhausts all tasks queued by setImmediate().",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestrunallimmediates"
+        },
+        "advanceTimersByTime": {
+            "!type": "fn(msToRun)",
+            "!doc": "Executes only the macro task queue (i.e. all tasks queued by setTimeout() or setInterval() and setImmediate()).",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestadvancetimersbytimemstorun"
+        },
+        "runOnlyPendingTimers": {
+            "!type": "fn()",
+            "!doc": "Executes only the macro-tasks that are currently pending (i.e., only the tasks that have been queued by setTimeout() or setInterval() up to this point). If any of the currently pending macro-tasks schedule new macro-tasks, those new tasks will not be executed by this call.",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestrunonlypendingtimers"
+        },
+        "setMock": {
+            "!type": "fn(moduleName, moduleExports)",
+            "!doc": "Explicitly supplies the mock object that the module system should return for the specified module.",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestsetmockmodulename-moduleexports"
+        },
+        "setTimeout": {
+            "!type": "fn(timeout: number)",
+            "!doc": "Set the default timeout interval for tests and before/after hooks in milliseconds.",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestsettimeouttimeout"
+        },
+        "useFakeTimers": {
+            "!type": "fn()",
+            "!doc": "Instructs Jest to use fake versions of the standard timer functions (setTimeout, setInterval, clearTimeout, clearInterval, nextTick, setImmediate and clearImmediate). ",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestusefaketimers"
+        },
+        "useRealTimers": {
+            "!type": "fn()",
+            "!doc": "Instructs Jest to use the real versions of the standard timer functions.",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestuserealtimers"
+        },
+        "spyOn": {
+            "!type": "fn(object, methodName) -> mockFn",
+            "!doc": "Creates a mock function similar to jest.fn but also tracks calls to object[methodName]. Returns a Jest mock function.",
+            "!url": "https://facebook.github.io/jest/docs/en/jest-object.html#jestuserealtimers"
+        }
+    },
+    "afterAll": {
+        "!type": "fn(fn: function, timeout: number) ",
+        "!doc": "Runs a function after all the tests in this file have completed. If the function returns a promise or is a generator, Jest waits for that promise to resolve before continuing.",
+        "!url": "https://facebook.github.io/jest/docs/en/api.html#afterallfn-timeout"
+    },
+    "afterEach": {
+        "!type": "fn(fn: function, timeout: number)",
+        "!doc": "Runs a function after each one of the tests in this file completes. If the function returns a promise or is a generator, Jest waits for that promise to resolve before continuing.",
+        "!url": "https://facebook.github.io/jest/docs/en/api.html#aftereachfn-timeout"
+    },
+    "beforeAll": {
+        "!type": "fn(fn: function, timeout: number)",
+        "!doc": "Runs a function before any of the tests in this file run. If the function returns a promise or is a generator, Jest waits for that promise to resolve before running tests.",
+        "!url": "https://facebook.github.io/jest/docs/en/api.html#beforeallfn-timeout"
+    },
+    "beforeEach": {
+        "!type": "fn(fn: function, timeout: number)",
+        "!doc": "Runs a function before each of the tests in this file runs. If the function returns a promise or is a generator, Jest waits for that promise to resolve before running the test.",
+        "!url": "https://facebook.github.io/jest/docs/en/api.html#beforeeachfn-timeout"
+    },
+    "describe": {
+        "!type": "fn(name: string, fn: function)",
+        "!doc": "Creates a block that groups together several related tests in one test suite.",
+        "!url": "https://facebook.github.io/jest/docs/en/api.html#describename-fn",
+        "only": {
+            "!type": "fn(name: string, fn: function)",
+            "!doc": "You can use describe.only if you want to run only one describe block.",
+            "!url": "https://facebook.github.io/jest/docs/en/api.html#describeonlyname-fn"
+        },
+        "skip": {
+            "!type": "fn(name: string, fn: function)",
+            "!doc": "You can use describe.skip if you do not want to run a particular describe block.",
+            "!url": "https://facebook.github.io/jest/docs/en/api.html#describeskipname-fn"
+        }
+    },
+    "fdescribe": {
+        "!type": "fn(name: string, fn: function)",
+        "!doc": "You can use describe.only if you want to run only one describe block.",
+        "!url": "https://facebook.github.io/jest/docs/en/api.html#describeonlyname-fn"
+    },
+    "xdescribe": {
+        "!type": "fn(name: string, fn: function)",
+        "!doc": "You can use describe.skip if you do not want to run a particular describe block.",
+        "!url": "https://facebook.github.io/jest/docs/en/api.html#describeskipname-fn"
+    },
+    "require": {
+        "requireActual": {
+            "!type": "fn(moduleName: string)",
+            "!doc": "Returns the actual module instead of a mock, bypassing all checks on whether the module should receive a mock implementation or not.",
+            "!url": "https://facebook.github.io/jest/docs/en/api.html#requirerequireactualmodulename"
+        },
+        "requireMock": {
+            "!type": "fn(moduleName: string)",
+            "!doc": "Returns a mock module instead of the actual module, bypassing all checks on whether the module should be required normally or not.",
+            "!url": "https://facebook.github.io/jest/docs/en/api.html#requirerequiremockmodulename"
+        }
+    },
+    "test": {
+        "!type": "fn(name: string, fn: function, timeout: number)",
+        "!doc": "All you need in a test file is the test method which runs a test.",
+        "!url": "https://facebook.github.io/jest/docs/en/api.html#testname-fn-timeout",
+        "only": {
+            "!type": "fn(name: string, fn: function, timeout: number)",
+            "!doc": "When you are debugging a large codebase, you will often only want to run a subset of tests. You can use .only to specify which tests are the only ones you want to run.",
+            "!url": "https://facebook.github.io/jest/docs/en/api.html#testonlyname-fn-timeout"
+        },
+        "skip": {
+            "!type": "fn(name: string, fn: function)",
+            "!doc": "When you are maintaining a large codebase, you may sometimes find a test that is temporarily broken for some reason. If you want to skip running this test, but you don't want to just delete this code, you can use test.skip to specify some tests to skip.",
+            "!url": "https://facebook.github.io/jest/docs/en/api.html#testskipname-fn"
+        }
+    },
+    "it": {
+        "!type": "fn(name: string, fn: function, timeout: number)",
+        "!doc": "All you need in a test file is the test method which runs a test.",
+        "!url": "https://facebook.github.io/jest/docs/en/api.html#testname-fn-timeout",
+        "only": {
+            "!type": "fn(name: string, fn: function, timeout: number)",
+            "!doc": "When you are debugging a large codebase, you will often only want to run a subset of tests. You can use .only to specify which tests are the only ones you want to run.",
+            "!url": "https://facebook.github.io/jest/docs/en/api.html#testonlyname-fn-timeout"
+        },
+        "skip": {
+            "!type": "fn(name: string, fn: function)",
+            "!doc": "When you are maintaining a large codebase, you may sometimes find a test that is temporarily broken for some reason. If you want to skip running this test, but you don't want to just delete this code, you can use test.skip to specify some tests to skip.",
+            "!url": "https://facebook.github.io/jest/docs/en/api.html#testskipname-fn"
+        }
+    },
+    "fit": {
+        "!type": "fn(name: string, fn: function, timeout: number)",
+        "!doc": "When you are debugging a large codebase, you will often only want to run a subset of tests. You can use .only to specify which tests are the only ones you want to run.",
+        "!url": "https://facebook.github.io/jest/docs/en/api.html#testonlyname-fn-timeout"
+    },
+    "xit": {
+        "!type": "fn(name: string, fn: function)",
+        "!doc": "When you are maintaining a large codebase, you may sometimes find a test that is temporarily broken for some reason. If you want to skip running this test, but you don't want to just delete this code, you can use test.skip to specify some tests to skip.",
+        "!url": "https://facebook.github.io/jest/docs/en/api.html#testskipname-fn"
+    },
+    "expect": {
+        "!type": "fn(value: ?)",
+        "!doc": "The expect function is used every time you want to test a value. You will rarely call expect by itself. Instead, you will use expect along with a 'matcher' function to assert something about a value.",
+        "!url": "https://facebook.github.io/jest/docs/en/expect.html#expectvalue",
+        "extend": {
+            "!type": "fn(matchers: ?)",
+            "!doc": "You can use expect.extend to add your own matchers to Jest. For example, let's say that you're testing a number theory library and you're frequently asserting that numbers are divisible by other numbers.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#expectextendmatchers"
+        },
+        "anything": {
+            "!type": "fn()",
+            "!doc": "expect.anything() matches anything but null or undefined. You can use it inside toEqual or toBeCalledWith instead of a literal value.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#expectanything"
+        },
+        "any": {
+            "!type": "fn(constructor)",
+            "!doc": "expect.any(constructor) matches anything that was created with the given constructor. You can use it inside toEqual or toBeCalledWith instead of a literal value.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#expectanyconstructor"
+        },
+        "arrayContaining": {
+            "!type": "fn(array)",
+            "!doc": "expect.arrayContaining(array) matches a received array which contains all of the elements in the expected array. That is, the expected array is a subset of the received array. Therefore, it matches a received array which contains elements that are not in the expected array.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#expectarraycontainingarray"
+        },
+        "assertions": {
+            "!type": "fn(num: number)",
+            "!doc": "expect.assertions(number) verifies that a certain number of assertions are called during a test. This is often useful when testing asynchronous code, in order to make sure that assertions in a callback actually got called.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#expectassertionsnumber"
+        },
+        "hasAssertions": {
+            "!type": "fn() ",
+            "!doc": "expect.hasAssertions() verifies that at least one assertion is called during a test. This is often useful when testing asynchronous code, in order to make sure that assertions in a callback actually got called.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#expecthasassertions"
+        },
+        "objectContaining": {
+            "!type": "fn(obj: object)",
+            "!doc": "expect.objectContaining(object) matches any received object that recursively matches the expected properties. That is, the expected object is a subset of the received object. Therefore, it matches a received object which contains properties that are not in the expected object.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#expectobjectcontainingobject"
+        },
+        "stringContaining": {
+            "!type": "fn(str: string)",
+            "!doc": "expect.stringContaining(string) matches any received string that contains the exact expected string.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#expectstringcontainingstring"
+        },
+        "stringMatching": {
+            "!type": "fn(r: regexp)",
+            "!doc": "expect.stringMatching(regexp) matches any received string that matches the expected regexp.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#expectstringmatchingregexp"
+        },
+        "addSnapshotSerializer": {
+            "!type": "fn(serializer: function)",
+            "!doc": "You can call expect.addSnapshotSerializer to add a module that formats application-specific data structures.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#expectaddsnapshotserializerserializer"
+        },
+        "not": {
+            "!type": "+expect",
+            "!doc": "If you know how to test something, .not lets you test its opposite.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#not"
+        },
+        "resolves": {
+            "!type": "+expect",
+            "!doc": "Use resolves to unwrap the value of a fulfilled promise so any other matcher can be chained.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#resolves"
+        },
+        "rejects": {
+            "!type": "+expect",
+            "!doc": "Use .rejects to unwrap the reason of a rejected promise so any other matcher can be chained.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#rejects"
+        },
+        "toBe": {
+            "!type": "fn(value: ?)",
+            "!doc": "toBe just checks that a value is what you expect. It uses Object.is to check exact equality.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tobevalue"
+        },
+        "toHaveBeenCalled": {
+            "!type": "fn()",
+            "!doc": "Use .toHaveBeenCalled to ensure that a mock function got called.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tohavebeencalled"
+        },
+        "toBeCalled": {
+            "!type": "fn()",
+            "!doc": "Use .toBeCalled to ensure that a mock function got called.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tohavebeencalled"
+        },
+        "toHaveBeenCalledTimes": {
+            "!type": "fn(num: number)",
+            "!doc": "Use .toHaveBeenCalledTimes to ensure that a mock function got called exact number of times.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tohavebeencalledtimesnumber"
+        },
+        "toHaveBeenCalledWith": {
+            "!type": "fn(arg1: ?, arg2: ?, ...)",
+            "!doc": "Use .toHaveBeenCalledWith to ensure that a mock function was called with specific arguments.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tohavebeencalledwitharg1-arg2-"
+        },
+        "toBeCalledWith": {
+            "!type": "fn(arg1: ?, arg2: ?, ...)",
+            "!doc": "Use .toBeCalledWith to ensure that a mock function was called with specific arguments.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tohavebeencalledwitharg1-arg2-"
+        },
+        "toHaveBeenLastCalledWith": {
+            "!type": "fn(arg1: ?, arg2: ?, ...)",
+            "!doc": "If you have a mock function, you can use .toHaveBeenLastCalledWith to test what arguments it was last called with.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tohavebeenlastcalledwitharg1-arg2-"
+        },
+        "lastCalledWith": {
+            "!type": "fn(arg1: ?, arg2: ?, ...)",
+            "!doc": "If you have a mock function, you can use .lastCalledWith to test what arguments it was last called with.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tohavebeenlastcalledwitharg1-arg2-"
+        },
+        "toBeCloseTo": {
+            "!type": "fn(num: number, numDigits: number)",
+            "!doc": "Using exact equality with floating point numbers is a bad idea. Rounding means that intuitive things fail.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tobeclosetonumber-numdigits"
+        },
+        "toBeDefined": {
+            "!type": "fn()",
+            "!doc": "Use .toBeDefined to check that a variable is not undefined.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tobedefined"
+        },
+        "toBeFalsy": {
+            "!type": "fn()",
+            "!doc": "Use .toBeFalsy when you don't care what a value is, you just want to ensure a value is false in a boolean context.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tobefalsy"
+        },
+        "toBeGreaterThan": {
+            "!type": "fn(num: number)",
+            "!doc": "To compare floating point numbers, you can use toBeGreaterThan.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tobegreaterthannumber"
+        },
+        "toBeGreaterThanOrEqual": {
+            "!type": "fn(num: number)",
+            "!doc": "To compare floating point numbers, you can use toBeGreaterThanOrEqual.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tobegreaterthanorequalnumber"
+        },
+        "toBeLessThan": {
+            "!type": "fn(num: number)",
+            "!doc": "To compare floating point numbers, you can use toBeLessThan.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tobelessthannumber"
+        },
+        "toBeLessThanOrEqual": {
+            "!type": "fn(num: number)",
+            "!doc": "To compare floating point numbers, you can use toBeLessThanOrEqual.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tobelessthanorequalnumber"
+        },
+        "toBeInstanceOf": {
+            "!type": "fn(cls: class)",
+            "!doc": "Use .toBeInstanceOf(Class) to check that an object is an instance of a class.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tobeinstanceofclass"
+        },
+        "toBeNull": {
+            "!type": "fn()",
+            "!doc": "Use .toBeNull when you want to check that something is null.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tobenull"
+        },
+        "toBeTruthy": {
+            "!type": "fn()",
+            "!doc": "Use .toBeTruthy when you don't care what a value is, you just want to ensure a value is true in a boolean context.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tobetruthy"
+        },
+        "toBeUndefined": {
+            "!type": "fn()",
+            "!doc": "Use .toBeUndefined to check that a variable is undefined.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tobeundefined"
+        },
+        "toContain": {
+            "!type": "fn(item: ?)",
+            "!doc": "Use .toContain when you want to check that an item is in an array. For testing the items in the array, this uses ===, a strict equality check. .toContain can also check whether a string is a substring of another string.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tocontainitem"
+        },
+        "toContainEqual": {
+            "!type": "fn(item: ?)",
+            "!doc": "Use .toContainEqual when you want to check that an item with a specific structure and values is contained in an array. For testing the items in the array, this matcher recursively checks the equality of all fields, rather than checking for object identity.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tocontainequalitem"
+        },
+        "toEqual": {
+            "!type": "fn(value: ?)",
+            "!doc": "Use .toEqual when you want to check that two objects have the same value. This matcher recursively checks the equality of all fields, rather than checking for object identity—this is also known as 'deep equal'.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#toequalvalue"
+        },
+        "toHaveLength": {
+            "!type": "fn(num: number)",
+            "!doc": "Use .toHaveLength to check that an object has a .length property and it is set to a certain numeric value.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tohavelengthnumber"
+        },
+        "toMatch": {
+            "!type": "fn(regexpOrString)",
+            "!doc": "Use .toMatch to check that a string matches a regular expression.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tomatchregexporstring"
+        },
+        "toMatchObject": {
+            "!type": "fn(obj: object)",
+            "!doc": "Use .toMatchObject to check that a JavaScript object matches a subset of the properties of an object. It will match received objects with properties that are not in the expected object.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tomatchobjectobject"
+        },
+        "toHaveProperty": {
+            "!type": "fn(keyPath: ?, value: ?)",
+            "!doc": "Use .toHaveProperty to check if property at provided reference keyPath exists for an object. For checking deeply nested properties in an object use dot notation for deep references.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tohavepropertykeypath-value"
+        },
+        "toMatchSnapshot": {
+            "!type": "fn(str?: string)",
+            "!doc": "This ensures that a value matches the most recent snapshot. Check out the Snapshot Testing guide for more information.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tomatchsnapshotoptionalstring"
+        },
+        "toThrow": {
+            "!type": "fn(error)",
+            "!doc": "Use .toThrow to test that a function throws when it is called.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tothrowerror"
+        },
+        "toThrowError": {
+            "!type": "fn(error)",
+            "!doc": "Use .toThrowError to test that a function throws when it is called.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tothrowerror"
+        },
+        "toThrowErrorMatchingSnapshot": {
+            "!type": "fn()",
+            "!doc": "Use .toThrowErrorMatchingSnapshot to test that a function throws an error matching the most recent snapshot when it is called.",
+            "!url": "https://facebook.github.io/jest/docs/en/expect.html#tothrowerrormatchingsnapshot"
+        }
+    }
+}

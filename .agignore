@@ -1,0 +1,7 @@
+syntax: glob
+.emacs.desktop
+.emacs.desktop.lock
+.idea
+.git
+TAGS
+__tests__/**
