@@ -1,15 +1,17 @@
-import R from "ramda";
+// * Imports
 
-import { extractNodesFromFile } from '../OrgFormat/NodesExtractor';
+import R from "ramda";
+import { extractNodesFromLines } from '../OrgFormat/NodesExtractor';
 import { headlineT } from '../OrgFormat/Transformations';
 import { log } from '../Helpers/Debug';
 import { nullWhenEmpty, promisePipe } from '../Helpers/Functions';
 import FileAccess from '../Helpers/FileAccess';
 import Queries from './Queries';
 
-
 // * Sync
+
 // ** How we know that changes occured?
+
 // *** Remote
 // Compare file mod time with one saved in db.
 
@@ -17,6 +19,7 @@ import Queries from './Queries';
 // File node has flag isChanged - we don't want to waste time for query every time cron schedule sync.
 
 // ** What happens after sync method is run
+
 // *** No changes
 // pass
 
@@ -71,81 +74,69 @@ import Queries from './Queries';
 
 // * Code
 
-export const isChangedRemotly = (file) => FileAccess.stat(file.path).then(
-  stat => stat.mtime > file.lastSync ? stat.mtime : false);
+// ** Propagate changes
 
+// *** Helpers
 
-import { extractNodesFromLines } from '../OrgFormat/NodesExtractor';
+export const getNewExternalMtime =
+  file => FileAccess.stat(file.path).then(
+    stat => stat.mtime > file.lastSync ? stat.mtime : false)
 
-const getLocallyChangedNodes = (file) => file.nodes.filtered('isChanged = true')
+const getRawNodesFromFile = promisePipe(
+  R.curry(FileAccess.read),
+  extractNodesFromLines)
 
-const groupSimiliarNodes = R.pipe(
+const getNodesFromDbAsArray = promisePipe(
+  R.curryN(2, Queries.getNodes)('file.path = $0'),   // Must do this way cos file.nodes doasn't have all prototype functions - it's bug in realm?
+  R.slice(0, Infinity))                              // Convert from result to array
+
+const fileAndDbChangesToOneList = promisePipe(
+  R.converge((...results) => Promise.all(results), [getNodesFromDbAsArray, getRawNodesFromFile]),
+  R.unnest)
+
+const groupBySimilarity = R.pipe(
   R.sortBy(R.prop('rawHeadline')),
-  R.groupWith(
-    (n1, n2) => n1.rawHeadline == n2.rawHeadline && n1.rawContent == n2.rawContent))
+  R.groupWith((n1, n2) => n1.rawHeadline == n2.rawHeadline && n1.rawContent == n2.rawContent))
 
-const partitionToChangedGroupsAndRest = R.partition(group => group.length === 2 && group[0].length === group[1].length)
+const partitionEachGroupByIdPossesion = R.map(R.partition(
+  node => node.id === undefined));
+
+const groupByChangedandNotChanged = R.groupBy(
+  nodesGroup => nodesGroup.length === 2 && nodesGroup[0].length === nodesGroup[1].length
+    ? 'notChangedNodes' : 'addedOrDeletedNodes');
+
+const getLocallyChangedNodes = file => file.nodes.filtered('isChanged = true')
+
+const partitionToChangedGroupsAndRest = R.partition(
+  group => group.length === 2 && group[0].length === group[1].length)
+
+const writeToFile = file => content => FileAccess.write(file.path, content);
+
+const zipNotChangedToDbAndFilePairs =  R.over(
+  R.lensProp('notChangedNodes'),
+  R.map(R.apply(R.zip)));
+
+// *** Main
 
 export const getChanges = (file) => {
-  const local = nullWhenEmpty(getLocallyChangedNodes(file))
-  const remote = null;
-  const newRemoteMtime = isChangedRemotly(file); // Check if file changed using modify time
+  const localChanges = nullWhenEmpty(getLocallyChangedNodes(file))
+  const newExternalMtime = getNewExternalMtime(file);
+  let remoteChanges = new Promise(r => r(null));
 
-  // If no changes - Exit
-  if (!newRemoteMtime && !local) return null
+  if (!newExternalMtime && !localChanges) return null
 
-  // Extract nodes from org file
-  const getRawNodesFromFile = promisePipe(
+  if (newExternalMtime) remoteChanges = promisePipe(
     R.prop('path'),
-    R.curry(FileAccess.read),
-    extractNodesFromLines,
-    // R.concat(file.nodes.map),
-    // R.tap(console.log)
-  )
+    fileAndDbChangesToOneList,
+    groupBySimilarity,
+    partitionEachGroupByIdPossesion,
+    groupByChangedandNotChanged,
+    zipNotChangedToDbAndFilePairs)(file)
 
-  const getNodesFromDbAsArray = promisePipe(
-    R.prop('path'),
-    R.curryN(2, Queries.getNodes)('file.path = $0'), // Must do this way cos file.nodes doasn't have all prototype functions - it's bug in realm?
-    R.slice(0, Infinity),                            // Convert from result to array
-    // R.tap(console.log)
-  )
-
-  const mergeNodesLists = promisePipe(
-    R.converge((...results) => Promise.all(results), [getNodesFromDbAsArray, getRawNodesFromFile]),
-    R.unnest)
-
-
-  const partitionByIdPossesion = R.map(R.partition(node => node.id === undefined));
-
-  const groupBySymmetry = R.groupBy(
-    nodesGroup => nodesGroup.length === 2 && nodesGroup[0].length === nodesGroup[1].length ? 'sameNodes' : 'newNodes');
-
-  promisePipe(
-    mergeNodesLists,
-    groupSimiliarNodes,
-    partitionByIdPossesion,
-    groupBySymmetry,
-    R.over(R.lensProp('sameNodes'), R.map(R.apply(R.zip))),
-    log()
-  )(file)
-
-  return new Promise(r => r(4))
-  // // Get remote changes
-  // if (newRemoteMtime) {
-  //   const allNodes = R.concat(extractedNodes, file.nodes)
-
-  //   remote = R.pipe(
-  //     groupSimiliarNodes,
-  //     partitionGroupsByIdPosession,
-  //     partitionToChangedGroupsAndRest,
-  //     R.converge((identicalGroups, rest) => ({ identicalGroups, rest })
-  //                [R.head, R.pipe(R.tail, R.unnest)]))(allNodes)}
-
-  return { remote, local, file}};
-
-// const changes = getChanges(file); if (!changes) return null
-const writeToFile = file => content => FileAccess.write(file.path, content);
-// const extractedNodes = extractNodesFromLines(file);
+  return remoteChanges.then(remoteChanges => ({
+    remoteChanges,
+    localChanges,
+    file}))};
 
 // * Sync
 

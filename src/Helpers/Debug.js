@@ -10,7 +10,7 @@ export const log = (name="DEBUG") => (obj) =>
     colors: true,
     showProxy: true,
     showHidden: false,
-    depth: 5,
+    depth: 3,
     breakLength: 50
   }), '\n');
 

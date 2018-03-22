@@ -4,7 +4,7 @@
 
 import R from 'ramda';
 
-import { getChanges, isChangedRemotly } from '../../src/Data/Sync';
+import { getChanges, getNewExternalMtime } from '../../src/Data/Sync';
 import Db from '../../src/Data/Db/Db';
 import DbHelper from '../../src/Data/Db/DbHelper';
 import FileAccess from '../../src/Helpers/FileAccess';
@@ -35,38 +35,39 @@ afterAll(() => {
 
 // * Tests
 
-describe('isChangedRemotly', () => {
+describe('getNewExternalMtime', () => {
 
   beforeAll(() => { return createAndAddFileToCleanDb('basic') })
 
   test('recognizing no external change', () => {
     expect.assertions(1)
     return Queries.getFiles().then(
-      files => expect(isChangedRemotly(files[0])).resolves.toBeFalsy())})
+      files => expect(getNewExternalMtime(files[0])).resolves.toBeFalsy())})
 
   test('recognizing external changes', () => {
     expect.assertions(1)
     return FileAccess.write(MOCKED_FILES['basic']).then(
       () => Queries.getFiles().then(
-        files => expect(isChangedRemotly(files[0])).resolves.toBeTruthy()))})})
+        files => expect(getNewExternalMtime(files[0])).resolves.toBeTruthy()))})})
 
 describe('getChanges', () => {
 
   beforeEach(() => { return createAndAddFileToCleanDb('remoteChanges1') })
 
-  test('returning remote changes', () => {
-    dupaa
+  test.only('returning remote changes', () => {
     expect.assertions(1)
     return writeToFile('remoteChanges1').then(
       () => Queries.getFiles().then(
-        (files) => expect(getChanges(files[0])).resolves.toHaveProperty('remote', 4)))
-  })
+        (files) => expect(getChanges(files[0])).resolves.toMatchObject({
+          remoteChanges: {
+            notChangedNodes: expect.anything()},
+          localChanges: null,
+          file: expect.anything()
+        })))})
 
-  // test('returning local changes', () => {
-
-  // })
-
-  // test('', () => {
-
-  // })
+  test('returning no local changes', () => {
+    expect.assertions(1)
+    return writeToFile('remoteChanges1').then(
+      () => Queries.getFiles().then(
+        (files) => expect(getChanges(files[0])).resolves.toHaveProperty('localChanges', null)))})
 })
