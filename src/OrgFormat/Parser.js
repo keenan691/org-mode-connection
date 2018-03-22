@@ -1,7 +1,7 @@
 /** @flow */
 import R from "ramda";
 
-import { extractNodesFromFile } from '../OrgFormat/NodesExtractor';
+import { extractNodesFromLines } from '../OrgFormat/NodesExtractor';
 import { nodeMetadataParser } from './AtomicParsers/NodeMetadataParser';
 import { parseContent } from './AtomicParsers/NodeContentParser';
 import { parseHeadline } from './AtomicParsers/HeadlineParser';
@@ -22,8 +22,8 @@ export const parseNode = R.converge(
     R.pick(["range", "rawHeadline", "rawContent", "level", "position", "originalPosition"])])
 
 const parseNodes = R.pipe(
-  extractNodesFromFile,
-  R.map(parseNode),
-  rlog("parseNodes :\n"));
+  extractNodesFromLines,
+  R.map(parseNode)
+);
 
 export const parse = lines => parseNodes(lines);

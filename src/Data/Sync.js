@@ -1,7 +1,12 @@
+import R from "ramda";
+
 import { extractNodesFromFile } from '../OrgFormat/NodesExtractor';
 import { headlineT } from '../OrgFormat/Transformations';
-import { nullWhenEmpty } from '../Helpers/Functions';
+import { log } from '../Helpers/Debug';
+import { nullWhenEmpty, promisePipe } from '../Helpers/Functions';
 import FileAccess from '../Helpers/FileAccess';
+import Queries from './Queries';
+
 
 // * Sync
 // ** How we know that changes occured?
@@ -65,73 +70,100 @@ import FileAccess from '../Helpers/FileAccess';
 
 
 // * Code
-/**
- * Check if file was changed using mtime.
- * @param {Type of file} file - Parameter description.
- * @returns {Return Type} mtime if file was changed, otherwise false.
- */
+
 export const isChangedRemotly = (file) => FileAccess.stat(file.path).then(
   stat => stat.mtime > file.lastSync ? stat.mtime : false);
 
+
+import { extractNodesFromLines } from '../OrgFormat/NodesExtractor';
+
+const getLocallyChangedNodes = (file) => file.nodes.filtered('isChanged = true')
+
+const groupSimiliarNodes = R.pipe(
+  R.sortBy(R.prop('rawHeadline')),
+  R.groupWith(
+    (n1, n2) => n1.rawHeadline == n2.rawHeadline && n1.rawContent == n2.rawContent))
+
+const partitionToChangedGroupsAndRest = R.partition(group => group.length === 2 && group[0].length === group[1].length)
+
 export const getChanges = (file) => {
-  const local = nullWhenEmpty(file.getLocallyChangedNodes())
+  const local = nullWhenEmpty(getLocallyChangedNodes(file))
   const remote = null;
   const newRemoteMtime = isChangedRemotly(file); // Check if file changed using modify time
+
   // If no changes - Exit
   if (!newRemoteMtime && !local) return null
 
   // Extract nodes from org file
-  const extractedNodes = extractNodesFromFile(file);
+  const getRawNodesFromFile = promisePipe(
+    R.prop('path'),
+    R.curry(FileAccess.read),
+    extractNodesFromLines,
+    // R.concat(file.nodes.map),
+    // R.tap(console.log)
+  )
 
-  // Get remote changes
-  if (newRemoteMtime) {
-    const allNodes = R.concat(extractedNodes, file.nodes)
+  const getNodesFromDbAsArray = promisePipe(
+    R.prop('path'),
+    R.curryN(2, Queries.getNodes)('file.path = $0'), // Must do this way cos file.nodes doasn't have all prototype functions - it's bug in realm?
+    R.slice(0, Infinity),                            // Convert from result to array
+    // R.tap(console.log)
+  )
 
-    const groupSimiliarNodes = R.groupWith((n1, n2) =>
-                                           n1.rawHeadline === n2.rawHeadline &&
-                                           n1.rawContent === n2.rawContent)
+  const mergeNodesLists = promisePipe(
+    R.converge((...results) => Promise.all(results), [getNodesFromDbAsArray, getRawNodesFromFile]),
+    R.unnest)
 
-    const partitionByIdPossesion = R.partition(n => n.id === undefined);
-    const checkIfGroupAreSymetric = x => x.length === 2 && x[0].length === x[1].length // Sprawdza czy jest tyle samo objektów posiadających id co nieposiadających
-    // listing trzeba podizelić na symetryczne grópy i resztę
-    // symetryczne grupy zcalić poprzez skopiowanie pozycji, poziomu numerów linii
-    // niesymetryczne przekazać dalej do obróbki choć na razie w uproszczonej wersji nie przejmować się zmianami todo itd.
-    // po prostu usunąć posiadające id i dodać nie posiadające
-    // no końcu odświerzyć rodzićów - tej funkji też użyć przy dodawaniu plików - to już zrobić w metodzie syncu
-    remote = {
-      toAdd
-      toDelete
-      sameOrModified // pary [[wersja z bazy danych, wersja zparsowana], ..] - czyli grupy symetryczne
-      // Może ich być więcej ale to pownie będzie rzadkość
-      // Na ten moment mogą się różnić jedynie pozycją i levelem
-      // W przyszłości mogą się różnić todo, priorytetem itd
 
-    }
-  }
+  const partitionByIdPossesion = R.map(R.partition(node => node.id === undefined));
 
-  return {
-    remote,
-    local,
-  }
-};
+  const groupBySymmetry = R.groupBy(
+    nodesGroup => nodesGroup.length === 2 && nodesGroup[0].length === nodesGroup[1].length ? 'sameNodes' : 'newNodes');
 
-const changes = getChanges(file); if (!changes) return null
-const onlyLocalChanges = changes.local && !changes.remote;
-const onlyRemoteChanges = !changes.local && changes.remote;
-const bothLocalAndRemoteChanges = changes.local && changes.remote;
+  promisePipe(
+    mergeNodesLists,
+    groupSimiliarNodes,
+    partitionByIdPossesion,
+    groupBySymmetry,
+    R.over(R.lensProp('sameNodes'), R.map(R.apply(R.zip))),
+    log()
+  )(file)
+
+  return new Promise(r => r(4))
+  // // Get remote changes
+  // if (newRemoteMtime) {
+  //   const allNodes = R.concat(extractedNodes, file.nodes)
+
+  //   remote = R.pipe(
+  //     groupSimiliarNodes,
+  //     partitionGroupsByIdPosession,
+  //     partitionToChangedGroupsAndRest,
+  //     R.converge((identicalGroups, rest) => ({ identicalGroups, rest })
+  //                [R.head, R.pipe(R.tail, R.unnest)]))(allNodes)}
+
+  return { remote, local, file}};
+
+// const changes = getChanges(file); if (!changes) return null
 const writeToFile = file => content => FileAccess.write(file.path, content);
+// const extractedNodes = extractNodesFromLines(file);
 
-const applyLocalChanges = file => R.pipe(
+// * Sync
+
+const applyLocalChanges = R.pipe(
   R.path('nodes'),
   R.map(node => node.toOrgRepr()),
-  writeToFile(file));
+  // writeToFile(file)
+)
 
-const sync = file => R.pipe(
-  getChanges
-  R.unless(R.isNil,
-           R.pipe(
-             R.cond([
-               [onlyLocalChanges, applyLocalChanges(file)]
-               [onlyRemoteChanges, applyRemoteChanges]]))))(file)
+// const applyRemoteChanges = R.pipe(
 
-export default sync
+// )
+
+// const sync = file => R.pipe(
+//   getChanges,
+//   R.unless(R.isNil,
+//            R.pipe(
+//              R.cond([[changes => changes.local && !changes.remote, applyLocalChanges]
+//                      [changes => !changes.local && changes.remote, applyRemoteChanges]]))))(file)
+
+export default null

@@ -1,16 +1,18 @@
 /** @flow */
 
-// * Imports
-import R from "ramda";
 
+// * Imports
+
+import R from "ramda";
 import { exportNodeToOrgRepr } from '../OrgFormat/Export';
 import { parse } from '../OrgFormat/Parser';
 import FileAccess from '../Helpers/FileAccess';
-import { syncFile } from './Sync';
+// import { syncFile } from './Sync';
 import Db from './Db/Db';
 import DbHelper  from './Db/DbHelper';
 
 // * Init
+
 DbHelper.init()
 const dbConn = DbHelper.getInstance();
 
@@ -26,7 +28,6 @@ export const prepareNodes = (parsedNodes, file) =>
     file}));
 
 // ** Generic
-
 
 export const queryRealm = (model, filter) => dbConn.then(realm => {
   let res = realm.objects(model)
@@ -117,9 +118,8 @@ export const enhanceNode = node => {
 // - [ ] getLocallyChangedNodes
 
 export const enhanceFile = (file) => {
-  file.getLocallyChangedNodes = () => file.nodes.fitered('isChanged = true')
   file.getAddedNodes = () => file.nodes.filtered('isAdded = true')
-  file.sync = () => syncFile(file)
+  // file.sync = () => syncFile(file)
   file.delete = () => deleteRealmObject(file)};
 
 
@@ -157,22 +157,25 @@ const addFile = (filepath, type='agenda') => FileAccess.read(filepath).then(file
 // - [X] getNodeById (id) => enhance (node)
 // - [X] getFileById (id) => enhance (file)
 
-const getObjects = (model) => dbConn.then(realm => realm.objects(model));
+const getObjects = (model, ...filterArgs) => dbConn.then(
+  realm =>
+    filterArgs.length > 0 ?
+    realm.objects(model).filtered(...filterArgs) :
+    realm.objects(model));
 
-const getNodes = () => getObjects('OrgNode')
+const getNodes = (...filter) => getObjects('OrgNode', ...filter)
 const getFiles = () => getObjects('OrgFile')
-const getAgenda = (dateStart, dateEnd) => getObjects('OrgTimestamp').
-      filtered('date >= $0 && date <= $1', dateStart, dateEnd))
+const getAgenda = (dateStart, dateEnd) => getObjects('OrgTimestamp', 'date >= $0 && date <= $1', dateStart, dateEnd)
 
 const getNodeById = getObjectByIdAndEnhance('OrgNode', enhanceNode)
 const getFileById = getObjectByIdAndEnhance('OrgFile', enhanceFile)
 
-const search = (term) => getObjects('OrgNode').
-      filtered('headline CONTAINS[c] $0 || content CONTAINS[c] $0', term));
+const search = (term) => getObjects('OrgNode', 'headline CONTAINS[c] $0 || content CONTAINS[c] $0', term)
 
 // * Export
 
 export default {
+  clearDb: () => DbHelper.getInstance().then(realm => Db(realm).cleanUpDatabase()),
   addFile,
   getFiles,
   getNodes,

@@ -11,7 +11,7 @@ const recreateOriginalNode = (node) => R.compose(
   R.concat(node.rawContent)
 );
 
-const createNewNode = (node) => R.compose(
+export const createNewNode = (node) => R.compose(
   R.concat(headlineT.level.toOrg(node)),
   R.concat(headlineT.todo.toOrg(node)),
   R.concat(headlineT.priority.toOrg(node)),

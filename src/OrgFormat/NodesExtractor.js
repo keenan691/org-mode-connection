@@ -25,7 +25,5 @@ const mapRangesToContent = (lines, ranges) => ranges.map(
       rawContent: lines.slice(range[0]+1, range[1]).join("\n"),
       range: range }));
 
-export const extractNodesFromFile = R.converge(
-  mapRangesToContent, [
-    R.identity,
-    getNodesLineRanges])
+export const extractNodesFromLines = R.converge(
+  mapRangesToContent, [R.identity, getNodesLineRanges])
