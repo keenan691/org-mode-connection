@@ -1,5 +1,11 @@
+;;; Settings
+
 ((nil . (
          (eval . (progn
+
+;;;; Project schortcuts
+
+                   (my/defprojectshortcut ?x "src/Helpers/Debug.js")
                    (my/defprojectshortcut ?i "tasks.py")
                    (my/defprojectshortcut ?o "project.org")
                    (my/defprojectshortcut ?r "src/OrgFormat/Regex.js")
@@ -13,6 +19,7 @@
                    (my/defprojectshortcut ?e "src/OrgFormat/Export.js")
                    (my/defprojectshortcut ?s "src/Data/Sync.js")
 
+;;;; Helm-projectnav
 
                    (setq helm-projectnav-test-dir "__tests__")
                    (setq helm-projectnav-src-dir "src")
