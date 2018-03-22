@@ -14,7 +14,7 @@ TEST_REGEX = "simple parse"
 
 @task
 def t(ctx):
-    system(f'./node_modules/.bin/jest --bail --watch --notify  -t {TEST_REGEX}')
+    system(f'./node_modules/.bin/jest --bail --watch --notify')
 
 
 @task
