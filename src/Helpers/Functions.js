@@ -8,7 +8,7 @@ const pipePromise = R.curry(
 //then, since we made our own reduce with the arguments how we wanted them, no need to R.flip
 export const promisePipe = R.compose( pipePromise, R.unapply(R.flatten) );
 
-export const nullWhenEmpty = R.ifElse(R.isEmpty, R.F, R.identity);
+export const nullWhenEmpty = obj => obj.length === 0 ? null : obj
 export const ireduce = R.addIndex(R.reduce)
 export const imap = R.addIndex(R.map);
 export const makeRegex = (flags='') =>  (...strings) => new RegExp(R.pipe(R.map(s => s.source), R.join(''))(strings), flags)
