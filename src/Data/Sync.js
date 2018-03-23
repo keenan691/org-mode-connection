@@ -6,7 +6,7 @@ import { headlineT } from '../OrgFormat/Transformations';
 import { log } from '../Helpers/Debug';
 import { nullWhenEmpty, promisePipe } from '../Helpers/Functions';
 import FileAccess from '../Helpers/FileAccess';
-import Queries from './Queries';
+// import Queries from './Queries';
 
 // * Sync
 
@@ -33,7 +33,7 @@ import Queries from './Queries';
 //    2. [X] if node is not changed get org repr from file using old position
 // 4. [ ] overwrite file
 
-// *** TODO [0/6] Only remote changes occured
+// *** TODO [0/6] Only external changes occured
 // *Directions* :
 // - [ ] when it's possible keep ids.
 // - [ ] crc is computed ignoring position
@@ -42,7 +42,7 @@ import Queries from './Queries';
 
 // *Process* :
 // 1. [ ] Phase one - exclude not changed
-//    - Extract remote nodes with position and compute theirs crc's
+//    - Extract external nodes with position and compute theirs crc's
 //    - Get local nodes
 //    - Exclude from both groups nodes with same crcc and update theirs positions and indent if needed
 
@@ -59,10 +59,10 @@ import Queries from './Queries';
 //    - delete rest of nodes from db
 //    - add remaining nodes from file as new
 
-// *** TODO [1/3] Both local and remote changes occured
+// *** TODO [1/3] Both local and external changes occured
 // Try to merge.
 
-// 1. [X] Do the same like in remote changes point.
+// 1. [X] Do the same like in external changes point.
 // 2. [ ] If changed nodes is not deleted then update it like in local changes point.
 // 3. [ ] If it's not possible return error message with this node id headline and position and mark this file as conflicted.
 
@@ -83,15 +83,12 @@ export const getNewExternalMtime =
     stat => stat.mtime > file.lastSync ? stat.mtime : false)
 
 const getRawNodesFromFile = promisePipe(
+  R.prop('path'),
   R.curry(FileAccess.read),
   extractNodesFromLines)
 
-const getNodesFromDbAsArray = promisePipe(
-  R.curryN(2, Queries.getNodes)('file.path = $0'),   // Must do this way cos file.nodes doasn't have all prototype functions - it's bug in realm?
-  R.slice(0, Infinity))                              // Convert from result to array
-
-const fileAndDbChangesToOneList = promisePipe(
-  R.converge((...results) => Promise.all(results), [getNodesFromDbAsArray, getRawNodesFromFile]),
+const ExternalAndLocalChangesToOneList = promisePipe(
+  R.converge((...results) => Promise.all(results), [R.prop('getNodesAsArray'), getRawNodesFromFile]),
   R.unnest)
 
 const groupBySimilarity = R.pipe(
@@ -101,7 +98,7 @@ const groupBySimilarity = R.pipe(
 const partitionEachGroupByIdPossesion = R.map(R.partition(
   node => node.id === undefined));
 
-const groupByChangedandNotChanged = R.groupBy(
+const groupByChangedAndNotChanged = R.groupBy(
   nodesGroup => nodesGroup.length === 2 && nodesGroup[0].length === nodesGroup[1].length
     ? 'notChangedNodes' : 'addedOrDeletedNodes');
 
@@ -110,51 +107,50 @@ const getLocallyChangedNodes = file => file.nodes.filtered('isChanged = true')
 const partitionToChangedGroupsAndRest = R.partition(
   group => group.length === 2 && group[0].length === group[1].length)
 
-const writeToFile = file => content => FileAccess.write(file.path, content);
-
-const zipNotChangedToDbAndFilePairs =  R.over(
-  R.lensProp('notChangedNodes'),
-  R.map(R.apply(R.zip)));
+const prepareOutput = R.evolve({
+  notChangedNodes: R.map(R.apply(R.zip)),
+  addedOrDeletedNodes: R.flatten});
 
 // *** Main
 
 export const getChanges = (file) => {
+  console.log('DUU')
+  console.log(file.new)
   const localChanges = nullWhenEmpty(getLocallyChangedNodes(file))
   const newExternalMtime = getNewExternalMtime(file);
-  let remoteChanges = new Promise(r => r(null));
+  let externalChanges = new Promise(r => r(null));
 
   if (!newExternalMtime && !localChanges) return null
 
-  if (newExternalMtime) remoteChanges = promisePipe(
-    R.prop('path'),
-    fileAndDbChangesToOneList,
+  if (newExternalMtime) externalChanges = promisePipe(
+    ExternalAndLocalChangesToOneList,
     groupBySimilarity,
     partitionEachGroupByIdPossesion,
-    groupByChangedandNotChanged,
-    zipNotChangedToDbAndFilePairs)(file)
+    groupByChangedAndNotChanged,
+    prepareOutput)(file)
 
-  return remoteChanges.then(remoteChanges => ({
-    remoteChanges,
+  return externalChanges.then(externalChanges => ({
+    externalChanges,
     localChanges,
     file}))};
 
-// * Sync
+// ** Sync
 
-const applyLocalChanges = R.pipe(
-  R.path('nodes'),
-  R.map(node => node.toOrgRepr()),
-  // writeToFile(file)
-)
+// *** Helpers
 
-// const applyRemoteChanges = R.pipe(
+const applyLocalChanges = R.converge(
+  (filePath, fileContent) => FileAccess.write(filePath, fileContent), [
+    R.path('file.path'),
+    R.pipe(R.path('file.nodes'), R.map(node => node.toOrgRepr()))]);
 
-// )
+const applyExternalChanges = () => 4
 
-// const sync = file => R.pipe(
-//   getChanges,
-//   R.unless(R.isNil,
-//            R.pipe(
-//              R.cond([[changes => changes.local && !changes.remote, applyLocalChanges]
-//                      [changes => !changes.local && changes.remote, applyRemoteChanges]]))))(file)
+// *** Main
 
-export default null
+const sync = file => R.pipe(getChanges, R.unless(R.isNil, R.pipe(R.cond(
+  [[changes => changes.local && !changes.external, applyLocalChanges]
+   [changes => !changes.local && changes.external, applyExternalChanges]]))))(file)
+
+// * Exports
+
+export default sync

@@ -8,6 +8,7 @@ import Realm from 'realm';
 
 import { parse } from '../../OrgFormat/Parser';
 import FileAccess from '../../Helpers/FileAccess';
+import sync from '../Sync';
 
 // * Db
 
@@ -18,8 +19,6 @@ export const openRealm = (schema) => Realm.open({
 
 // * Exports
 
-export default (realm) => (
-  {
-    cleanUpDatabase: () => realm.write(() => realm.deleteAll()),
-    sync: () => realm.objects('OrgFile').forEach((file) => file.sync())
-  })
+export default (realm) => ({
+  cleanUpDatabase: () => realm.write(() => realm.deleteAll()),
+  sync: () => realm.objects('OrgFile').forEach((file) => file)})

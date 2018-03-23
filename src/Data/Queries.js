@@ -17,8 +17,15 @@ DbHelper.init()
 const dbConn = DbHelper.getInstance();
 
 // * Functions
+
 // ** Nodes
 
+// const getNodesFromDbAsArray = (file) => promisePipe(
+//   R.curryN(2, getNodes)('file.path = $0'),   // Must do this way cos file.nodes doasn't have all prototype functions - it's bug in realm?
+//   R.slice(0, Infinity))(file)                              // Convert from result to array
+
+const realmResultToArray = res => res.slice(0, Infinity);
+const getNodesFromDbAsArray = (file) => getNodes('file = $0', file).then(nodes => realmResultToArray(nodes))
 const generateNodeId = (node, file, position) => file.path + position; // TODO it's fake ethod
 
 export const prepareNodes = (parsedNodes, file) =>
@@ -34,6 +41,7 @@ export const queryRealm = (model, filter) => dbConn.then(realm => {
   return filter ? res.filtered(filter) : res});
 
 export const deleteRealmObject = (obj, alsoDelete=[]) => dbConn.then(realm => realm.write(() => realm.delete(obj)))
+
 export const getObjectByIdAndEnhance = (objSchema, enhanceFunction) => (id) => dbConn.then(realm => {
   const res = realm.objects(objSchema).filtered('id = $0', id)
   return res.length === 1 ? enhanceFunction(res[0]) : null})
@@ -50,7 +58,8 @@ export const addTimestamp = (node, type, timestampObj) => dbConn.then(realm => r
   markNodeAsChanged(node)
   // Create new timestamp if value is not set to null
   if (timestampObj && timestampObj.hasOwnProperty('date')) {
-      node.timestamps.push(R.merge(timestampObj, { type }))}}));
+    node.timestamps.push(R.merge(timestampObj, { type }))}}));
+
 
 
 // * TODO [6/11] Node container
@@ -119,6 +128,7 @@ export const enhanceNode = node => {
 
 export const enhanceFile = (file) => {
   file.getAddedNodes = () => file.nodes.filtered('isAdded = true')
+  file.getNodesAsArray = () => getNodesFromDbAsArray(file)
   // file.sync = () => syncFile(file)
   file.delete = () => deleteRealmObject(file)};
 
@@ -164,12 +174,10 @@ const getObjects = (model, ...filterArgs) => dbConn.then(
     realm.objects(model));
 
 const getNodes = (...filter) => getObjects('OrgNode', ...filter)
-const getFiles = () => getObjects('OrgFile')
+const getFiles = () => getObjects('OrgFile').then(res => {res.map(obj => {obj.new = 34; return obj});return res})
 const getAgenda = (dateStart, dateEnd) => getObjects('OrgTimestamp', 'date >= $0 && date <= $1', dateStart, dateEnd)
-
 const getNodeById = getObjectByIdAndEnhance('OrgNode', enhanceNode)
 const getFileById = getObjectByIdAndEnhance('OrgFile', enhanceFile)
-
 const search = (term) => getObjects('OrgNode', 'headline CONTAINS[c] $0 || content CONTAINS[c] $0', term)
 
 // * Export
