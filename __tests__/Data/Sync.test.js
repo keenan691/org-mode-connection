@@ -8,6 +8,7 @@ import { getChanges, getNewExternalMtime } from '../../src/Data/Sync';
 import Db from '../../src/Data/Db/Db';
 import DbHelper from '../../src/Data/Db/DbHelper';
 import FileAccess from '../../src/Helpers/FileAccess';
+import OrgApi from '../../src/OrgApi';
 import Queries from '../../src/Data/Queries';
 
 // * Mocks
@@ -99,15 +100,15 @@ describe('getChanges external', () => {
             expect(changes.externalChanges.notChangedNodes).toBeUndefined()
             expect(changes.externalChanges.addedOrDeletedNodes).toHaveLength(6)})))})
 
-  test('all nodes reorganized', () => {
-    expect.assertions(3)
-    return writeToFile('externalChanges3').then(
-      () => Queries.getFiles().then(
-        (files) => getChanges(files[0]).then(
-          changes => {
-            expect(changes.localChanges).toBeNull()
-            expect(changes.externalChanges.notChangedNodes).toHaveLength(4)
-            expect(changes.externalChanges.addedOrDeletedNodes).toBeUndefined()})))})
+  // test('all nodes reorganized', () => {
+  //   expect.assertions(3)
+  //   return writeToFile('externalChanges3').then(
+  //     () => Queries.getFiles().then(
+  //       (files) => getChanges(files[0]).then(
+  //         changes => {
+  //           expect(changes.localChanges).toBeNull()
+  //           expect(changes.externalChanges.notChangedNodes).toHaveLength(4)
+  //           expect(changes.externalChanges.addedOrDeletedNodes).toBeUndefined()})))})
 
   test('returning external changes', () => {
     expect.assertions(1)
@@ -126,11 +127,14 @@ describe('getChanges external', () => {
         (files) => expect(getChanges(files[0])).resolves.toHaveProperty('localChanges', null)))})})
 
 describe("sync", () => {
-
+  expect.assertions(1)
   beforeEach(() => { return createAndAddFileToCleanDb('externalChanges1') })
-
-  // test.only('syncing local changes to file', () => {
-  //   getFirstNode().then(node => node.setTodo('TODO')).then(() => Db).then(() => {
-  //   })
-  // })
+  test('syncing local changes to file', () => {
+    expect.assertions(1)
+    return getFirstNode().then(
+      node => node.setTodo('NEXT')).then(
+        () => OrgApi.syncDb()).then(
+          () => expect(getFirstNode()).resolves.toHaveProperty('todo', 'NEXT')
+        )
+  })
 })

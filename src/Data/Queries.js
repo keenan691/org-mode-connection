@@ -1,14 +1,14 @@
-/** @flow */
-
-
 // * Imports
 
 import R from "ramda";
-import { exportNodeToOrgRepr } from '../OrgFormat/Export';
+
 import { parse } from '../OrgFormat/Parser';
-import FileAccess from '../Helpers/FileAccess';
+import { promisePipe } from '../Helpers/Functions';
 import Db from './Db/Db';
 import DbHelper  from './Db/DbHelper';
+import FileAccess from '../Helpers/FileAccess';
+import OrgNode from './Models/OrgNode';
+import exportNodeToOrgRepr from '../OrgFormat/Export';
 
 // * Init
 
@@ -19,12 +19,6 @@ const dbConn = DbHelper.getInstance();
 
 // ** Nodes
 
-// const getNodesFromDbAsArray = (file) => promisePipe(
-//   R.curryN(2, getNodes)('file.path = $0'),   // Must do this way cos file.nodes doasn't have all prototype functions - it's bug in realm?
-//   R.slice(0, Infinity))(file)                              // Convert from result to array
-
-const realmResultToArray = res => res.slice(0, Infinity);
-const getNodesFromDbAsArray = (file) => getNodes('file = $0', file).then(nodes => realmResultToArray(nodes))
 const generateNodeId = (node, file, position) => file.path + position; // TODO it's fake ethod
 
 export const prepareNodes = (parsedNodes, file) =>
@@ -58,8 +52,6 @@ export const addTimestamp = (node, type, timestampObj) => dbConn.then(realm => r
   // Create new timestamp if value is not set to null
   if (timestampObj && timestampObj.hasOwnProperty('date')) {
     node.timestamps.push(R.merge(timestampObj, { type }))}}));
-
-
 
 // * TODO [6/11] Node container
 // - [ ] add/delete
@@ -139,11 +131,9 @@ export const enhanceNode = realmNode => {
 // - [ ] getLocallyChangedNodes
 
 export const enhanceFile = (file) => {
-  file.getAddedNodes = () => file.nodes.filtered('isAdded = true')
-  file.getNodesAsArray = () => getNodesFromDbAsArray(file)
-  // file.sync = () => syncFile(file)
-  file.delete = () => deleteRealmObject(file)};
-
+  file.delete = () => deleteRealmObject(file)
+  return file
+};
 
 // * Queries
 // ** DONE [1/1] Add
@@ -186,7 +176,7 @@ const getObjects = (model, ...filterArgs) => dbConn.then(
     realm.objects(model));
 
 const getNodes = (...filter) => getObjects('OrgNode', ...filter)
-const getFiles = () => getObjects('OrgFile').then(res => {res.map(obj => {obj.new = 34; return obj});return res})
+const getFiles = () => getObjects('OrgFile');
 const getAgenda = (dateStart, dateEnd) => getObjects('OrgTimestamp', 'date >= $0 && date <= $1', dateStart, dateEnd)
 const getNodeById = getObjectByIdAndEnhance('OrgNode', enhanceNode)
 const getFileById = getObjectByIdAndEnhance('OrgFile', enhanceFile)

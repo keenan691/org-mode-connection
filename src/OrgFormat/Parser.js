@@ -23,7 +23,6 @@ export const parseNode = R.converge(
 
 const parseNodes = R.pipe(
   extractNodesFromLines,
-  R.map(parseNode)
-);
+  R.map(parseNode));
 
 export const parse = lines => parseNodes(lines);
