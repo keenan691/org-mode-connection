@@ -63,6 +63,6 @@
     "babel-runtime": "^6.26.0",
     "promisify-node": "^0.4.0",
     "ramda": "^0.25.0",
-    "realm": "2.1.1"
+    "realm": "^2.3.3"
   }
 }
