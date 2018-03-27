@@ -87,35 +87,48 @@ const markNodeAsChanged = (node) => {
   node.isChanged = true
   node.file.isChanged = true};
 
-const setNodeProperty = (node, name, value) => dbConn.then(realm => realm.write(() => {
-  markNodeAsChanged(node)
-  return node[name] = value}))
+const RealmOrgNodeGetters = function () {
+  const nodeProps = Object.getOwnPropertyNames(OrgNode.properties)
+  const timeStampProps = ['scheduled', 'deadline'];
+  const obj = {}
 
-export const enhanceNode = node => {
-  Object.defineProperties(node, {
-    scheduled: { get: () => getTimestamp(node, 'scheduled') },
-    deadline: { get: () => getTimestamp(node, 'deadline') }})
+  nodeProps.forEach(
+    prop => obj[prop] = {
+      get: function() {
+        return this._node[prop]}})
 
-  // Generic
-  node.delete = () => deleteRealmObject(node);
-  node.toOrgRepr = () => exportNodeToOrgRepr(node);
+  timeStampProps.forEach(
+    prop => obj[prop] = {
+      get: function() {
+        return getTimestamp(this._node, prop)}})
 
-  // Setters
-  node.setPriority = (val) => setNodeProperty(node, "priority", val);
-  node.setTodo = (val) => setNodeProperty(node, "todo", val)  // also add to todo states changes when is chaged to done. And vice versa when from done to todo
-  node.setTags = (val) => setNodeProperty(node, "tags", val)
+  return obj}();
 
-  // Timestamps
-  node.setDeadline = (timestampObj) => addTimestamp(node, 'deadline', timestampObj)
-  node.schedule = (timestampObj) => addTimestamp(node, 'scheduled', timestampObj)
+const OrgNodeMethods = Object.create(null);
+OrgNodeMethods.prototype = {
+  setNodeProperty  (name, value) {
+    return dbConn.then(realm => realm.write(() => {
+      markNodeAsChanged(this._node)
+      return this._node[name] = value}))},
 
-  // Tree
-  node.getDescendants = function (val) {} // nodes with same parent
+  delete (){ return deleteRealmObject(this._node)},
+  toOrgRepr () { return exportNodeToOrgRepr(node); },
+  schedule (timestampObj) { return addTimestamp(this._node, 'scheduled', timestampObj)},
+  setDeadline (timestampObj) { return addTimestamp(this._node, 'deadline', timestampObj)},
+  setTodo (val) { return this.setNodeProperty('todo', val)}};
 
-  // Clock
-  node.clockIn = function (val) {} // opens new time in node drawer
-  node.clockOut = function (val) {} // finishes clock
-  node.clockCancel = function (val) {} // cancels clock
+export const enhanceNode = realmNode => {
+  // let enhancedNode = {
+  //   get isChanged(){ return realmNode.isChanged },
+  //   get todo(){ return realmNode.todo },
+  //   set todo(val){ setNodeProperty(realmNode, 'todo', val) }
+  // }
+
+  let obj = Object.create(OrgNodeMethods.prototype, RealmOrgNodeGetters)
+  Object.assign(obj, { _node: realmNode })
+
+  return obj
+  // // Generic
 
   return node}
 
