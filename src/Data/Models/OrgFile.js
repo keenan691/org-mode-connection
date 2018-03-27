@@ -1,18 +1,4 @@
-/** @flow */
-
-// * OrgFile
-// ** imports
-
-import Realm from 'realm';
-
-// ** object
-
-class OrgFile extends Realm.Object {
-}
-
-// ** schema
-
-OrgFile.schema = {
+export default {
   name: 'OrgFile',
   primaryKey: 'path',
   properties: {
@@ -40,5 +26,3 @@ OrgFile.schema = {
 
   }
 };
-
-export default OrgFile.schema

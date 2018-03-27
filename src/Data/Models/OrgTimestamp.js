@@ -1,10 +1,4 @@
-/** @flow */
-
-import Realm from 'realm';
-
-class OrgTimestamp extends Realm.Object {}
-
-OrgTimestamp.schema = {
+export default  {
   name: 'OrgTimestamp',
   properties: {
     node: 'OrgNode',
@@ -16,5 +10,3 @@ OrgTimestamp.schema = {
     type: 'string' // active, inActive, scheduled, deadline
   }
 }
-
-export default OrgTimestamp.schema

@@ -1,20 +1,4 @@
-/** @flow */
-
-
-// * imports
-import Realm from 'realm';
-
-
-// * OrgNode
-// ** functions
-// ** object
-
-class OrgNode extends Realm.Object {
-
-}
-
-// ** schema
-OrgNode.schema = {
+export default  {
   name: 'OrgNode',
   primaryKey: 'id',
   properties: {
@@ -35,7 +19,6 @@ OrgNode.schema = {
     // Tree props
     parent: 'OrgNode?',
     children: { type: 'linkingObjects', objectType: 'OrgNode', property: 'parent'},
-
     //  Org data
     headline: 'string',
     content: 'string',
@@ -47,5 +30,3 @@ OrgNode.schema = {
     drawers: 'string?' // json string
   }
 }
-
-export default OrgNode.schema
