@@ -1,11 +1,14 @@
 // * Imports
 
 import R from "ramda";
+
 import { extractNodesFromLines } from '../OrgFormat/NodesExtractor';
 import { headlineT } from '../OrgFormat/Transformations';
-import { log } from '../Helpers/Debug';
+import { log, rlog } from '../Helpers/Debug';
 import { nullWhenEmpty, promisePipe } from '../Helpers/Functions';
 import FileAccess from '../Helpers/FileAccess';
+import Queries from './Queries';
+
 // import Queries from './Queries';
 
 // * Sync
@@ -82,13 +85,17 @@ export const getNewExternalMtime =
   file => FileAccess.stat(file.path).then(
     stat => stat.mtime > file.lastSync ? stat.mtime : false)
 
+const realmResultToArray = res => res.slice(0, Infinity);
+
+const getNodesFromDbAsArray = (file) => Queries.getNodes('file = $0', file).then(nodes => realmResultToArray(nodes))
+
 const getRawNodesFromFile = promisePipe(
   R.prop('path'),
   R.curry(FileAccess.read),
   extractNodesFromLines)
 
 const ExternalAndLocalChangesToOneList = promisePipe(
-  R.converge((...results) => Promise.all(results), [R.prop('getNodesAsArray'), getRawNodesFromFile]),
+  R.converge((...results) => Promise.all(results), [getNodesFromDbAsArray, getRawNodesFromFile]),
   R.unnest)
 
 const groupBySimilarity = R.pipe(
@@ -114,13 +121,15 @@ const prepareOutput = R.evolve({
 // *** Main
 
 export const getChanges = (file) => {
-  console.log('DUU')
-  console.log(file.new)
+
   const localChanges = nullWhenEmpty(getLocallyChangedNodes(file))
   const newExternalMtime = getNewExternalMtime(file);
   let externalChanges = new Promise(r => r(null));
 
-  if (!newExternalMtime && !localChanges) return null
+  console.log(newExternalMtime)
+
+  // FIXME external time jest promisem
+  // if (!newExternalMtime && !localChanges) return externalChanges
 
   if (newExternalMtime) externalChanges = promisePipe(
     ExternalAndLocalChangesToOneList,
@@ -147,10 +156,18 @@ const applyExternalChanges = () => 4
 
 // *** Main
 
-const sync = file => R.pipe(getChanges, R.unless(R.isNil, R.pipe(R.cond(
-  [[changes => changes.local && !changes.external, applyLocalChanges]
-   [changes => !changes.local && changes.external, applyExternalChanges]]))))(file)
+
+const sync = file => R.pipe(
+  getChanges,
+  rlog("sync = file :\n"),
+  // R.unless(R.isNil, R.pipe(R.cond(
+  //   [[changes => changes.local && !changes.external, applyLocalChanges]
+  //    [changes => !changes.local && changes.external, applyExternalChanges]]))))(file
+)
 
 // * Exports
 
-export default sync
+export default {
+  syncDb: () => promisePipe(Queries.getFiles, R.forEach(
+    file => R.pipe(enhanceFile, sync)(file)))(),
+}

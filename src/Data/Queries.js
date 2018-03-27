@@ -7,7 +7,6 @@ import R from "ramda";
 import { exportNodeToOrgRepr } from '../OrgFormat/Export';
 import { parse } from '../OrgFormat/Parser';
 import FileAccess from '../Helpers/FileAccess';
-// import { syncFile } from './Sync';
 import Db from './Db/Db';
 import DbHelper  from './Db/DbHelper';
 
