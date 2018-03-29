@@ -143,6 +143,11 @@ export const enhanceFile = (file) => {
 //   - [X] OrgNode
 //   - [X] OrgTimestamps
 
+const addNodes = (nodes, file) => dbConn.then(realm => realm.write(
+  () => prepareNodes(nodes, file).forEach(node => {
+    const orgNode = realm.create('OrgNode', node, true)})
+));
+
 const addFile = (filepath, type='agenda') => FileAccess.read(filepath).then(fileContent => {
   const nodes = parse(fileContent);
   dbConn.then(
@@ -181,16 +186,23 @@ const getAgenda = (dateStart, dateEnd) => getObjects('OrgTimestamp', 'date >= $0
 const getNodeById = getObjectByIdAndEnhance('OrgNode', enhanceNode)
 const getFileById = getObjectByIdAndEnhance('OrgFile', enhanceFile)
 const search = (term) => getObjects('OrgNode', 'headline CONTAINS[c] $0 || content CONTAINS[c] $0', term)
+const deleteNode = (node) => dbConn.then(realm => realm.write(
+  () => realm.delete(node)));
+const deleteNodes = (nodes) => dbConn.then(realm => realm.write(
+  () => nodes.forEach(node => realm.delete(node))));
 
 // * Export
 
 export default {
   clearDb: () => DbHelper.getInstance().then(realm => Db(realm).cleanUpDatabase()),
   addFile,
+  addNodes,
   getFiles,
   getNodes,
   getAgenda,
   getFileById,
   getNodeById,
   search,
+  deleteNode,
+  deleteNodes
 }
