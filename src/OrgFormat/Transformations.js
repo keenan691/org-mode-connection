@@ -53,7 +53,8 @@ const addSpaceAfter = (val) => val ? val + ' ' : '';
 export const headlineT = {
   tags: {
     toOrg(node) {
-      return addSpaceBefore(':'+node.tags.map(tag => tag.name).join(':')+':')},
+      return node.tags.length > 0 ?
+        addSpaceBefore(':'+Array.from(node.tags).map(tag => tag.name).join(':')+':') : ''},
     fromOrg(val) {
       return {
         tags: R.pipe(
@@ -68,7 +69,7 @@ export const headlineT = {
     fromOrg(val) {return {priority: val[2]}}},
 
   todo: {
-    toOrg(node) {return addSpaceBefore(node.todo)},
+    toOrg(node) {return addSpaceAfter(node.todo)},
     fromOrg(val) {return {todo: val.trim()}}},
 
   level: {
