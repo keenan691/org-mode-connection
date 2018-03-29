@@ -14,6 +14,7 @@ export default {
     // Sync props
     lastSync: 'date?',
     isChanged: { type: 'bool', default: false},
+    isConflicted: { type: 'bool', default: false},
 
     // Metadata props
     metadata: 'string?', // TODO json accessot
