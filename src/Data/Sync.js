@@ -6,6 +6,8 @@ import { extractNodesFromLines } from '../OrgFormat/NodesExtractor';
 import { headlineT } from '../OrgFormat/Transformations';
 import { log, rlog } from '../Helpers/Debug';
 import { nullWhenEmpty, promisePipe } from '../Helpers/Functions';
+import { parseNode } from '../OrgFormat/Parser';
+import Export from '../OrgFormat/Export';
 import FileAccess from '../Helpers/FileAccess';
 import Queries from './Queries';
 
@@ -106,8 +108,13 @@ const partitionEachGroupByIdPossesion = R.map(R.partition(
   node => node.id === undefined));
 
 const groupByChangedAndNotChanged = R.groupBy(
-  nodesGroup => nodesGroup.length === 2 && nodesGroup[0].length === nodesGroup[1].length
-    ? 'notChangedNodes' : 'addedOrDeletedNodes');
+  nodesGroup => {
+    if (nodesGroup.length === 2 && nodesGroup[0].length === nodesGroup[1].length) {
+      return 'notChangedNodes' }
+    else if (nodesGroup[1][0] == undefined) {
+      return 'addedNodes'
+    } else {
+      return 'deletedNodes'}});
 
 const getLocallyChangedNodes = file => file.nodes.filtered('isChanged = true')
 
@@ -116,58 +123,66 @@ const partitionToChangedGroupsAndRest = R.partition(
 
 const prepareOutput = R.evolve({
   notChangedNodes: R.map(R.apply(R.zip)),
-  addedOrDeletedNodes: R.flatten});
+  addedNodes: R.flatten,
+  deletedNodes: R.flatten});
 
 // *** Main
 
 export const getChanges = (file) => {
 
   const localChanges = nullWhenEmpty(getLocallyChangedNodes(file))
-  const newExternalMtime = getNewExternalMtime(file);
-  let externalChanges = new Promise(r => r(null));
+  let externalChanges = new Promise(r => r(null))
 
-  console.log(newExternalMtime)
+  return getNewExternalMtime(file).then(newExternalMtime => {
+    if (!newExternalMtime && !localChanges) return null
 
-  // FIXME external time jest promisem
-  // if (!newExternalMtime && !localChanges) return externalChanges
+    if (newExternalMtime) externalChanges = promisePipe(
+      ExternalAndLocalChangesToOneList,
+      groupBySimilarity,
+      partitionEachGroupByIdPossesion,
+      groupByChangedAndNotChanged,
+      prepareOutput)(file)
 
-  if (newExternalMtime) externalChanges = promisePipe(
-    ExternalAndLocalChangesToOneList,
-    groupBySimilarity,
-    partitionEachGroupByIdPossesion,
-    groupByChangedAndNotChanged,
-    prepareOutput)(file)
-
-  return externalChanges.then(externalChanges => ({
-    externalChanges,
-    localChanges,
-    file}))};
+    return externalChanges.then(externalChanges => ({
+      externalChanges,
+      localChanges,
+      file}))})};
 
 // ** Sync
 
 // *** Helpers
 
-const applyLocalChanges = R.converge(
-  (filePath, fileContent) => FileAccess.write(filePath, fileContent), [
-    R.path('file.path'),
-    R.pipe(R.path('file.nodes'), R.map(node => node.toOrgRepr()))]);
+const applyLocalChanges = (changes) => {
+  if (changes.localChanges) {
+    const newFileContent = Array.from(changes.file.nodes).map(n => Export(n)).join();
+    return FileAccess.write(changes.file.path, newFileContent).then(() => changes)}
+  return changes}
 
-const applyExternalChanges = () => 4
+const applyExternalChanges = changes => {
+  if (changes.externalChanges){
+    const externalChanges = changes.externalChanges;
+    const deleteNodes = Queries.deleteNodes(externalChanges.deletedNodes);
+    const addNodes = Queries.addNodes(externalChanges.addedNodes.map(n => parseNode(n)), changes.file)
+    return Promise.all([deleteNodes, addNodes]).then(() => changes)}}
+
+const clearChangedFlags = changes => {};
 
 // *** Main
 
-
-const sync = file => R.pipe(
+const syncFile = promisePipe(
   getChanges,
-  rlog("sync = file :\n"),
-  // R.unless(R.isNil, R.pipe(R.cond(
-  //   [[changes => changes.local && !changes.external, applyLocalChanges]
-  //    [changes => !changes.local && changes.external, applyExternalChanges]]))))(file
+  applyLocalChanges,
+  applyExternalChanges, // TODO add remote and local changes
+  clearChangedFlags // TODO generate report
 )
+
+const syncAllFiles = () => Queries.getFiles().then(files => {
+  const syncFilePromises = []
+  files.forEach(file => syncFilePromises.push(syncFile(file)))
+  return Promise.all(syncFilePromises)})
 
 // * Exports
 
 export default {
-  syncDb: () => promisePipe(Queries.getFiles, R.forEach(
-    file => R.pipe(enhanceFile, sync)(file)))(),
+  syncDb: () => syncAllFiles()
 }

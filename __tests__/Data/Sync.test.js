@@ -36,6 +36,11 @@ const MOCKED_FILES = {
 ** node4
 * node3 `,
 
+  externalChanges4: `
+* node2
+** node1
+** Added node`,
+
 };
 
 // * Functions
@@ -65,9 +70,16 @@ afterAll(() => {
 //       - [X] recognizing level change
 //       - [X] recognizing position change
 // - [ ] sync
+//   - [ ] empty
 //   - [ ] local
 //   - [ ] external
+//     - [ ] only reorganized
+//     - [ ] only added
+//     - [ ] only deleted
 //   - [ ] both
+//     - [ ] resolved
+//     - [ ] conflict
+//   - [ ] sync flags cleared after sync
 
 // ** Code
 
@@ -91,24 +103,26 @@ describe('getChanges external', () => {
   beforeEach(() => { return createAndAddFileToCleanDb('externalChanges1') })
 
   test('all nodes changed', () => {
-    expect.assertions(3)
+    expect.assertions(4)
     return writeToFile('externalChanges2').then(
       () => Queries.getFiles().then(
         (files) => getChanges(files[0]).then(
           changes => {
             expect(changes.localChanges).toBeNull()
             expect(changes.externalChanges.notChangedNodes).toBeUndefined()
-            expect(changes.externalChanges.addedOrDeletedNodes).toHaveLength(6)})))})
+            expect(changes.externalChanges.addedNodes).toHaveLength(2)
+            expect(changes.externalChanges.deletedNodes).toHaveLength(4)
+          })))})
 
-  // test('all nodes reorganized', () => {
-  //   expect.assertions(3)
-  //   return writeToFile('externalChanges3').then(
-  //     () => Queries.getFiles().then(
-  //       (files) => getChanges(files[0]).then(
-  //         changes => {
-  //           expect(changes.localChanges).toBeNull()
-  //           expect(changes.externalChanges.notChangedNodes).toHaveLength(4)
-  //           expect(changes.externalChanges.addedOrDeletedNodes).toBeUndefined()})))})
+  test('all nodes reorganized', () => {
+    expect.assertions(3)
+    return writeToFile('externalChanges3').then(
+      () => Queries.getFiles().then(
+        (files) => getChanges(files[0]).then(
+          changes => {
+            expect(changes.localChanges).toBeNull()
+            expect(changes.externalChanges.notChangedNodes).toHaveLength(4)
+            expect(changes.externalChanges.addedNodes).toBeUndefined()})))})
 
   test('returning external changes', () => {
     expect.assertions(1)
@@ -129,12 +143,22 @@ describe('getChanges external', () => {
 describe("sync", () => {
   expect.assertions(1)
   beforeEach(() => { return createAndAddFileToCleanDb('externalChanges1') })
+
   test('syncing local changes to file', () => {
     expect.assertions(1)
     return getFirstNode().then(
       node => node.setTodo('NEXT')).then(
         () => OrgApi.syncDb()).then(
-          () => expect(getFirstNode()).resolves.toHaveProperty('todo', 'NEXT')
-        )
+          () => expect(FileAccess.read('externalChanges1')).resolves.
+            toEqual(expect.arrayContaining(["* NEXT node1"])))})
+
+  test('syncing external changes to db', () => {
+    expect.assertions(1)
+    return writeToFile('externalChanges4').then(
+      () => OrgApi.syncDb().then(
+        () => OrgApi.getNodes().then(
+          nodes => {
+            expect(nodes).toHaveLength(3)
+          })))
   })
 })
