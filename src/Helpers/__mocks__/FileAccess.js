@@ -8,7 +8,7 @@ export default (function (){
     stat: { mtime: undefined }}
 
   return {
-    write (content) {
+    write (path, content) {
       return new Promise((resolve, reject) => {
         __mockFile.content = content
         __mockFile.stat.mtime = new Date()

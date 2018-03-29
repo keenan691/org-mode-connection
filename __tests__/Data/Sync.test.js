@@ -40,10 +40,10 @@ const MOCKED_FILES = {
 
 // * Functions
 
-const writeToFile = (name) => FileAccess.write(MOCKED_FILES[name]);
+const writeToFile = (name) => FileAccess.write(name, MOCKED_FILES[name]);
 const getFirstNode = () => Queries.getFiles().then(files => Queries.getNodeById(files[0].nodes[0].id));
 const createAndAddFileToCleanDb = (name) => Queries.clearDb().then(
-  () => FileAccess.write(MOCKED_FILES[name]).then(
+  () => FileAccess.write(name, MOCKED_FILES[name]).then(
     () => Queries.addFile(name)))
 
 // * Tests lifecycle functions

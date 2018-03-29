@@ -17,7 +17,7 @@ afterAll(() => {
 
 
 beforeAll(() => {
-  FileAccess.write(getOrgFileContent('full.org').join('\n')).then(() => Queries.addFile('fixtures/full.org'))
+  FileAccess.write('file',getOrgFileContent('full.org').join('\n')).then(() => Queries.addFile('fixtures/full.org'))
 })
 
 describe("Queries", () => {
