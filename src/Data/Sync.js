@@ -13,7 +13,7 @@ import Queries from './Queries';
 
 // import Queries from './Queries';
 
-// * Sync
+// * Plan
 
 // ** How we know that changes occured?
 
@@ -28,7 +28,8 @@ import Queries from './Queries';
 // *** No changes
 // pass
 
-// *** TODO [3/4] Only local changes occured
+// *** DONE [4/4] Only local changes occured
+// CLOSED: [2018-03-29 czw 12:25]
 // 1. [X] Get all file db nodes
 // 2. [X] Divide original file using nodes line ranges eg.
 //    [begginning, node1, text, node2, end]
@@ -36,52 +37,44 @@ import Queries from './Queries';
 // 3. [X] map nodes to org repr
 //    1. [X] if node is changed or added coumpute its org repr
 //    2. [X] if node is not changed get org repr from file using old position
-// 4. [ ] overwrite file
+// 4. [X] overwrite file
 
-// *** TODO [0/6] Only external changes occured
-// *Directions* :
-// - [ ] when it's possible keep ids.
-// - [ ] crc is computed ignoring position
-// - [ ] id is made from concated crc, indent and position
-// - [ ] thing more abouth cases of headlines with same crc but different positions. No matter with one is whith becouse it have the same identity. One important thing is to always taka first when processing to, due to not forget about other. *Do tests for this case*
+// *** TODO [5/6] Only external changes occured
+// - [X] when it's possible keep ids.
 
-// *Process* :
-// 1. [ ] Phase one - exclude not changed
-//    - Extract external nodes with position and compute theirs crc's
-//    - Get local nodes
-//    - Exclude from both groups nodes with same crcc and update theirs positions and indent if needed
+// - [X] Phase one - exclude nodes with changed position
+//   - Get local nodes
+//   - Exclude from both groups nodes with same headline and content and update theirs positions and indent if needed
 
-// 2. [ ] Phase two - try to recognize common changes to avoid loss of id
-//    - parse rest of nodes
-//    - exclude group with new headlines - if there is new headline it means that this node is new
-//    - pair nodes with same headlines and seek for common changes
-//      - todo state has changed (content will be changed also becouse of todo state history - do something with this: either parse state changes as metadata or remove them before compare) and content can changed rest is the same
-//      - only tags has changed
-//      - only scheduled or deadline has changed
-//      - only priority has changed
-//      - only drawers has changed
-//    - update those nodes
-//    - delete rest of nodes from db
-//    - add remaining nodes from file as new
+// - [X] Phase two - try to recognize common changes to avoid loss of id
+// - [ ] Phase three -  recognize common changes of properties to avoid id loss
+//   - parse rest of nodes
+//   - exclude group with new headlines - if there is new headline it means that this node is new
+//   - pair nodes with same headlines and seek for common changes
+//     - todo state has changed (content will be changed also becouse of todo state history - do something with this: either parse state changes as metadata or remove them before compare) and content can changed rest is the same
+//     - only tags has changed
+//     - only scheduled or deadline has changed
+//     - only priority has changed
+//     - only drawers has changed
+//   - update those nodes
+// - [X] delete rest of nodes from db
+// - [X] add remaining nodes from file as new
 
 // *** TODO [1/3] Both local and external changes occured
 // Try to merge.
 
-// 1. [X] Do the same like in external changes point.
+// 1. [X] Process external changes.
 // 2. [ ] If changed nodes is not deleted then update it like in local changes point.
 // 3. [ ] If it's not possible return error message with this node id headline and position and mark this file as conflicted.
 
-// Conflited file will not be synced util conflict is resolved. Future possible action will be:
+// Conflited file will not be synced util conflict is resolved. Future possible actions will be:
 //    - delete those nodes and sync file
 //    - force version from db
 //    - merge nodes to manual resolve with tag resolve
 
-
 // * Code
 
 // ** Propagate changes
-
-// *** Helpers
 
 export const getNewExternalMtime =
   file => FileAccess.stat(file.path).then(
@@ -89,7 +82,8 @@ export const getNewExternalMtime =
 
 const realmResultToArray = res => res.slice(0, Infinity);
 
-const getNodesFromDbAsArray = (file) => Queries.getNodes('file = $0', file).then(nodes => realmResultToArray(nodes))
+const getNodesFromDbAsArray = file => Queries.getNodes('file = $0', file).then(
+  nodes => realmResultToArray(nodes))
 
 const getRawNodesFromFile = promisePipe(
   R.prop('path'),
@@ -122,14 +116,11 @@ const partitionToChangedGroupsAndRest = R.partition(
   group => group.length === 2 && group[0].length === group[1].length)
 
 const prepareOutput = R.evolve({
-  notChangedNodes: R.map(R.apply(R.zip)),
+  notChangedNodes: R.map(R.pipe(R.apply(R.zip), R.map(group => [group[1], group[0]]), R.unnest)),
   addedNodes: R.flatten,
   deletedNodes: R.flatten});
 
-// *** Main
-
 export const getChanges = (file) => {
-
   const localChanges = nullWhenEmpty(getLocallyChangedNodes(file))
   let externalChanges = new Promise(r => r(null))
 
@@ -148,41 +139,62 @@ export const getChanges = (file) => {
       localChanges,
       file}))})};
 
-// ** Sync
+// ** Apply changes
 
-// *** Helpers
-
-const applyLocalChanges = (changes) => {
-  if (changes.localChanges) {
-    const newFileContent = Array.from(changes.file.nodes).map(n => Export(n)).join();
-    return FileAccess.write(changes.file.path, newFileContent).then(() => changes)}
-  return changes}
+const applyLocalChanges = changes => {
+  const newFileContent = Array.from(changes.file.nodes).map(n => Export(n)).join();
+  return FileAccess.write(changes.file.path, newFileContent).then(() => ({ status: 'success' }))}
 
 const applyExternalChanges = changes => {
-  if (changes.externalChanges){
-    const externalChanges = changes.externalChanges;
-    const deleteNodes = Queries.deleteNodes(externalChanges.deletedNodes);
-    const addNodes = Queries.addNodes(externalChanges.addedNodes.map(n => parseNode(n)), changes.file)
-    return Promise.all([deleteNodes, addNodes]).then(() => changes)}}
+  const externalChanges = changes.externalChanges;
+  const nodesToAdd = externalChanges.addedNodes.map(n => parseNode(n));
+  const deleteNodes = Queries.deleteNodes(externalChanges.deletedNodes);
+  const addNodes = Queries.addNodes(nodesToAdd, changes.file)
+  const updateNodes = Queries.updateNodes(externalChanges.notChangedNodes, { isChanged: false })
+  return Promise.all([deleteNodes, addNodes, updateNodes]).then(() => ({ status: 'success' }))}
 
-const clearChangedFlags = changes => {};
+const mergeChanges = changes => {
+  // At the moment only notify aboout conflict
+  // In future we can try to resolve it
+  return new Promise(r => r({ status: 'conflict' }))};
 
-// *** Main
+// ** Sync
 
-const syncFile = promisePipe(
-  getChanges,
-  applyLocalChanges,
-  applyExternalChanges, // TODO add remote and local changes
-  clearChangedFlags // TODO generate report
-)
+const noChangesP = changes => changes === null
+const onlyLocalChangesP = changes => changes.localChanges && !changes.externalChanges;
+const onlyExternalChangesP = changes => !changes.localChanges && changes.externalChanges;
+const bothExternalAndLocalChangesP = changes => changes.localChanges && changes.externalChanges;
 
-const syncAllFiles = () => Queries.getFiles().then(files => {
-  const syncFilePromises = []
-  files.forEach(file => syncFilePromises.push(syncFile(file)))
-  return Promise.all(syncFilePromises)})
+const generateReportAndUpdateFileStatus = changes => syncResult => syncResult.then(
+  result => {
+    if (result) {
+      if (result.status === 'success') Queries.flagFileAsSynced(changes.file)
+
+      const changesSummary = {
+        file: R.prop('path'),
+        localChanges: R.unless(R.isNil, R.length),
+        externalChanges: R.unless(R.isNil, R.pipe(R.evolve({
+          addedNodes: R.length,
+          deletedNodes: R.length,
+          notChangedNodes: R.length})))};
+
+      return Object.assign(result, R.evolve(changesSummary, changes))}
+
+    return new Promise(r => r(null))});
+
+const syncFile = file => getChanges(file).then(changes => R.pipe(
+  R.cond([
+    [noChangesP, () => new Promise(r => r(null))],
+    [onlyLocalChangesP, applyLocalChanges],
+    [onlyExternalChangesP, applyExternalChanges],
+    [bothExternalAndLocalChangesP, mergeChanges]]),
+  generateReportAndUpdateFileStatus(changes),
+)(changes))
+
+const syncAllFiles = () => Queries.getFiles().then(
+  files => Promise.all(files.map(file => syncFile(file)))).then(res => res.filter(i => i !== null))
 
 // * Exports
 
 export default {
-  syncDb: () => syncAllFiles()
-}
+  syncDb: () => syncAllFiles()}
