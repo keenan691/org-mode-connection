@@ -19,7 +19,7 @@ const dbConn = DbHelper.getInstance();
 
 // ** Nodes
 
-const generateNodeId = (node, file, position) => file.path + position; // TODO it's fake ethod
+const generateNodeId = (node, file, position) => file.path + position; // TODO it's fake ethod. Id have to be realy uniqu. And cant depend on position, becouse position can change
 
 export const prepareNodes = (parsedNodes, file) =>
   parsedNodes.map((node) => R.merge(node, {
@@ -53,10 +53,10 @@ export const addTimestamp = (node, type, timestampObj) => dbConn.then(realm => r
   if (timestampObj && timestampObj.hasOwnProperty('date')) {
     node.timestamps.push(R.merge(timestampObj, { type }))}}));
 
-// * TODO [6/11] Node container
-// - [ ] add/delete
-//   - [ ] deleteNode
-//   - [ ] addNode - update position of every nodes after one and save old position for sycnc purposes
+// * TODO [6/10] Node container
+// - [-] add/delete
+//   - [ ] deleteNode - only if has no children
+//   - [ ] addNode subnodes - update position of every nodes after one and save old position for sycnc purposes
 // - [X] schedule
 // - [X] deadline
 // - [X] isChanged
@@ -124,24 +124,20 @@ export const enhanceNode = realmNode => {
   return node}
 
 // * TODO [1/4] File container
-// - [ ] delete file - metoda znajduje się w node kontenerze
-// - [X] sync file
-// - [ ] find headline / path of headlines or create
-// - [ ] addNode
-// - [ ] getLocallyChangedNodes
-
 export const enhanceFile = (file) => {
   file.delete = () => deleteRealmObject(file)
   return file
 };
 
 // * Queries
-// ** DONE [1/1] Add
+// ** DONE [1/3] Add
 // CLOSED: [2018-03-12 pon 23:57]
 // - [X] addFile
 //   - [X] OrgFile
 //   - [X] OrgNode
 //   - [X] OrgTimestamps
+// - [ ] addNode as child to file/other node and update positions of rest of nodes
+// - [ ] addNodes without updating positions
 
 const addNodes = (nodes, file) => dbConn.then(realm => realm.write(
   () => prepareNodes(nodes, file).forEach(node => {
@@ -186,15 +182,34 @@ const getAgenda = (dateStart, dateEnd) => getObjects('OrgTimestamp', 'date >= $0
 const getNodeById = getObjectByIdAndEnhance('OrgNode', enhanceNode)
 const getFileById = getObjectByIdAndEnhance('OrgFile', enhanceFile)
 const search = (term) => getObjects('OrgNode', 'headline CONTAINS[c] $0 || content CONTAINS[c] $0', term)
+
+// ** TODO [2/3] Delete
+// - [X] deleteNodes
+// - [X] deleteNode
+// - [ ] deleteFile
+
 const deleteNode = (node) => dbConn.then(realm => realm.write(
   () => realm.delete(node)));
 const deleteNodes = (nodes) => dbConn.then(realm => realm.write(
   () => nodes.forEach(node => realm.delete(node))));
 
+// ** TODO [1/1] Update
+// - [X] updateNodes
+
+
+const flagFileAsSynced = (file) => dbConn.then(realm => realm.write(
+  () => Object.assign(file, { isChanged: false, isConflicted: false })));
+
+const updateNodes = (listOfNodesAndChanges, setForAll) => dbConn.then(realm => realm.write(
+  () => listOfNodesAndChanges.forEach(group => {
+    let [realmNode, toUpdate] = group
+    if (setForAll) Object.assign(toUpdate, setForAll)
+    Object.assign(realmNode, toUpdate)})))
+
 // * Export
 
 export default {
-  clearDb: () => DbHelper.getInstance().then(realm => Db(realm).cleanUpDatabase()),
+  clearDb: () => dbConn.then(realm => Db(realm).cleanUpDatabase()),
   addFile,
   addNodes,
   getFiles,
@@ -204,5 +219,7 @@ export default {
   getNodeById,
   search,
   deleteNode,
-  deleteNodes
+  deleteNodes,
+  updateNodes,
+  flagFileAsSynced
 }
