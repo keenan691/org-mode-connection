@@ -9,7 +9,7 @@ import { selfChangingRegexMatch } from '../../Helpers/Functions';
 
 const isOdd = R.pipe(R.length, R.modulo(R.__, 2))
 const dropRetardedDrawersAndGroupByTwo = R.pipe(
-  // R.when(isOdd, R.dropLast(1)),
+  R.when(isOdd, R.dropLast(1)),
   R.splitEvery(2))
 
 const linesRangeParser = (regex, transform, wrapIn=null) => {
@@ -21,14 +21,13 @@ const linesRangeParser = (regex, transform, wrapIn=null) => {
     let drawers = []
     let nrOfAlreadySlicedLines = 0
     R.forEach((parsed) => {
-      console.log(parsed)
       const lineStart = parsed[0].lineNr - nrOfAlreadySlicedLines
-      const lineEnd = parsed[1].lineNr - nrOfAlreadySlicedLines +1
+      const lineEnd = parsed[1].lineNr - nrOfAlreadySlicedLines + 1
       nrOfAlreadySlicedLines += lineEnd - lineStart
 
       const objName = parsed[0].parsedObj
       const drawerContent = inputLines.splice(lineStart, lineEnd - lineStart)
-      drawers.push({ [objName]: drawerContent.slice(1,-1) })
+      drawers.push({ [objName]: drawerContent.slice(1, -1) })
 
     } , dropRetardedDrawersAndGroupByTwo(parserOutput))
 
