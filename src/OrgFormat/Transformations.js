@@ -19,7 +19,7 @@ const timePointer = (type, useWarningPeriod=false) => ({
       month -= 1;
       dateArgs = [year, month, day].map(x => parseInt(x))
       datetimeArgs.push(...dateArgs)
-      if (!dateIsCorrect(...dateArgs)) {return []}}
+      if (!dateIsCorrect(...dateArgs)) {console.log('not cal', dateArgs); return []}}
 
     // Time check
     if (time) {
