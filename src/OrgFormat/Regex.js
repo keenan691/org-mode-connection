@@ -9,6 +9,7 @@ const datetimeR = /(\d+)\-(\d+)\-(\d+)\s+.{3}\s*(\d{2}:\d{2})?(-\d{2}:\d{2})?/;
 const repeaterR = /\s*([\+\.]+\d+[ywmdh])?/;
 const warningPeriodR = /\s*(-\d+[ywmdh])?/;
 const activeTimestamp = mr(/\</, datetimeR, repeaterR, /\>/);
+const activeTimestampWithWarningPeriod = mr(/\</, datetimeR, repeaterR, warningPeriodR, /\>/);
 const inactiveTimestamp = mr(/\[/, datetimeR, /\]/);
 
 export const headlineR = {
@@ -19,11 +20,11 @@ export const headlineR = {
 };
 
 export const nodeMetadataR = {
-  scheduled: mr(/^\s*SCHEDULED:\s*</, datetimeR, repeaterR, warningPeriodR),
+  scheduled: mr(/\s*SCHEDULED:\s*/, activeTimestampWithWarningPeriod),
+  deadline: mr(/\s*DEADLINE:\s*/, activeTimestampWithWarningPeriod),
+  closed: mr(/\s*CLOSED:\s*/, inactiveTimestamp),
   activeTimestampRange: mrg(activeTimestamp, /\-{2}/, activeTimestamp),
-  deadline: mr(/^\s*DEADLINE:\s*</, datetimeR, repeaterR, warningPeriodR),
   inactiveTimestamp: inactiveTimestamp,
-  closed: mr(/^\s*CLOSED:\s*\[/, datetimeR),
   activeTimestamp: mrg(/(?:^|[^-])/, activeTimestamp, /(?!--)/),
   drawer: [/^\s*:([a-zA-Z_0-9]+):\s*$/, /\s*:END:/] // if form [start, end]
 };

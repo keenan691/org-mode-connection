@@ -31,7 +31,6 @@ const linesRangeParser = (regex, transform, wrapIn=null) => {
 
     } , dropRetardedDrawersAndGroupByTwo(parserOutput))
 
-    console.log(drawers)
     if (drawers.length > 0) inputObjects.push({ drawers })
 
     return [inputObjects, inputLines]}

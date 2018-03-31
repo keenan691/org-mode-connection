@@ -12,13 +12,13 @@ describe("scheduled and deadline metadata parses", () => {
     expect(nodeMetadataParser(["SCHEDULED: <2018-02-22 czw>"]))
       .toEqual([[{timestamps: [{
         type: "scheduled",
-        date: new Date(2018, 1, 22)}]}], []])});
+        date: new Date(2018, 1, 22)}]}], [""]])});
 
   it("deadline parses", () => {
     expect(nodeMetadataParser(["DEADLINE: <2018-02-22 czw>"]))
       .toEqual([[{timestamps: [{
         type: "deadline",
-        date: new Date(2018, 1, 22)}]}], []])})});
+        date: new Date(2018, 1, 22)}]}], [""]])})});
 
 describe("scheduled metadata with repeater", () => {
   it("with hourly repeater parses", () => {
@@ -27,7 +27,7 @@ describe("scheduled metadata with repeater", () => {
       .toEqual([[{timestamps: [{
         type: "scheduled",
         date: new Date(2018, 1, 22),
-        repeater: "+4h"}]}], []])});
+        repeater: "+4h"}]}], [""]])});
 
   it("with daily repeater parses", () => {
     expect(
@@ -35,7 +35,7 @@ describe("scheduled metadata with repeater", () => {
       .toEqual([[{timestamps: [{
         type: "scheduled",
         date: new Date(2018, 1, 22),
-        repeater: "+4d"}]}], []])});
+        repeater: "+4d"}]}], [""]])});
 
   it("with weekly repeater parses", () => {
     expect(
@@ -43,7 +43,7 @@ describe("scheduled metadata with repeater", () => {
       .toEqual([[{timestamps: [{
         type: "scheduled",
         date: new Date(2018, 1, 22),
-        repeater: "+4w"}]}], []])});
+        repeater: "+4w"}]}], [""]])});
 
   it("with monthly repeater parses", () => {
     expect(
@@ -51,7 +51,7 @@ describe("scheduled metadata with repeater", () => {
       .toEqual([[{timestamps: [{
         type: "scheduled",
         date: new Date(2018, 1, 22),
-        repeater: "+4m"}]}], []])});
+        repeater: "+4m"}]}], [""]])});
 
   it("with yearly repeater parses", () => {
     expect(
@@ -59,7 +59,7 @@ describe("scheduled metadata with repeater", () => {
       .toEqual([[{timestamps: [{
         type: "scheduled",
         date: new Date(2018, 1, 22),
-        repeater: "+4y"}]}], []])});
+        repeater: "+4y"}]}], [""]])});
 
   it("with shifting ++ repeater parses", () => {
     expect(
@@ -67,7 +67,7 @@ describe("scheduled metadata with repeater", () => {
       .toEqual([[{timestamps: [{
         type: "scheduled",
         date: new Date(2018, 1, 22),
-        repeater: "++4y"}]}], []])});
+        repeater: "++4y"}]}], [""]])});
 
   it("with shifting .+ repeater parses", () => {
     expect(
@@ -75,8 +75,7 @@ describe("scheduled metadata with repeater", () => {
       .toEqual([[{timestamps: [{
         type: "scheduled",
         date: new Date(2018, 1, 22),
-        repeater: ".+4y"}]}], []])})});
-
+        repeater: ".+4y"}]}], [""]])})});
 
 describe("scheduled metadata with warning period parses", () => {
   it("with hourly warning period parses", () => {
@@ -84,21 +83,21 @@ describe("scheduled metadata with warning period parses", () => {
       nodeMetadataParser(["SCHEDULED: <2018-02-22 czw -3h>"]))
       .toEqual([[{timestamps: [{
         type: "scheduled",
-        date: new Date(2018, 1, 22),}]}], []])});
+        date: new Date(2018, 1, 22),}]}], [""]])});
 
   it("with daily warning period parses", () => {
     expect(
       nodeMetadataParser(["SCHEDULED: <2018-02-22 czw -3d>"]))
       .toEqual([[{timestamps: [{
         type: "scheduled",
-        date: new Date(2018, 1, 22),}]}], []])});
+        date: new Date(2018, 1, 22),}]}], [""]])});
 
   it("with monthly warning period parses", () => {
     expect(
       nodeMetadataParser(["SCHEDULED: <2018-02-22 czw -3m>"]))
       .toEqual([[{timestamps: [{
         type: "scheduled",
-        date: new Date(2018, 1, 22),}]}], []])})});
+        date: new Date(2018, 1, 22),}]}], [""]])})});
 
 describe("scheduled metadata with repeater and warning period parses", () => {
   it("with hourly warning period parses", () => {
@@ -107,7 +106,7 @@ describe("scheduled metadata with repeater and warning period parses", () => {
       .toEqual([[{timestamps: [{
         type: "scheduled",
         date: new Date(2018, 1, 22),
-        repeater: "+4d",}]}], []])})});
+        repeater: "+4d",}]}], [""]])})});
 
 describe("deadline with repeater and warning period parses", () => {
   it("deadline parses", () => {
@@ -117,7 +116,7 @@ describe("deadline with repeater and warning period parses", () => {
         type: "deadline",
         date: new Date(2018, 1, 22),
         repeater: "+3d",
-        warningPeriod: "-1d"}]}], []])})});
+        warningPeriod: "-1d"}]}], [""]])})});
 
 describe("must not parse", () => {
   it("wrong date", () => {
@@ -128,24 +127,20 @@ describe("must not parse", () => {
   it("wrong repeater", () => {
     expect(
       nodeMetadataParser(["DEADLINE: <2018-02-17 czw +3j -1d>"]))
-      .toEqual([[{timestamps: [{
-        type: "deadline",
-        date: new Date(2018, 1, 17)}]}], []])});
+      .toEqual([[], ["DEADLINE: <2018-02-17 czw +3j -1d>"]])});
 
   it("wrong warning period", () => {
     expect(
       nodeMetadataParser(["DEADLINE: <2018-02-17 czw> +3d -1j"]))
       .not.toEqual([[{timestamps: [{
-        warningPeriod: expect.anything()}]}], []])});
+        warningPeriod: expect.anything()}]}], [""]])});
 
   it("switched repeater with warning period", () => {
     // TODO Check if this works in org mode, parsers parses it as warning perion even when they are switchedw
     // Maybe in org mode order isn't important
     expect(
       nodeMetadataParser(["SCHEDULED: <2018-02-17 czw -3d +2d>"]))
-      .toEqual([[{timestamps: [{
-        type: "scheduled",
-        date: new Date(2018, 1, 17)}]}], []])})});
+      .toEqual([[], ["SCHEDULED: <2018-02-17 czw -3d +2d>"]])})});
 
 describe("Drawers", () => {
   it("Drawer is parsed", () => {
@@ -157,8 +152,7 @@ describe("Drawers", () => {
       .toEqual([[{
         drawers: [{
           LOGBOOK: [
-            'CLOCK: [2017-11-07 wto 20:45]--[2017-11-07 wto 21:14] =>  0:29']}]}],
-                []])});})
+            'CLOCK: [2017-11-07 wto 20:45]--[2017-11-07 wto 21:14] =>  0:29']}]}], []])});})
 
 test("Closed date is closed", () => {
   expect(
@@ -166,7 +160,7 @@ test("Closed date is closed", () => {
     .toEqual([[{timestamps: [{
       type: "closed",
       date: new Date(2018, 1, 2, 21, 16)}]}],
-              []])});
+              [""]])});
 
 describe("Timestaps parses", () => {
 

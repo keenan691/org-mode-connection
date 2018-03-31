@@ -4,7 +4,6 @@ import R from "ramda";
 
 import { ireduce } from '../../Helpers/Functions';
 
-
 export const getParsedFromInput = R.head
 export const getLinesFromInput = R.last
 

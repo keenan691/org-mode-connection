@@ -3,22 +3,24 @@
 import R from "ramda";
 
 import { hungryLineParser } from '../GenericParsers/HungryLineParser';
+import { lazyInLineParser } from '../GenericParsers/LazyInLineParser';
 import { lazyLineParser } from '../GenericParsers/LazyLineParser';
 import { linesRangeParser } from '../GenericParsers/LinesRangeParser';
 import { nodeMetadataR } from '../Regex';
 import { nodeMetadataT } from '../Transformations';
+import { rlog } from '../../Helpers/Debug';
 
 const drawersParser = linesRangeParser(nodeMetadataR.drawer, nodeMetadataT.drawer.fromOrg);
 
-const closedDateParser = lazyLineParser(nodeMetadataR.closed,
-                                        nodeMetadataT.closed.fromOrg,
-                                        "timestamps")
-const scheduledParser = lazyLineParser(nodeMetadataR.scheduled,
-                                       nodeMetadataT.scheduled.fromOrg,
-                                       "timestamps");
-const deadlineParser = lazyLineParser(nodeMetadataR.deadline,
-                                      nodeMetadataT.deadline.fromOrg,
-                                      "timestamps");
+const closedDateParser = lazyInLineParser(nodeMetadataR.closed,
+                                          nodeMetadataT.closed.fromOrg,
+                                          "timestamps")
+const scheduledParser = lazyInLineParser(nodeMetadataR.scheduled,
+                                         nodeMetadataT.scheduled.fromOrg,
+                                         "timestamps");
+const deadlineParser = lazyInLineParser(nodeMetadataR.deadline,
+                                        nodeMetadataT.deadline.fromOrg,
+                                        "timestamps");
 
 const activeTimestampParser = hungryLineParser(
   nodeMetadataR.activeTimestamp,
@@ -30,14 +32,18 @@ const activeTimestampRangeParser = hungryLineParser(
   nodeMetadataT.activeTimestampRange.fromOrg,
   "timestamps");
 
-
 export const nodeMetadataParser = (lines) => {
   const innerRepr = [[], lines];
   return R.pipe(
-    drawersParser,
     scheduledParser,
     deadlineParser,
     closedDateParser,
+    drawersParser,
     activeTimestampRangeParser,
     activeTimestampParser,
+    rlog('to merge'),
+    // TODO odpowiednio zmergować te objekty bo się nadpisują
+    // TODO coś przy tworzeniu timestamów nie wychodzi i agendy się wypieprzają
+    R.over(R.lensIndex(0),R.reduce(R.mergeDeepWith(R.concat), [])),
+    rlog('after merge'),
   )(innerRepr)};
