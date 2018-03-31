@@ -27,7 +27,11 @@
                    (setq helm-projectnav-test-suffix ".test.js")
                    (setq helm-projectnav-components-dirs
                          '(
-                           ("helpers" "src/Helpers" ("index.js" ".story.js" "Styles" ".md") ".js")))
+                           ("helpers" "src/Helpers" ("index.js" ".story.js" "Styles" ".md") ".js")
+                           ("org" "src/OrgFormat" ("index.js" ".story.js" "Styles" ".md") ".js")
+                           ("atomic parsers" "src/OrgFormat/AtomicParsers" ("index.js" ".story.js" "Styles" ".md") ".js")
+                           ("generic parsers" "src/OrgFormat/GenericParsers" ("index.js" ".story.js" "Styles" ".md") ".js")
+                           ))
 
                    (setenv "NODE_PATH"
                            (concat (projectile-project-root) "node_modules" ":"
