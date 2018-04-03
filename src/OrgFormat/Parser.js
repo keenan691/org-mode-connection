@@ -11,14 +11,14 @@ import { rlog } from '../Helpers/Debug';
 
 // * TODO extract file content and metadata
 // * parse nodes
-
+const deepMerge = R.reduce(R.mergeDeepWith(R.concat), [])
 const useRestAsContentAndRemoveInput = (input) => R.append(
   { content: input[1].join('\n') }, input[0]);
 
 export const parseNode = R.converge(
   (...args) => R.mergeAll(args), [
     R.pipe(R.prop("rawHeadline"), parseHeadline),
-    R.pipe(R.prop("rawContent"), R.split('\n'),nodeMetadataParser, useRestAsContentAndRemoveInput, R.mergeAll),
+    R.pipe(R.prop("rawContent"), R.split('\n'),nodeMetadataParser, useRestAsContentAndRemoveInput, deepMerge),
     R.pick(["range", "rawHeadline", "rawContent", "level", "position", "originalPosition"])])
 
 const parseNodes = R.pipe(
