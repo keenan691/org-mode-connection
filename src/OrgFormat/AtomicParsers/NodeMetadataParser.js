@@ -41,9 +41,6 @@ export const nodeMetadataParser = (lines) => {
     drawersParser,
     activeTimestampRangeParser,
     activeTimestampParser,
-    rlog('to merge'),
     // TODO odpowiednio zmergować te objekty bo się nadpisują
     // TODO coś przy tworzeniu timestamów nie wychodzi i agendy się wypieprzają
-    R.over(R.lensIndex(0),R.reduce(R.mergeDeepWith(R.concat), [])),
-    rlog('after merge'),
   )(innerRepr)};

@@ -170,7 +170,7 @@ const generateReportAndUpdateFileStatus = changes => syncResult => syncResult.th
     if (result) {
       if (result.status === 'success') Queries.flagFileAsSynced(changes.file)
 
-      const changesSummary = {
+      const changesToSummary = {
         file: R.prop('path'),
         localChanges: R.unless(R.isNil, R.length),
         externalChanges: R.unless(R.isNil, R.pipe(R.evolve({
@@ -178,7 +178,7 @@ const generateReportAndUpdateFileStatus = changes => syncResult => syncResult.th
           deletedNodes: R.length,
           notChangedNodes: R.length})))};
 
-      return Object.assign(result, R.evolve(changesSummary, changes))}
+      return Object.assign(result, R.evolve(changesToSummary, changes))}
 
     return new Promise(r => r(null))});
 

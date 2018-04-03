@@ -153,12 +153,13 @@ const addFile = (filepath, type='agenda') => FileAccess.read(filepath).then(file
       const orgFile = realm.create('OrgFile', {
         path: filepath,
         lastSync: new Date(),
-        type
-      })
+        type})
 
       // Creating node objects
       prepareNodes(nodes, orgFile).forEach(node => {
-        const orgNode = realm.create('OrgNode', node, true)})}))})
+        const orgNode = realm.create('OrgNode', node, true)
+
+      })}))})
 
 // ** DONE [6/6] Retrive
 // CLOSED: [2018-03-12 pon 19:16]

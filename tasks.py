@@ -14,7 +14,7 @@ TEST_REGEX = "simple parse"
 
 @task
 def t(ctx):
-    system(f'./node_modules/.bin/jest --bail --watch --notify')
+    system(f'./node_modules/.bin/jest -b --watch --notify')
 
 
 @task
@@ -31,6 +31,7 @@ def fast_command_1(ctx):
 @task
 def fast_command_2(ctx):
     ui.send_message_to_user('project fast command #2')
+
 
 @task
 def reset_db(ctx):
