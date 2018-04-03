@@ -2,17 +2,15 @@
 
 import R from "ramda";
 
-import { createNewNode } from '../../src/OrgFormat/Export';
-import { parse } from '../../src/OrgFormat/Parser';
+import {
+  createNewNode,
+  recreateOriginalNode,
+} from '../../src/OrgFormat/Export';
 import { getOrgFileContent } from "../../src/Helpers/Fixtures";
-
-test("createNewNode", () => {
-  const rawNode = ["* This is headline :tag1:tag2:",
-                   "content"];
-  expect(createNewNode(parse(rawNode)[0])).toEqual(rawNode.join('\n'));});
-
+import { parse } from '../../src/OrgFormat/Parser';
 
 test.only("full parse-export test", () => {
-  const parsedNodes = parse(getOrgFileContent("parse-export-test.org"))
-  console.log(parsedNodes)
-})
+  const originalContent = getOrgFileContent("parse-export-test.org");
+  const parsedNodes = parse(originalContent)
+  parsedNodes.forEach(
+    node => expect(recreateOriginalNode(node)).toEqual(createNewNode(node)))})
