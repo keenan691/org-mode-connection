@@ -1,7 +1,14 @@
 {
-  "name": "node-flowtype-boilerplate",
-  "version": "0.0.0",
-  "description": "Minimalistic boilerplate to quick-start Node.js development in ES6+ (stage-3) with Flowtype checking.",
+  "name": "org-mode-connection",
+  "version": "0.0.1",
+  "description": "",
+  "main": "./src/OrgApi",
+  "keywords": [
+    "emacs",
+    "org mode",
+    "parser",
+    "database"
+  ],
   "engineStrict": true,
   "engines": {
     "node": ">=8.9"
@@ -39,16 +46,16 @@
     "build": "babel src/**/*.js -d dist",
     "build:watch": "babel --watch src/**/*.js -d dist"
   },
-  "author": "Jakub Synowiec <github@jakubsynowiec.info> (https://jakubsynowiec.info)",
+  "author": "Bartłomiej Nankiewicz (https://bartlomiej.nankiewicz@gmail.com)",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jsynowiec/node-flowtype-boilerplate.git"
+    "url": "https://github.com/bnankiewicz/OrgModeConnection.git"
   },
   "bugs": {
-    "url": "https://github.com/jsynowiec/node-flowtype-boilerplate/issues"
+    "url": "https://github.com/bnankiewicz/OrgModeConnection/issues"
   },
-  "homepage": "https://github.com/jsynowiec/node-flowtype-boilerplate#readme",
+  "homepage": "https://github.com/bnankiewicz/OrgModeConnection#readme",
   "jest": {
     "testEnvironment": "node",
     "moduleFileExtensions": [
