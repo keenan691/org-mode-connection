@@ -150,9 +150,9 @@ describe("Drawers", () => {
         'CLOCK: [2017-11-07 wto 20:45]--[2017-11-07 wto 21:14] =>  0:29',
         ':END:']))
       .toEqual([[{
-        drawers: [{
+        drawers: {
           LOGBOOK: [
-            'CLOCK: [2017-11-07 wto 20:45]--[2017-11-07 wto 21:14] =>  0:29']}]}], []])});})
+            'CLOCK: [2017-11-07 wto 20:45]--[2017-11-07 wto 21:14] =>  0:29']}}], []])});})
 
 test("Closed date is closed", () => {
   expect(

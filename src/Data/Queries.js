@@ -22,10 +22,14 @@ const dbConn = DbHelper.getInstance();
 const generateNodeId = (node, file, position) => file.path + position; // TODO it's fake ethod. Id have to be realy uniqu. And cant depend on position, becouse position can change
 
 export const prepareNodes = (parsedNodes, file) =>
-  parsedNodes.map((node) => R.merge(node, {
-    id: generateNodeId(node, file, node.position),
-    originalPosition: node.position,
-    file}));
+  parsedNodes.map(node => R.pipe(
+    R.merge({
+      id: generateNodeId(node, file, node.position),
+      originalPosition: node.position,
+      file}),
+    R.evolve({
+      drawers: JSON.stringify
+    }))(node));
 
 // ** Generic
 
@@ -80,7 +84,7 @@ const markNodeAsChanged = (node) => {
 
 const RealmOrgNodeGetters = function () {
   const nodeProps = Object.getOwnPropertyNames(OrgNode.properties)
-  const timeStampProps = ['scheduled', 'deadline'];
+  const timeStampProps = ['closed', 'scheduled', 'deadline'];
   const obj = {}
 
   nodeProps.forEach(
@@ -92,6 +96,10 @@ const RealmOrgNodeGetters = function () {
     prop => obj[prop] = {
       get: function() {
         return getTimestamp(this._node, prop)}})
+
+  obj['drawers'] = {
+    get: function() {
+      return this._node.drawers ? JSON.parse(this._node.drawers) : ''}}
 
   return obj}();
 
@@ -141,8 +149,7 @@ export const enhanceFile = (file) => {
 
 const addNodes = (nodes, file) => dbConn.then(realm => realm.write(
   () => prepareNodes(nodes, file).forEach(node => {
-    const orgNode = realm.create('OrgNode', node, true)})
-));
+    const orgNode = realm.create('OrgNode', node, true)})));
 
 const addFile = (filepath, type='agenda') => FileAccess.read(filepath).then(fileContent => {
   const nodes = parse(fileContent);
@@ -157,9 +164,7 @@ const addFile = (filepath, type='agenda') => FileAccess.read(filepath).then(file
 
       // Creating node objects
       prepareNodes(nodes, orgFile).forEach(node => {
-        const orgNode = realm.create('OrgNode', node, true)
-
-      })}))})
+        const orgNode = realm.create('OrgNode', node, true)})}))})
 
 // ** DONE [6/6] Retrive
 // CLOSED: [2018-03-12 pon 19:16]
@@ -196,7 +201,6 @@ const deleteNodes = (nodes) => dbConn.then(realm => realm.write(
 
 // ** TODO [1/1] Update
 // - [X] updateNodes
-
 
 const flagFileAsSynced = (file) => dbConn.then(realm => realm.write(
   () => Object.assign(file, { isChanged: false, isConflicted: false })));

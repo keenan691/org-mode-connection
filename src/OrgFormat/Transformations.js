@@ -6,7 +6,25 @@ import { log } from '../Helpers/Debug';
 
 // * Helper Objects
 
+const asTwoDigit = digit => ('0' + digit).slice(-2);
+const printHour = date => {
+  const hour = asTwoDigit(date.getHours()) + ':' + asTwoDigit(date.getMinutes())
+  return hour !== '00:00' ? ' ' +hour : ''};
+
+const inactivePar = date => `[${ date }]`;
+const asOrgDate = date =>
+      `${ date.getFullYear() }-${ asTwoDigit(date.getMonth() + 1) }-${ asTwoDigit(date.getDate()) }`+
+      ` ${date.toLocaleDateString('en-GB', { weekday: 'short' }).toLowerCase()}` +
+      printHour(date)
+
+const dateAsOrgActiveDate = date => `<${ asOrgDate(date) }>`;
+const dateAsOrgInactiveDate = date => `[${ asOrgDate(date) }]`;
+const timePointerDateToOrg = {scheduled: dateAsOrgActiveDate,
+                              deadline: dateAsOrgActiveDate,
+                              closed: dateAsOrgInactiveDate};
+
 const timePointer = (type, useWarningPeriod=false) => ({
+  toOrg: obj => obj ? `${ obj.type.toUpperCase() }: ${ timePointerDateToOrg[obj.type](obj.date) }` : '',
   fromOrg: (parsedItem, year, month, day, time, timeRangeEnd, repeater, warningPeriod) => {
     let dateArgs = [];
     let datetimeArgs = [];
@@ -49,12 +67,18 @@ const timePointer = (type, useWarningPeriod=false) => ({
 
 const addSpaceBefore = (val) => val ? ' ' + val : '';
 const addSpaceAfter = (val) => val ? val + ' ' : '';
+const countHeadlineLength = node =>
+      node.level + 1 + node.headline.length +
+      (node.todo ? node.todo.length + 1 : 0)
+
+const tagTab = node => ' '.repeat(64 - countHeadlineLength(node));
 
 export const headlineT = {
   tags: {
     toOrg(node) {
       return node.tags.length > 0 ?
-        addSpaceBefore(':'+Array.from(node.tags).map(tag => tag.name).join(':')+':') : ''},
+        addSpaceBefore(tagTab(node) + ':' +
+                       Array.from(node.tags).map(tag => tag.name).join(':')+':') : ''},
     fromOrg(val) {
       return {
         tags: R.pipe(

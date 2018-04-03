@@ -5,39 +5,38 @@ File description.
 
 
 * Deadline and scheduled should be parsed
-SCHEDULED: <2018-03-30 pią> DEADLINE: <2018-07-30 pon>
+SCHEDULED: <2018-03-30 fri> DEADLINE: <2018-07-30 mon>
 
 * DONE Deadline and scheduled shuld not be parsed - only closed
-CLOSED: [2018-03-30 pią 16:03]
+CLOSED: [2018-03-30 fri 16:03]
 
-SCHEDULED: <2018-03-30 pią> DEADLINE: <2018-07-30 pon>
+SCHEDULED: <2018-03-30 fri> DEADLINE: <2018-07-30 mon>
 Lorem ipsum dolor sit amet, consectetuer adipiscing elit.  Donec hendrerit tempor tellus.  Donec pretium posuere tellus.  Proin quam nisl, tincidunt et, mattis eget, convallis nec, purus.  Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.  Nulla posuere.  Donec vitae dolor.  Nullam tristique diam non turpis.  Cras placerat accumsan nulla.  Nullam rutrum.  Nam vestibulum accumsan nisl.
 
 Nullam eu ante vel est convallis dignissim.  Fusce suscipit, wisi nec facilisis facilisis, est dui fermentum leo, quis tempor ligula erat quis odio.  Nunc porta vulputate tellus.  Nunc rutrum turpis sed pede.  Sed bibendum.  Aliquam posuere.  Nunc aliquet, augue nec adipiscing interdum, lacus tellus malesuada massa, quis varius mi purus non odio.  Pellentesque condimentum, magna ut suscipit hendrerit, ipsum augue ornare nulla, non luctus diam neque sit amet urna.  Curabitur vulputate vestibulum lorem.  Fusce sagittis, libero non molestie mollis, magna orci ultrices dolor, at vulputate neque nulla lacinia eros.  Sed id ligula quis est convallis tempor.  Curabitur lacinia pulvinar nibh.  Nam a sapien.
 
 
 * WAITING Donec posuere augue in quam.                           :NOTE:emacs:
-SCHEDULED: <2018-04-02 pon>
+SCHEDULED: <2018-04-02 mon>
 :PROPERTIES:
 :CATEGORY: In id.
 :END:
-- State "WAITING"    from "TODO"       [2018-03-30 pią 16:13]
 :LOGBOOK:
-CLOCK: [2018-03-30 pią 15:52]--[2018-03-30 pią 15:52] =>  0:00
-CLOCK: [2018-03-30 pią 15:51]--[2018-03-30 pią 15:51] =>  0:00
+CLOCK: [2018-03-30 fri 15:52]--[2018-03-30 fri 15:52] =>  0:00
+CLOCK: [2018-03-30 fri 15:51]--[2018-03-30 fri 15:51] =>  0:00
 :END:
 :CUSTOM:
 :END:
-- State "TODO"       from "WAITING"    [2018-03-30 pią 16:12]
-- State "WAITING"    from "TODO"       [2018-03-30 pią 16:11]
+- State "TODO"       from "WAITING"    [2018-03-30 fri 16:12]
+- State "WAITING"    from "TODO"       [2018-03-30 fri 16:11]
 
 Sed diam. Scheduled and properties should be parsed first, and after they are removed todo states changes schould be parsed. Cyli centralnie pod scheduled i props. Pod props jedynie jeśłi nie występuje tam jakiś tekst
 
 ** DONE Nulla posuere.
-CLOSED: [2018-03-30 pią 15:47]
+CLOSED: [2018-03-30 fri 15:47]
 
-** Not finished drawer should not be parsed
-DEADLINE: <2018-03-30 pią> SCHEDULED: <2018-04-02 pon>
+** DONE Not finished drawer should not be parsed
+SCHEDULED: <2018-04-02 mon> DEADLINE: <2018-03-30 fri> CLOSED: [2018-04-03 tue 13:24]
 :PROPERTIES:
 :CUSTOM_ID: 34
 :END:

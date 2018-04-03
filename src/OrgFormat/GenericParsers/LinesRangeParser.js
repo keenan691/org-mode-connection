@@ -18,7 +18,7 @@ const linesRangeParser = (regex, transform, wrapIn=null) => {
     R.unless(R.isEmpty, R.apply(transform)))
 
   const makeOutput = (inputObjects, inputLines, parserOutput) => {
-    let drawers = []
+    let drawers = {}
     let nrOfAlreadySlicedLines = 0
     R.forEach((parsed) => {
       const lineStart = parsed[0].lineNr - nrOfAlreadySlicedLines
@@ -27,11 +27,11 @@ const linesRangeParser = (regex, transform, wrapIn=null) => {
 
       const objName = parsed[0].parsedObj
       const drawerContent = inputLines.splice(lineStart, lineEnd - lineStart)
-      drawers.push({ [objName]: drawerContent.slice(1, -1) })
+      Object.assign(drawers, { [objName]: drawerContent.slice(1, -1) })
 
     } , dropRetardedDrawersAndGroupByTwo(parserOutput))
 
-    if (drawers.length > 0) inputObjects.push({ drawers })
+    if (Object.keys(drawers).length > 0) inputObjects.push({ drawers })
 
     return [inputObjects, inputLines]}
   return parser(parseLine, makeOutput)}
