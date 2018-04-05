@@ -25,5 +25,5 @@ beforeAll(() => {
 test.only("full parse-export test", () => {
   expect.assertions(5)
   return Queries.getNodes().then(nodes => {
-    console.log(nodes)
+    // console.log(nodes)
     nodes.forEach(node => expect(recreateOriginalNode(node)).toEqual(createNewNode(node)))})})

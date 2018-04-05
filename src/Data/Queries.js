@@ -161,10 +161,16 @@ const addFile = (filepath, type='agenda') => FileAccess.read(filepath).then(file
         path: filepath,
         lastSync: new Date(),
         type})
+      // console.log(orgFile)
+      // console.log('add file')
+      // console.log('realm', realm)
 
       // Creating node objects
       prepareNodes(nodes, orgFile).forEach(node => {
-        const orgNode = realm.create('OrgNode', node, true)})}))})
+        const orgNode = realm.create('OrgNode', node, true)})
+
+      return 1
+    }))})
 
 // ** DONE [6/6] Retrive
 // CLOSED: [2018-03-12 pon 19:16]
@@ -226,5 +232,5 @@ export default {
   deleteNode,
   deleteNodes,
   updateNodes,
-  flagFileAsSynced
+  flagFileAsSynced,
 }
