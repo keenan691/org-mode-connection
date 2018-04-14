@@ -12,8 +12,12 @@ import exportNodeToOrgRepr from '../OrgFormat/Export';
 
 // * Init
 
-DbHelper.init()
-const dbConn = DbHelper.getInstance();
+let dbConn = undefined
+
+export const connectDb = () => {
+  DbHelper.init()
+  dbConn = DbHelper.getInstance();
+};
 
 // * Functions
 

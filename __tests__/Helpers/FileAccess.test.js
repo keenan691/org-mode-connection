@@ -2,7 +2,11 @@
 
 import R from "ramda";
 
-import FileAccess from '../../src/Helpers/FileAccess';
+import FileAccess, { configureFileAccess } from '../../src/Helpers/FileAccess';
+
+beforeAll(() => {
+  configureFileAccess()
+})
 
 test('File modify time', () => {
   expect.assertions(1)

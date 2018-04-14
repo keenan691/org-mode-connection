@@ -1,7 +1,5 @@
 /** @flow */
 
-// * DbHelper
-// ** Imports
 import { openRealm } from './Db';
 import OrgFile from '../Models/OrgFile';
 import OrgNode from '../Models/OrgNode';
