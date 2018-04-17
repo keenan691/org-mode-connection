@@ -14,14 +14,12 @@ jest.mock('../../src/Helpers/FileAccess');
 
 afterAll(() => {
   DbHelper.init()
-  DbHelper.getInstance().then(realm => Db(realm).cleanUpDatabase())
-})
+  DbHelper.getInstance().then(realm => Db(realm).cleanUpDatabase())})
 
 beforeAll(() => {
   OrgApi.configureDb(Realm)
   OrgApi.connectDb()
-  FileAccess.write('file', getOrgFileContent('full.org').join('\n')).then(() => Queries.addFile('fixtures/full.org'))
-})
+  FileAccess.write('file', getOrgFileContent('full.org').join('\n')).then(() => Queries.addFile('fixtures/full.org'))})
 
 describe("Queries", () => {
 
@@ -54,14 +52,12 @@ describe("Queries", () => {
       expect(results[2].timestamps).toHaveLength(2)
       expect(results[0].tags).toHaveLength(2)
       expect(results[1].tags).toHaveLength(0)
-      expect(results[2].tags).toHaveLength(2)
-    })});
+      expect(results[2].tags).toHaveLength(2)})});
 
   test("getAgenda", () => {
     expect.assertions(1);
     const agenda = Queries.getAgenda(new Date(2018, 2, 12), new Date(2018, 2, 15));
-    return expect(agenda).resolves.toHaveLength(5);
-  });
+    return expect(agenda).resolves.toHaveLength(5);});
 
   test("getAgenda", () => {
     expect.assertions(3);
@@ -69,26 +65,20 @@ describe("Queries", () => {
     return agenda.then(result => {
       expect(result[0].nodes).toHaveLength(1)
       expect(result[1].nodes).toHaveLength(1)
-      expect(result[2].nodes).toHaveLength(1)
-    })
-  });
+      expect(result[2].nodes).toHaveLength(1)})});
 
   test("getAgenda", () => {
     expect.assertions(1);
     const agenda = Queries.getAgenda(new Date(2018, 2, 12), new Date(2018, 2, 12));
-    return expect(agenda).resolves.toHaveLength(2);
-  });
-
+    return expect(agenda).resolves.toHaveLength(2);});
 
   test("search", () => {
     expect.assertions(1)
-    return expect(Queries.search("Node")).resolves.toHaveLength(5);
-  });
+    return expect(Queries.search("Node")).resolves.toHaveLength(5);});
 
   test("search", () => {
     expect.assertions(1)
-    return expect(Queries.search("nunc")).resolves.toHaveLength(2);
-  });
+    return expect(Queries.search("nunc")).resolves.toHaveLength(2);});
 
   test("getNodeById", () => {
     expect.assertions(3)
@@ -98,8 +88,7 @@ describe("Queries", () => {
           node => {
             expect(node).toHaveProperty('parent', null),
             expect(node).toHaveProperty('headline', 'node 1')
-            expect(node).toHaveProperty('deadline.date', new Date(2018, 2, 12))
-          })});
+            expect(node).toHaveProperty('deadline.date', new Date(2018, 2, 12))})});
 
   test("setDeadline to null", () => {
     expect.assertions(1)
@@ -127,7 +116,4 @@ describe("Queries", () => {
         expect(node).toHaveProperty('file.isChanged', true)
         return node}).then(
           node => node.schedule({ date: new Date(2000, 1, 1)}).then(
-            () => expect(node).toHaveProperty('isChanged', true)))  });
-
-
-})
+            () => expect(node).toHaveProperty('isChanged', true)))})})
