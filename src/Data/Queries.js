@@ -20,11 +20,28 @@ export const connectDb = () => {
 };
 
 // * Functions
-
 // ** Nodes
 
-const generateNodeId = (node, file, position) => file.path + position; // TODO it's fake ethod. Id have to be realy uniqu. And cant depend on position, becouse position can change
+const mapNodeToPlainObject = (node) => ({
+  id: node.id,
+  level: node.level,
+  headline: node.headline,
+  content: node.content,
+  category: null,
+  todo: node.todo,
+  priority: node.priority,
+  drawers: node.drawers,
+  tags: Array.from(node.tags).map(t => t.name),
+  timestamps: Array.from(node.timestamps).map(t => ({
+    type: t.type,
+    warningPeriod: t.warningPeriod,
+    repeater: t.repeater,
+    date: t.date,
+    dateRangeEnd: t.dateRangeEnd}))})
 
+const generateNodeId = (node, file, position) => file.path + position
+
+// Prepare parsed nodes for adding to db
 export const prepareNodes = (parsedNodes, file) =>
   parsedNodes.map(node => R.pipe(
     R.merge({
@@ -32,10 +49,23 @@ export const prepareNodes = (parsedNodes, file) =>
       originalPosition: node.position,
       file}),
     R.evolve({
-      drawers: JSON.stringify
-    }))(node));
+      drawers: JSON.stringify}))(node));
 
-// ** Generic
+// ** Files
+
+const mapFileToPlainObject = (f) => ({
+  id: f.path,
+  type: f.type,
+  path: f.path,
+  title: f.title,
+  content: f.content,
+  metadata: f.metadata,
+  category: f.category,
+  lastSync: f.lastSync,
+  isChanged: f.isChanged,
+  isConflicted: f.isConflicted,});
+
+// ** Realm helpers
 
 export const queryRealm = (model, filter) => dbConn.then(realm => {
   let res = realm.objects(model)
@@ -47,7 +77,13 @@ export const getObjectByIdAndEnhance = (objSchema, enhanceFunction) => (id) => d
   const res = realm.objects(objSchema).filtered('id = $0', id)
   return res.length === 1 ? enhanceFunction(res[0]) : null})
 
-// ** Timestamps related functions
+const getObjects = (model, ...filterArgs) => dbConn.then(
+  realm =>
+    filterArgs.length > 0 ?
+    realm.objects(model).filtered(...filterArgs) :
+    realm.objects(model));
+
+// ** Timestamps
 
 export const getTimestamp = (node, type) => R.head(node.timestamps.filtered(`type = "${type}"`))
 
@@ -61,27 +97,8 @@ export const addTimestamp = (node, type, timestampObj) => dbConn.then(realm => r
   if (timestampObj && timestampObj.hasOwnProperty('date')) {
     node.timestamps.push(R.merge(timestampObj, { type }))}}));
 
-// * TODO [6/10] Node container
-// - [-] add/delete
-//   - [ ] deleteNode - only if has no children
-//   - [ ] addNode subnodes - update position of every nodes after one and save old position for sycnc purposes
-// - [X] schedule
-// - [X] deadline
-// - [X] isChanged
-// - [X] tag
-// - [X] todo
-// - [ ] todo state changes
-// - [X] proirity
-// - [ ] tree
-//   - [ ] getDescendants
-//   - [ ] childrens
-//   - [ ] parent
-// - [ ] clock
-//   - [ ] clockIn
-//   - [ ] clockOut
-//   - [ ] clockCancel
+// * TODO [6/10] Node methods
 
-// Enhances realmjs returned node object with additional methods.
 const markNodeAsChanged = (node) => {
   node.isChanged = true
   node.file.isChanged = true};
@@ -135,21 +152,8 @@ export const enhanceNode = realmNode => {
 
   return node}
 
-// * TODO [1/4] File container
-export const enhanceFile = (file) => {
-  file.delete = () => deleteRealmObject(file)
-  return file
-};
-
 // * Queries
 // ** DONE [1/3] Add
-// CLOSED: [2018-03-12 pon 23:57]
-// - [X] addFile
-//   - [X] OrgFile
-//   - [X] OrgNode
-//   - [X] OrgTimestamps
-// - [ ] addNode as child to file/other node and update positions of rest of nodes
-// - [ ] addNodes without updating positions
 
 const addNodes = (nodes, file) => dbConn.then(realm => realm.write(
   () => prepareNodes(nodes, file).forEach(node => {
@@ -165,39 +169,33 @@ const addFile = (filepath, type='agenda') => FileAccess.read(filepath).then(file
         path: filepath,
         lastSync: new Date(),
         type})
-      // console.log(orgFile)
-      // console.log('add file')
-      // console.log('realm', realm)
 
       // Creating node objects
       prepareNodes(nodes, orgFile).forEach(node => {
         const orgNode = realm.create('OrgNode', node, true)})
 
-      return 1
-    }))})
+      return 1}))})
 
-// ** DONE [6/6] Retrive
-// CLOSED: [2018-03-12 pon 19:16]
-
-// - [X] getAgenda (name)
-// - [X] search (term) => results
-// - [X] getFiles () => results
-// - [X] getNodes (filter) => results
-// - [X] getNodeById (id) => enhance (node)
-// - [X] getFileById (id) => enhance (file)
-
-const getObjects = (model, ...filterArgs) => dbConn.then(
-  realm =>
-    filterArgs.length > 0 ?
-    realm.objects(model).filtered(...filterArgs) :
-    realm.objects(model));
+// ** DONE [6/6] Get
 
 const getNodes = (...filter) => getObjects('OrgNode', ...filter)
 const getFiles = () => getObjects('OrgFile');
 const getAgenda = (dateStart, dateEnd) => getObjects('OrgTimestamp', 'date >= $0 && date <= $1', dateStart, dateEnd)
 const getNodeById = getObjectByIdAndEnhance('OrgNode', enhanceNode)
-const getFileById = getObjectByIdAndEnhance('OrgFile', enhanceFile)
 const search = (term) => getObjects('OrgNode', 'headline CONTAINS[c] $0 || content CONTAINS[c] $0', term)
+
+// ** Get as plain objects
+
+// Returns whole file content including nodes as plain object
+const getFileAsPlainObject = (id) => dbConn.then(realm => {
+  const f = realm.objects('OrgFile').filtered(`path = '${id}'`)[0]
+  const filePlain = mapFileToPlainObject(f);
+  const nodesPlain = {
+    nodes: Array.from(f.nodes).map(mapNodeToPlainObject)}
+  return Object.assign(filePlain, nodesPlain)})
+
+// Return only files fields as plain object, without nodes
+const getAllFilesAsPlainObject = () => Array.from(getFiles()).map(mapFileToPlainObject);
 
 // ** TODO [2/3] Delete
 // - [X] deleteNodes
@@ -225,12 +223,13 @@ const updateNodes = (listOfNodesAndChanges, setForAll) => dbConn.then(realm => r
 
 export default {
   clearDb: () => dbConn.then(realm => Db(realm).cleanUpDatabase()),
+  getFileAsPlainObject,
+  getAllFilesAsPlainObject,
   addFile,
   addNodes,
   getFiles,
   getNodes,
   getAgenda,
-  getFileById,
   getNodeById,
   search,
   deleteNode,

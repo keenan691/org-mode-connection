@@ -6,7 +6,9 @@ import { getOrgFileContent } from '../../src/Helpers/Fixtures';
 import Db from '../../src/Data/Db/Db';
 import DbHelper from '../../src/Data/Db/DbHelper';
 import FileAccess from '../../src/Helpers/FileAccess';
+import OrgApi from '../../src/OrgApi';
 import Queries, { enhanceNode } from '../../src/Data/Queries';
+var Realm = require('realm')
 
 jest.mock('../../src/Helpers/FileAccess');
 
@@ -15,16 +17,33 @@ afterAll(() => {
   DbHelper.getInstance().then(realm => Db(realm).cleanUpDatabase())
 })
 
-
 beforeAll(() => {
-  FileAccess.write('file',getOrgFileContent('full.org').join('\n')).then(() => Queries.addFile('fixtures/full.org'))
+  OrgApi.configureDb(Realm)
+  OrgApi.connectDb()
+  FileAccess.write('file', getOrgFileContent('full.org').join('\n')).then(() => Queries.addFile('fixtures/full.org'))
 })
 
 describe("Queries", () => {
+
+  test.only("getFileAsPlainObject", () => {
+    expect.assertions(1)
+    const obj = Queries.getFileAsPlainObject('fixtures/full.org');
+    const expectation = expect.objectContaining({
+      nodes: expect.any(Array),
+      id: expect.any(String)});
+    return expect(obj).resolves.toEqual(expectation)});
+
+  test("getAllFilesAsPlainObject", () => {
+    expect.assertions(1)
+    const obj = Queries.getAllFilesAsPlainObject('fixtures/full.org');
+    const expectation = expect.objectContaining({
+      nodes: expect.any(Array),
+      id: expect.any(String)});
+    return expect(obj).resolves.toEqual(expectation)});
+
   test("addFile", () => {
     expect.assertions(1);
-    return expect(Queries.getFiles()).resolves.toHaveLength(1)
-  });
+    return expect(Queries.getFiles()).resolves.toHaveLength(1)});
 
   test("getNodes", () => {
     expect.assertions(6);
