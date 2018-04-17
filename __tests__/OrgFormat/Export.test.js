@@ -11,7 +11,10 @@ import { parse } from '../../src/OrgFormat/Parser';
 import Db from '../../src/Data/Db/Db';
 import DbHelper from '../../src/Data/Db/DbHelper';
 import FileAccess from '../../src/Helpers/FileAccess';
+import OrgApi from '../../src/OrgApi';
 import Queries, { enhanceNode } from '../../src/Data/Queries';
+
+var Realm = require('realm')
 
 jest.mock('../../src/Helpers/FileAccess');
 
@@ -20,9 +23,11 @@ afterAll(() => {
   DbHelper.getInstance().then(realm => Db(realm).cleanUpDatabase())})
 
 beforeAll(() => {
+  OrgApi.configureDb(Realm)
+  OrgApi.connectDb()
   FileAccess.write('file',getOrgFileContent('parse-export-test.org').join('\n')).then(() => Queries.addFile('fixtures/full.org'))})
 
-test.only("full parse-export test", () => {
+test("full parse-export test", () => {
   expect.assertions(5)
   return Queries.getNodes().then(nodes => {
     // console.log(nodes)

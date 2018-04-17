@@ -3,13 +3,14 @@
 // * Imports
 
 import R from 'ramda';
-
 import { getChanges, getNewExternalMtime } from '../../src/Data/Sync';
 import Db from '../../src/Data/Db/Db';
 import DbHelper from '../../src/Data/Db/DbHelper';
 import FileAccess from '../../src/Helpers/FileAccess';
 import OrgApi from '../../src/OrgApi';
 import Queries from '../../src/Data/Queries';
+
+var Realm = require('realm')
 
 // * Mocks
 
@@ -83,7 +84,10 @@ afterAll(() => {
 
 describe('getNewExternalMtime', () => {
 
-  beforeAll(() => { return createAndAddFileToCleanDb('basic') })
+  beforeAll(() => {
+    OrgApi.configureDb(Realm)
+    OrgApi.connectDb()
+    return createAndAddFileToCleanDb('basic') })
 
   test('recognizing no external change', () => {
     expect.assertions(1)

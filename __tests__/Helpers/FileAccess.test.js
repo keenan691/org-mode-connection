@@ -5,7 +5,9 @@ import R from "ramda";
 import FileAccess, { configureFileAccess } from '../../src/Helpers/FileAccess';
 
 beforeAll(() => {
-  configureFileAccess()
+  var promisify = require("promisify-node");
+  const fsInterface = promisify("fs")
+  configureFileAccess(fsInterface)
 })
 
 test('File modify time', () => {
