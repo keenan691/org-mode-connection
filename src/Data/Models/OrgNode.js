@@ -6,6 +6,8 @@ export default  {
     // Internal
     id: 'string',
     file: 'OrgFile',
+
+    // Sync
     isChanged: { type: 'bool', default: false },
     isAdded: { type: 'bool', default: false },
     rawContent: 'string',
@@ -19,7 +21,8 @@ export default  {
     // Tree props
     parent: 'OrgNode?',
     children: { type: 'linkingObjects', objectType: 'OrgNode', property: 'parent'},
-    //  Org data
+
+    // Org data
     headline: 'string',
     content: 'string',
     tags: 'OrgTag[]',
