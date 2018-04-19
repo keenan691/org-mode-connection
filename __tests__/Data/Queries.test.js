@@ -29,6 +29,11 @@ describe("Queries", () => {
     const expectation = expect.objectContaining({
       nodes: expect.any(Array),
       name: expect.any(String),
+      metadata: {
+        CATEGORY: 'category',
+        TITLE: 'title'
+      },
+      description: '\ndescription\n',
       size: expect.any(String),
       mtime: expect.any(Date),
       ctime: expect.any(Date),
