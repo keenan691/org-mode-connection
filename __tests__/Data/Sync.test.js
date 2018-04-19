@@ -50,7 +50,7 @@ const writeToFile = (name) => FileAccess.write(name, MOCKED_FILES[name]);
 const getFirstNode = () => Queries.getFiles().then(files => Queries.getNodeById(files[0].nodes.sorted('position')[0].id));
 const createAndAddFileToCleanDb = (name) => Queries.clearDb().then(
   () => FileAccess.write(name, MOCKED_FILES[name]).then(
-    () => Queries.addFile(name)))
+    () => OrgApi.addFile(name)))
 
 // * Tests lifecycle functions
 

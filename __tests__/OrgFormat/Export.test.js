@@ -25,7 +25,7 @@ afterAll(() => {
 beforeAll(() => {
   OrgApi.configureDb(Realm)
   OrgApi.connectDb()
-  FileAccess.write('file',getOrgFileContent('parse-export-test.org').join('\n')).then(() => Queries.addFile('fixtures/full.org'))})
+  FileAccess.write('file',getOrgFileContent('parse-export-test.org').join('\n')).then(() => OrgApi.addFile('fixtures/full.org'))})
 
 test("full parse-export test", () => {
   expect.assertions(5)

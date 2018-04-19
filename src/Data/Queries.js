@@ -1,7 +1,10 @@
-// * Imports
-
 import R from "ramda";
 
+import {
+  mapFileToPlainObject,
+  mapNodeToPlainObject,
+  prepareNodes,
+} from './Transforms';
 import { parse } from '../OrgFormat/Parser';
 import { promisePipe } from '../Helpers/Functions';
 import Db from './Db/Db';
@@ -17,59 +20,10 @@ let dbConn = undefined
 export const connectDb = () => {
   DbHelper.init()
   dbConn = DbHelper.getInstance();
+  return dbConn
 };
 
-// * Functions
-// ** Nodes
-
-const mapNodeToPlainObject = (node) => ({
-  id: node.id,
-  level: node.level,
-  headline: node.headline,
-  content: node.content,
-  category: null,
-  todo: node.todo,
-  priority: node.priority,
-  drawers: node.drawers,
-  tags: Array.from(node.tags).map(t => t.name),
-  timestamps: Array.from(node.timestamps).map(t => ({
-    type: t.type,
-    warningPeriod: t.warningPeriod,
-    repeater: t.repeater,
-    date: t.date,
-    dateRangeEnd: t.dateRangeEnd}))})
-
-const generateNodeId = (node, file, position) => file.path + position
-
-// Prepare parsed nodes for adding to db
-export const prepareNodes = (parsedNodes, file) =>
-  parsedNodes.map(node => R.pipe(
-    R.merge({
-      id: generateNodeId(node, file, node.position),
-      originalPosition: node.position,
-      file}),
-    R.evolve({
-      drawers: JSON.stringify}))(node));
-
-// ** Files
-
-const mapFileToPlainObject = (f) => ({
-  id: f.path,
-  type: f.type,
-  name: f.name,
-  size: f.size,
-  ctime: f.ctime,
-  mtime: f.mtime,
-  path: f.path,
-  title: f.title,
-  content: f.content,
-  metadata: f.metadata,
-  category: f.category,
-  lastSync: f.lastSync,
-  isChanged: f.isChanged,
-  isConflicted: f.isConflicted,});
-
-// ** Realm helpers
+// * Realm helpers
 
 export const queryRealm = (model, filter) => dbConn.then(realm => {
   let res = realm.objects(model)
@@ -87,21 +41,7 @@ const getObjects = (model, ...filterArgs) => dbConn.then(
     realm.objects(model).filtered(...filterArgs) :
     realm.objects(model));
 
-// ** Timestamps
-
-export const getTimestamp = (node, type) => R.head(node.timestamps.filtered(`type = "${type}"`))
-
-export const addTimestamp = (node, type, timestampObj) => dbConn.then(realm => realm.write(() => {
-  // Delete old timestamps of given type
-  const oldTimestamp = getTimestamp(node, type)
-  if (oldTimestamp) realm.delete(oldTimestamp)
-
-  markNodeAsChanged(node)
-  // Create new timestamp if value is not set to null
-  if (timestampObj && timestampObj.hasOwnProperty('date')) {
-    node.timestamps.push(R.merge(timestampObj, { type }))}}));
-
-// * TODO [6/10] Node methods
+// * Functions
 
 const markNodeAsChanged = (node) => {
   node.isChanged = true
@@ -157,35 +97,66 @@ export const enhanceNode = realmNode => {
   return node}
 
 // * Queries
-// ** DONE [1/3] Add
+
+// ** Nodes
 
 const addNodes = (nodes, file) => dbConn.then(realm => realm.write(
   () => prepareNodes(nodes, file).forEach(node => {
     const orgNode = realm.create('OrgNode', node, true)})));
 
-const addFile = (filepath, type='agenda') => FileAccess.read(filepath).then(fileContent => {
-  const nodes = parse(fileContent);
-  dbConn.then(
-    realm => realm.write(() => {
-
-      // Creating file object
-      const orgFile = realm.create('OrgFile', {
-        path: filepath,
-        lastSync: new Date(),
-        type})
-
-      // Creating node objects
-      prepareNodes(nodes, orgFile).forEach(node => {
-        const orgNode = realm.create('OrgNode', node, true)})
-
-      return 1}))})
-
-// ** DONE [6/6] Get
-
 const getNodes = (...filter) => getObjects('OrgNode', ...filter)
+
+const deleteNode = (node) => dbConn.then(realm => realm.write(
+  () => realm.delete(node)));
+
+const deleteNodes = (nodes) => dbConn.then(realm => realm.write(
+  () => nodes.forEach(node => realm.delete(node))));
+
+const updateNodes = (listOfNodesAndChanges, setForAll) => dbConn.then(realm => realm.write(
+  () => listOfNodesAndChanges.forEach(group => {
+    let [realmNode, toUpdate] = group
+    if (setForAll) Object.assign(toUpdate, setForAll)
+    Object.assign(realmNode, toUpdate)})))
+
+// ** Files
+
 const getFiles = () => getObjects('OrgFile');
-const getAgenda = (dateStart, dateEnd) => getObjects('OrgTimestamp', 'date >= $0 && date <= $1', dateStart, dateEnd)
+
 const getNodeById = getObjectByIdAndEnhance('OrgNode', enhanceNode)
+
+// Flags file as synced and updates file stats
+const flagFileAsSynced = (file) =>
+      FileAccess.stat(file.path).then(
+        ({name, size, mtime, ctime}) =>
+          dbConn.then(realm => realm.write(
+            () => Object.assign(file, {
+              name,
+              size,
+              mtime,
+              ctime,
+              isChanged: false,
+              isConflicted: false }))))
+
+// ** Timestamps
+
+export const getTimestamp = (node, type) => R.head(node.timestamps.filtered(`type = "${type}"`))
+
+export const addTimestamp = (node, type, timestampObj) => dbConn.then(realm => realm.write(() => {
+  // Delete old timestamps of given type
+  const oldTimestamp = getTimestamp(node, type)
+  if (oldTimestamp) realm.delete(oldTimestamp)
+
+  markNodeAsChanged(node)
+  // Create new timestamp if value is not set to null
+  if (timestampObj && timestampObj.hasOwnProperty('date')) {
+    node.timestamps.push(R.merge(timestampObj, { type }))}}));
+
+// ** Agenda
+
+const getAgenda = (dateStart, dateEnd) => getObjects('OrgTimestamp', 'date >= $0 && date <= $1', dateStart, dateEnd)
+
+// ** Search
+
 const search = (term) => getObjects('OrgNode', 'headline CONTAINS[c] $0 || content CONTAINS[c] $0', term)
 
 // ** Get as plain objects
@@ -201,45 +172,12 @@ const getFileAsPlainObject = (id) => dbConn.then(realm => {
 // Return only files fields as plain object, without nodes
 const getAllFilesAsPlainObject = () => getFiles().then(files => files.map(mapFileToPlainObject))
 
-// ** TODO [2/3] Delete
-// - [X] deleteNodes
-// - [X] deleteNode
-// - [ ] deleteFile
-
-const deleteNode = (node) => dbConn.then(realm => realm.write(
-  () => realm.delete(node)));
-const deleteNodes = (nodes) => dbConn.then(realm => realm.write(
-  () => nodes.forEach(node => realm.delete(node))));
-
-// ** TODO [1/1] Update
-// - [X] updateNodes
-
-// Flags file as synced and updates file stats
-const flagFileAsSynced = (file) =>
-      FileAccess.stat(file.path).then(
-        ({name, size, mtime, ctime}) =>
-          dbConn.then(realm => realm.write(
-            () => Object.assign(file, {
-              name,
-              size,
-              mtime,
-              ctime,
-              isChanged: false,
-              isConflicted: false }))))
-
-const updateNodes = (listOfNodesAndChanges, setForAll) => dbConn.then(realm => realm.write(
-  () => listOfNodesAndChanges.forEach(group => {
-    let [realmNode, toUpdate] = group
-    if (setForAll) Object.assign(toUpdate, setForAll)
-    Object.assign(realmNode, toUpdate)})))
-
 // * Export
 
 export default {
   clearDb: () => dbConn.then(realm => Db(realm).cleanUpDatabase()),
   getFileAsPlainObject,
   getAllFilesAsPlainObject,
-  addFile,
   addNodes,
   getFiles,
   getNodes,
@@ -250,4 +188,6 @@ export default {
   deleteNodes,
   updateNodes,
   flagFileAsSynced,
+  connectDb
+
 }

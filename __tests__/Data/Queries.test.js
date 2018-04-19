@@ -19,11 +19,11 @@ afterAll(() => {
 beforeAll(() => {
   OrgApi.configureDb(Realm)
   OrgApi.connectDb()
-  FileAccess.write('file', getOrgFileContent('full.org').join('\n')).then(() => Queries.addFile('fixtures/full.org'))})
+  FileAccess.write('file', getOrgFileContent('full.org').join('\n')).then(() => OrgApi.addFile('fixtures/full.org'))})
 
 describe("Queries", () => {
 
-  test.only("getFileAsPlainObject", () => {
+  test("getFileAsPlainObject", () => {
     expect.assertions(1)
     const obj = Queries.getFileAsPlainObject('fixtures/full.org');
     const expectation = expect.objectContaining({

@@ -1,9 +1,11 @@
 import R from "ramda";
+
 import { extractNodesFromLines } from '../OrgFormat/NodesExtractor';
 import { headlineT } from '../OrgFormat/Transformations';
 import { log, rlog } from '../Helpers/Debug';
 import { nullWhenEmpty, promisePipe } from '../Helpers/Functions';
-import { parseNode } from '../OrgFormat/Parser';
+import { parse, parseNode } from '../OrgFormat/Parser';
+import { prepareNodes } from './Transforms';
 import Export from '../OrgFormat/Export';
 import FileAccess from '../Helpers/FileAccess';
 import Queries from './Queries';
@@ -69,7 +71,26 @@ import Queries from './Queries';
 //    - force version from db
 //    - merge nodes to manual resolve with tag resolve
 
-// * Code
+// * Add file
+
+const addFile = (filepath, type='agenda') => FileAccess.read(filepath).then(fileContent => {
+  const nodes = parse(fileContent);
+  Queries.connectDb().then(
+    realm => realm.write(() => {
+
+      // Creating file object
+      const orgFile = realm.create('OrgFile', {
+        path: filepath,
+        lastSync: new Date(),
+        type})
+
+      // Creating node objects
+      prepareNodes(nodes, orgFile).forEach(node => {
+        const orgNode = realm.create('OrgNode', node, true)})
+
+      return 1}))})
+
+// * Sync
 
 // ** Propagate changes
 
@@ -194,4 +215,5 @@ const syncAllFiles = () => Queries.getFiles().then(
 // * Exports
 
 export default {
+  addFile,
   syncDb: () => syncAllFiles()}
