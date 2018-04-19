@@ -60,26 +60,6 @@ afterAll(() => {
 
 // * TODO [1/3] Tests
 
-// ** Plan
-
-// - [X] getNewExternalMtime
-// - [X] getChanges
-//   - [X] recognizing local changed
-//   - [X] recognizing external changes
-//     - [X] returning changedNodes
-//     - [X] returning notChangedNodes
-//       - [X] recognizing level change
-//       - [X] recognizing position change
-// - [-] sync
-//   - [X] empty
-//   - [X] local
-//   - [X] external
-//     - [X] only reorganized
-//     - [X] only added
-//     - [X] only deleted
-//   - [X] both
-//     - [X] conflict
-
 // ** Code
 
 describe('getNewExternalMtime', () => {
@@ -89,7 +69,7 @@ describe('getNewExternalMtime', () => {
     OrgApi.connectDb()
     return createAndAddFileToCleanDb('basic') })
 
-  test('recognizing no external change', () => {
+  test.only('recognizing no external change', () => {
     expect.assertions(1)
     return Queries.getFiles().then(
       files => expect(getNewExternalMtime(files[0])).resolves.toBeFalsy())})

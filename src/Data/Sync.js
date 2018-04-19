@@ -12,7 +12,7 @@ import Queries from './Queries';
 
 // import Queries from './Queries';
 
-// * Plan
+// * Description
 
 // ** How we know that changes occured?
 
@@ -87,6 +87,8 @@ const addFile = (filepath, type='agenda') => FileAccess.read(filepath).then(file
       // Creating node objects
       prepareNodes(nodes, orgFile).forEach(node => {
         const orgNode = realm.create('OrgNode', node, true)})
+
+      Queries.flagFileAsSynced(orgFile)
 
       return 1}))})
 

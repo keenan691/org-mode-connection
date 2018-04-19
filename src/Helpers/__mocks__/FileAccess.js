@@ -5,7 +5,12 @@ import R from "ramda";
 export default (function (){
   let __mockFile = {
     content: "",
-    stat: { mtime: undefined }}
+    stat: {
+      mtime: new Date(),
+      ctime: new Date(),
+      name: "some name",
+      size: "234",
+    }}
 
   return {
     write (path, content) {
