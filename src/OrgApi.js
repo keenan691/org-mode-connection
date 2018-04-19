@@ -6,8 +6,7 @@ import Sync from './Data/Sync';
 const Configure = {
   configureFileAccess,
   configureDb,
-  connectDb
-}
+  connectDb}
 
 const Api = Object.assign({}, Queries, Db, Sync, Configure)
 

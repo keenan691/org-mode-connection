@@ -1,5 +1,3 @@
-/** @flow */
-
 import R from "ramda";
 
 const inRange = (val, start, end) => val >= start && val <= end;

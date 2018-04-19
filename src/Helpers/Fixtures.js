@@ -1,5 +1,3 @@
-// @flow
-
 import R from "ramda";
 
 import fs from "fs";
@@ -13,5 +11,4 @@ export const getOrgFileContent = R.pipe(
   makeOrgFilePath,
   getFileDescriptor,
   readData,
-  R.split("\n")
-);
+  R.split("\n"));

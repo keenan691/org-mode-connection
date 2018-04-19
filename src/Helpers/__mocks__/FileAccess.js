@@ -9,8 +9,7 @@ export default (function (){
       mtime: new Date(),
       ctime: new Date(),
       name: "some name",
-      size: "234",
-    }}
+      size: "234",}}
 
   return {
     write (path, content) {

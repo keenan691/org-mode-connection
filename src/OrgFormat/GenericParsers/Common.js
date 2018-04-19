@@ -1,5 +1,3 @@
-/** @flow */
-
 import R from "ramda";
 
 import { ireduce } from '../../Helpers/Functions';

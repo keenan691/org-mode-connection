@@ -1,5 +1,3 @@
-/** @flow */
-
 import R from "ramda";
 
 import { enhanceNode } from '../Data/Queries';

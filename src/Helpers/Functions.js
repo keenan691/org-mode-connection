@@ -3,9 +3,8 @@
 import R from "ramda";
 
 const pipePromise = R.curry(
-  (list,acc) => list.reduce( (acc,fn) => acc.then(fn), Promise.resolve(acc) )
-);
-//then, since we made our own reduce with the arguments how we wanted them, no need to R.flip
+  (list,acc) => list.reduce( (acc,fn) => acc.then(fn), Promise.resolve(acc) ));
+
 export const promisePipe = R.compose( pipePromise, R.unapply(R.flatten) );
 export const deepMerge = R.reduce(R.mergeDeepWith(R.concat), [])
 export const nullWhenEmpty = obj => obj.length === 0 ? null : obj

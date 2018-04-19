@@ -20,8 +20,7 @@ let dbConn = undefined
 export const connectDb = () => {
   DbHelper.init()
   dbConn = DbHelper.getInstance();
-  return dbConn
-};
+  return dbConn};
 
 // * Realm helpers
 

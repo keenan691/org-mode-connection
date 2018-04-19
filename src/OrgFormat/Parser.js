@@ -1,4 +1,3 @@
-/** @flow */
 import R from "ramda";
 
 import { deepMerge } from '../Helpers/Functions';

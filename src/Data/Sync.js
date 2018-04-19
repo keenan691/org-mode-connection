@@ -10,8 +10,6 @@ import Export from '../OrgFormat/Export';
 import FileAccess from '../Helpers/FileAccess';
 import Queries from './Queries';
 
-// import Queries from './Queries';
-
 // * Description
 
 // ** How we know that changes occured?
@@ -113,7 +111,7 @@ const getRawNodesFromFile = promisePipe(
   R.curry(FileAccess.read),
   extractNodesFromLines)
 
-const ExternalAndLocalChangesToOneList = promisePipe(
+const externalAndLocalChangesToOneList = promisePipe(
   R.converge((...results) => Promise.all(results), [getNodesFromDbAsArray, getRawNodesFromFile]),
   R.unnest)
 
@@ -151,7 +149,7 @@ export const getChanges = (file) => {
     if (!newExternalMtime && !localChanges) return null
 
     if (newExternalMtime) externalChanges = promisePipe(
-      ExternalAndLocalChangesToOneList,
+      externalAndLocalChangesToOneList,
       groupBySimilarity,
       partitionEachGroupByIdPossesion,
       groupByChangedAndNotChanged,

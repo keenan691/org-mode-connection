@@ -1,5 +1,3 @@
-/** @flow */
-
 import { makeRegex } from '../Helpers/Functions';
 
 const mr = makeRegex();
@@ -16,8 +14,7 @@ export const headlineR = {
   priority: /\[#[ABC]\]/,
   todo: /(^TODO\s+|DONE\s+)/,
   tags: /:.+:\s*$/,
-  head: /^\*+\s+/
-};
+  head: /^\*+\s+/};
 
 export const nodeMetadataR = {
   scheduled: mr(/\s*SCHEDULED:\s*/, activeTimestampWithWarningPeriod),
@@ -26,17 +23,14 @@ export const nodeMetadataR = {
   activeTimestampRange: mrg(activeTimestamp, /\-{2}/, activeTimestamp),
   inactiveTimestamp: inactiveTimestamp,
   activeTimestamp: mrg(/(?:^|[^-])/, activeTimestamp, /(?!--)/),
-  drawer: [/^\s*:([a-zA-Z_0-9]+):\s*$/, /\s*:END:/] // if form [start, end]
-};
+  drawer: [/^\s*:([a-zA-Z_0-9]+):\s*$/, /\s*:END:/]};
 
 export const drawersContentR = {
   clockStarted: mr(/^\s*CLOCK: /, inactiveTimestamp),
   clockEnded: mr(/^\s*CLOCK: /, inactiveTimestamp, /--/, inactiveTimestamp, /\s*=>\s*/, timeR),
-  singleProperty: /^\s*:(.*?):\s*(.*?)\s*$/,
-};
+  singleProperty: /^\s*:(.*?):\s*(.*?)\s*$/,};
 
 export const nodeContentR = {
-  todoStateHistory: /^\s*- State\s+"\w+"\s+from\s+"\w+"\s+/,
-};
+  todoStateHistory: /^\s*- State\s+"\w+"\s+from\s+"\w+"\s+/,};
 
 export const fileMetadataR = /^#\+(\w+):\s*(.*)/

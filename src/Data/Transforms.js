@@ -44,3 +44,5 @@ export const mapFileToPlainObject = (f) => ({
   lastSync: f.lastSync,
   isChanged: f.isChanged,
   isConflicted: f.isConflicted,});
+
+export const mapNodeContentToObjectForm = (node) => ;

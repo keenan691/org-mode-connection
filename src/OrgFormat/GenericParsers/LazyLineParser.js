@@ -1,11 +1,8 @@
-/** @flow */
-
 import R from "ramda";
 
 import { parser } from './Common';
 
 // Parses only first line
-
 const lazyLineParser = (regex, transform, wrapIn=null) => {
   const terminator = R.reduced;
 
@@ -23,6 +20,6 @@ const lazyLineParser = (regex, transform, wrapIn=null) => {
         inputLines.splice(parsed.lineNr, 1)}
       , parserOutput)
     return [inputObjects, inputLines]}
-  return parser(parseLine, makeOutput, terminator)}
 
+  return parser(parseLine, makeOutput, terminator)}
 export { lazyLineParser }
