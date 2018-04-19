@@ -1,3 +1,9 @@
+#+TITLE: Sample Title
+#+CATEGORY: Sample Category
+
+File description.
+In few lines.
+
 * node 1
 
 Nunc eleifend leo vitae magna.

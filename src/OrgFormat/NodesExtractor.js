@@ -7,8 +7,12 @@ import { imap } from '../Helpers/Functions';
 import { preParseHeadline } from './AtomicParsers/HeadlineParser';
 
 export const rangeAsObj = (range) => ({ range: range }); // make unviersal func as obj
-const isNode = R.pipe(R.last, R.test(headlineR.head));
-const getHeadlinesLineNumbers = R.pipe(R.filter(isNode), R.map(R.head));
+const isNode = R.test(headlineR.head);
+
+const getHeadlinesLineNumbers = R.pipe(
+  R.filter(R.pipe(R.last, isNode)),
+  R.map(R.head));
+
 const addLineNumbers = imap((line, idx) => [idx, line]);
 
 export const getNodesLineRanges = (lines) => R.pipe(
@@ -27,3 +31,5 @@ const mapRangesToContent = (lines, ranges) => ranges.map(
 
 export const extractNodesFromLines = R.converge(
   mapRangesToContent, [R.identity, getNodesLineRanges])
+
+export const extractPreNodeContentFromLines = R.takeWhile(R.complement(isNode))

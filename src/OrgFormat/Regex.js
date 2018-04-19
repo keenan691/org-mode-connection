@@ -39,8 +39,4 @@ export const nodeContentR = {
   todoStateHistory: /^\s*- State\s+"\w+"\s+from\s+"\w+"\s+/,
 };
 
-// At moment we will understand logbook and properties drawers
-// clock in LOGBOOK drawer
-// Clock variants we must at least detect:
-// CLOCK: [2011-10-04 Tue 16:08]--[2011-10-04 Tue 16:09] =>  0:01
-// CLOCK: [2011-10-04 Tue 16:41]
+export const fileMetadataR = /^#\+(\w+):\s*(.*)/

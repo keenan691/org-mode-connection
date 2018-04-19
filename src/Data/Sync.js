@@ -74,7 +74,7 @@ import Queries from './Queries';
 // * Add file
 
 const addFile = (filepath, type='agenda') => FileAccess.read(filepath).then(fileContent => {
-  const nodes = parse(fileContent);
+  const nodes = parse(fileContent).nodes;
   Queries.connectDb().then(
     realm => realm.write(() => {
 

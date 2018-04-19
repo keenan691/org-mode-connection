@@ -7,7 +7,6 @@ import {
   recreateOriginalNode,
 } from '../../src/OrgFormat/Export';
 import { getOrgFileContent } from "../../src/Helpers/Fixtures";
-import { parse } from '../../src/OrgFormat/Parser';
 import Db from '../../src/Data/Db/Db';
 import DbHelper from '../../src/Data/Db/DbHelper';
 import FileAccess from '../../src/Helpers/FileAccess';
