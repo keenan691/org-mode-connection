@@ -1,5 +1,3 @@
-/** @flow */
-
 import R from "ramda";
 import { dateIsCorrect, timeIsCorrect } from './Validators';
 import { log } from '../Helpers/Debug';
@@ -100,7 +98,7 @@ export const headlineT = {
     toOrg(node) {return addSpaceAfter('*'.repeat(node.level))},
     fromOrg(val) {return {level: val.trim().length}}}};
 
-// * Node Metadata Transformations
+// * Node Metadata Transforms
 
 export const nodeMetadataT = {
   drawer: {

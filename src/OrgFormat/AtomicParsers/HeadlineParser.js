@@ -3,7 +3,7 @@
 import R from "ramda";
 import { rlog } from '../../Helpers/Debug';
 import { headlineR } from '../Regex';
-import { headlineT } from '../Transformations';
+import { headlineT } from '../Transforms';
 import { lazyInLineParser } from '../GenericParsers/LazyInLineParser';
 
 const parseLevel = lazyInLineParser(

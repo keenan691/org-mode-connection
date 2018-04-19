@@ -7,7 +7,7 @@ import { lazyInLineParser } from '../GenericParsers/LazyInLineParser';
 import { lazyLineParser } from '../GenericParsers/LazyLineParser';
 import { linesRangeParser } from '../GenericParsers/LinesRangeParser';
 import { nodeMetadataR } from '../Regex';
-import { nodeMetadataT } from '../Transformations';
+import { nodeMetadataT } from '../Transforms';
 import { rlog } from '../../Helpers/Debug';
 
 const drawersParser = linesRangeParser(nodeMetadataR.drawer, nodeMetadataT.drawer.fromOrg);

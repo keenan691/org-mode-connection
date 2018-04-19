@@ -1,7 +1,7 @@
 import R from "ramda";
 
 import { enhanceNode } from '../Data/Queries';
-import { headlineT, nodeMetadataT } from './Transformations';
+import { headlineT, nodeMetadataT } from './Transforms';
 
 export const recreateOriginalNode = (node) =>
   headlineT.level.toOrg(node) +

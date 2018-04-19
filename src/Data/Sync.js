@@ -1,7 +1,7 @@
 import R from "ramda";
 
 import { extractNodesFromLines } from '../OrgFormat/NodesExtractor';
-import { headlineT } from '../OrgFormat/Transformations';
+import { headlineT } from '../OrgFormat/Transforms';
 import { log, rlog } from '../Helpers/Debug';
 import { nullWhenEmpty, promisePipe } from '../Helpers/Functions';
 import { parse, parseNode } from '../OrgFormat/Parser';
