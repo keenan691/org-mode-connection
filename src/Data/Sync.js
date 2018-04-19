@@ -74,7 +74,8 @@ import Queries from './Queries';
 // * Add file
 
 const addFile = (filepath, type='agenda') => FileAccess.read(filepath).then(fileContent => {
-  const nodes = parse(fileContent).nodes;
+  const parsingResult = parse(fileContent)
+
   Queries.connectDb().then(
     realm => realm.write(() => {
 
@@ -82,10 +83,12 @@ const addFile = (filepath, type='agenda') => FileAccess.read(filepath).then(file
       const orgFile = realm.create('OrgFile', {
         path: filepath,
         lastSync: new Date(),
+        description: parsingResult.file.description,
+        metadata: JSON.stringify(parsingResult.file.metadata),
         type})
 
       // Creating node objects
-      prepareNodes(nodes, orgFile).forEach(node => {
+      prepareNodes(parsingResult.nodes, orgFile).forEach(node => {
         const orgNode = realm.create('OrgNode', node, true)})
 
       Queries.flagFileAsSynced(orgFile)

@@ -21,7 +21,7 @@ export default {
 
     // Org
     metadata: 'string?',
-    content: 'string?', // text before first headline stripped from metadata
+    description: 'string?', // text before first headline stripped from metadata
 
     // Extracted metadata which have to be indexed
     category: 'string?',
