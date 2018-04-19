@@ -1,7 +1,4 @@
-// * Imports
-
 import R from "ramda";
-
 import { extractNodesFromLines } from '../OrgFormat/NodesExtractor';
 import { headlineT } from '../OrgFormat/Transformations';
 import { log, rlog } from '../Helpers/Debug';

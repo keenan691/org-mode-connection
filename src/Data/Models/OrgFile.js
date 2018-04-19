@@ -6,24 +6,27 @@ export default {
     // Related objects
     nodes: { type: 'linkingObjects', objectType: 'OrgNode', property: 'file'},
 
-    // Identity props
-    type: 'string', // agenda, referenece
+    // File
     path: 'string',
-    content: 'string?', // text before first headline stripped from metadata
+    name: 'string?',
+    size: 'string?',
+    mtime: 'date?',
+    ctime: 'date?',
 
-    // Sync props
+    // Sync
+    type: 'string', // agenda, referenece
     lastSync: 'date?',
     isChanged: { type: 'bool', default: false},
     isConflicted: { type: 'bool', default: false},
 
-    // Metadata props
-    metadata: 'string?', // TODO json accessot
+    // Org
+    metadata: 'string?',
+    content: 'string?', // text before first headline stripped from metadata
 
-    // INDEXED METADATA
-    // TODO If this changes - also changes `metadata` prop.
+    // Extracted metadata which have to be indexed
     category: 'string?',
-    // tags: 'tags',
     title: 'string?',
+    // tags: 'tags',
 
   }
 };

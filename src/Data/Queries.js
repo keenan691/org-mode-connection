@@ -56,6 +56,10 @@ export const prepareNodes = (parsedNodes, file) =>
 const mapFileToPlainObject = (f) => ({
   id: f.path,
   type: f.type,
+  name: f.name,
+  size: f.size,
+  ctime: f.ctime,
+  mtime: f.mtime,
   path: f.path,
   title: f.title,
   content: f.content,
@@ -195,7 +199,7 @@ const getFileAsPlainObject = (id) => dbConn.then(realm => {
   return Object.assign(filePlain, nodesPlain)})
 
 // Return only files fields as plain object, without nodes
-const getAllFilesAsPlainObject = () => Array.from(getFiles()).map(mapFileToPlainObject);
+const getAllFilesAsPlainObject = () => getFiles().then(files => files.map(mapFileToPlainObject))
 
 // ** TODO [2/3] Delete
 // - [X] deleteNodes
@@ -210,8 +214,18 @@ const deleteNodes = (nodes) => dbConn.then(realm => realm.write(
 // ** TODO [1/1] Update
 // - [X] updateNodes
 
-const flagFileAsSynced = (file) => dbConn.then(realm => realm.write(
-  () => Object.assign(file, { isChanged: false, isConflicted: false })));
+// Flags file as synced and updates file stats
+const flagFileAsSynced = (file) =>
+      FileAccess.stat(file.path).then(
+        ({name, size, mtime, ctime}) =>
+          dbConn.then(realm => realm.write(
+            () => Object.assign(file, {
+              name,
+              size,
+              mtime,
+              ctime,
+              isChanged: false,
+              isConflicted: false }))))
 
 const updateNodes = (listOfNodesAndChanges, setForAll) => dbConn.then(realm => realm.write(
   () => listOfNodesAndChanges.forEach(group => {

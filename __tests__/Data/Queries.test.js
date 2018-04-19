@@ -28,14 +28,10 @@ describe("Queries", () => {
     const obj = Queries.getFileAsPlainObject('fixtures/full.org');
     const expectation = expect.objectContaining({
       nodes: expect.any(Array),
-      id: expect.any(String)});
-    return expect(obj).resolves.toEqual(expectation)});
-
-  test("getAllFilesAsPlainObject", () => {
-    expect.assertions(1)
-    const obj = Queries.getAllFilesAsPlainObject('fixtures/full.org');
-    const expectation = expect.objectContaining({
-      nodes: expect.any(Array),
+      name: expect.any(String),
+      size: expect.any(String),
+      mtime: expect.any(String),
+      ctime: expect.any(String),
       id: expect.any(String)});
     return expect(obj).resolves.toEqual(expectation)});
 

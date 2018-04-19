@@ -179,7 +179,7 @@ describe("sync", () => {
                localChanges: 1,
                status: "conflict"}]))})
 
-  test('calling sync when nothing is changed', () => {
+  test('not calling sync when nothing is changed', () => {
     expect.assertions(1)
     return expect(OrgApi.syncDb()).resolves.toHaveLength(0)})
 
