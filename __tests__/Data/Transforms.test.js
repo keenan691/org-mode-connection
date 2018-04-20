@@ -87,8 +87,7 @@ const headerMappings = {
   regular: [
     'Nulla posuere.',
     [regularLine(
-      [regularText('Nulla posuere.')])]
-  ],
+      [regularText('Nulla posuere.')])]],
 
   withLink: [
     `Nulla posuere. ${link(...links.unknown)} Proin neque massa`,
@@ -96,11 +95,9 @@ const headerMappings = {
       regularText('Nulla posuere.'),
       link('')])]]};
 
-// ** Content
+// ** Line types
 
-const contentToObjectsMappings = {
-
-// *** Line types
+const linesMappings = {
 
   emptyLine: [
     '\n',
@@ -115,8 +112,7 @@ const contentToObjectsMappings = {
   twoLines: [
     'one\ntwo',
     [regularLine(regularText('one')),
-     regularLine(regularText('two'))]
-  ],
+     regularLine(regularText('two'))]],
 
   listLine: [
     '- Lorem ipsum dolor sit amet, consectetuer adipiscing elit.',
@@ -137,9 +133,11 @@ const contentToObjectsMappings = {
   numericListLine: [
     '1. Lorem ipsum dolor sit amet, consectetuer adipiscing elit.',
     [numericListLine(
-      [regularText('Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')])]],
+      [regularText('Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')])]]};
 
-// *** Faces
+// ** Faces
+
+const regularLinesWithFaces = {
 
   strikeThroughLine: [
     'Proin quam nisl, +tincidunt+ et, mattis eget, +convallis+ nec, purus.  ',
@@ -181,12 +179,7 @@ const contentToObjectsMappings = {
   italicLine: [
     '/bibendum/',
     [regularLine(
-      [italicTextCreator('bibendum')])]]
-
-  // ** end
-
-}
-
+      [italicTextCreator('bibendum')])]]}
 
 // * Tests
 
@@ -197,7 +190,7 @@ describe("mapNodeContentToObject", () => {
     const expectation = testData;
     expect(mapNodeContentToObject(testData).plainContent).toBe(expectation)})
 
-  test.only("mapping lines", () => {
+  test.only("mapping lines to objects", () => {
     const testData = ;
     const expectation = ;
     expect(mapNodeContentToObject(testData)).toBe(expectation)
