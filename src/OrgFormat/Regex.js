@@ -34,3 +34,22 @@ export const nodeContentR = {
   todoStateHistory: /^\s*- State\s+"\w+"\s+from\s+"\w+"\s+/,};
 
 export const fileMetadataR = /^#\+(\w+):\s*(.*)/
+
+export const nodeContentLinesR = {
+  // emptyLine: /^.*\n$/,
+  emptyLine: /^\s*$/,
+  listLine: /^\s*-\s+/,
+  checkboxLine: /^\s*-\s+[ ]\s+/,
+  numericListLine: /^\s*[0-9]\./,
+}
+
+export const nodeContentInlineElementsR = {
+  link: /d/,
+  regularText: /d/,
+  codeText: /d/,
+  strikeThroughText: /d/,
+  underlineText: /d/,
+  verbatimText: /d/,
+  boldText: /d/,
+  italicText: /d/,
+}

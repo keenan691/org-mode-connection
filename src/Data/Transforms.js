@@ -1,5 +1,7 @@
 import R from "ramda";
 
+// * To db transforms
+
 const generateNodeId = (node, file, position) => file.path + position
 
 // Prepare parsed nodes for adding to db
@@ -11,6 +13,8 @@ export const prepareNodes = (parsedNodes, file) =>
       file}),
     R.evolve({
       drawers: JSON.stringify}))(node));
+
+// * To plain object transform
 
 export const mapNodeToPlainObject = (n) => ({
   id: n.id,
@@ -44,16 +48,3 @@ export const mapFileToPlainObject = (f) => ({
   lastSync: f.lastSync,
   isChanged: f.isChanged,
   isConflicted: f.isConflicted,});
-
-// * node pretiffy
-// Traktować wszystkie linie tak samo. Nie gupować.
-
-// Stowrzyć drugi array z liniami zawierający wartości odpowiadające
-
-// Może coś zlinked list jest narzeczy
-
-export const mapNodeContentToObject = (node) => ({
-  plainContent: node,
-  objectContent: node
-
-})

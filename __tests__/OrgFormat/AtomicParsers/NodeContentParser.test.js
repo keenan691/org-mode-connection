@@ -1,69 +1,67 @@
-// * TransformTest starts here
-
 import R from "ramda";
-import { mapNodeContentToObject } from '../../src/Data/Transforms';
+
+import {
+  lineCreators,
+  mapNodeContentToObject,
+} from '../../../src/OrgFormat/AtomicParsers/NodeContentParser';
 
 // * Factory functions
+
+// ** Test
+
+const testNodesMappings = (mappingResults, mappedProp, extractPath) =>
+      Object.keys(mappingResults).forEach(
+        (key) => {
+          const node = createNode({ [mappedProp]: mappingResults[key][0] });
+          const nodeMappingResult = mapNodeContentToObject(node);
+          const extractedPath = R.path(extractPath, nodeMappingResult);
+          const expectation = mappingResults[key][1];
+          expect(extractedPath).toEqual(expectation)})
 
 // ** Node
 
 const createNode = (props) => ({
   headline: 'This is headline ',
-  content: ''
-  // ...props
+  content: '',
+  ...props
 })
 
 // ** Inline elements
 
 const link = (url, urlTitle) => ({
   type: 'link',
-  text: `[[${url}][${urlTitle}]]`});
+  url,
+  urlTitle});
 
 const regularText = (t) => ({
   type: 'regular',
-  text: `${t}`});
+  text: t});
 
 const codeText = (t) => ({
   type: 'code',
-  text: `~${t}~`});
+  text: t});
 
 const strikeThroughText = (t) => ({
   type: 'strikeThrough',
-  text: `+${t}+`});
+  text: t});
 
 const underlineTextCreator = (t) => ({
   type: 'underline',
-  text: `_${t}_`});
+  text: t});
 
 const verbatimTextCreator = (t) => ({
   type: 'verbatim',
-  text: `=${t}=`});
+  text: t});
 
 const boldTextCreator = (t) => ({
   type: 'bold',
-  text: `*${t}*`});
+  text: t});
 
 const italicTextCreator = (t) => ({
   type: 'italic',
-  text: `/${t}/`});
+  text: t});
 
 // ** Line containers
-
-const regularLine = (elements) => ({
-  type: 'regular',
-  elements});
-
-const listLine = (elements) => ({
-  type: 'list',
-  elements});
-
-const checkboxLine = (elements) => ({
-  type: 'checkbox',
-  elements});
-
-const numericListLine = (elements) => ({
-  type: 'numericList',
-  elements});
 
 // * Test data
 
@@ -73,38 +71,38 @@ const contentLinesMappings = {
 
   emptyLine: [
     '\n',
-    [regularLine(
-      [regularText('\n')])]],
+    [lineCreators.emptyLine(), lineCreators.emptyLine()]],
 
   regularLine: [
     'Suspendisse potenti.  ',
-    [regularLine(
+    [lineCreators.regularLine(
       [regularText('Suspendisse potenti.  ')])]],
 
   twoLines: [
     'one\ntwo',
-    [regularLine(regularText('one')),
-     regularLine(regularText('two'))]],
+    [lineCreators.regularLine([regularText('one')]),
+     lineCreators.regularLine([regularText('two')])]],
 
   listLine: [
     '- Lorem ipsum dolor sit amet, consectetuer adipiscing elit.',
-    [listLine(
+    [lineCreators.listLine(
       [regularText('Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')])]],
 
   checkboxLine: [
     '- [ ] Lorem ipsum dolor sit amet, consectetuer adipiscing elit.',
-    [checkboxLine(
+    [lineCreators.checkboxLine(
       [regularText('Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')])]],
 
   checkboxLineWithBold: [
     '- [ ] *Lorem* ipsum dolor sit amet, consectetuer adipiscing elit.',
-    [regularLine(
+    [lineCreators.checkboxLine(
       [boldTextCreator('Lorem'),
-       regularText('ipsum dolor sit amet, consectetuer adipiscing elit.')])]],
+       regularText('ipsum dolor sit amet, consectetuer adipiscing elit.')],
+      false)]],
 
   numericListLine: [
     '1. Lorem ipsum dolor sit amet, consectetuer adipiscing elit.',
-    [numericListLine(
+    [lineCreators.numericListLine(
       [regularText('Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')])]]};
 
 // ** Links
@@ -125,12 +123,12 @@ const headerMappings = {
 
   regular: [
     'Nulla posuere.',
-    [regularLine(
+    [lineCreators.regularLine(
       [regularText('Nulla posuere.')])]],
 
   // withLink: [
   //   `Nulla posuere. ${link(...links.unknown)} Proin neque massa`,
-  //   [regularLine([
+  //   [lineCreators.regularLine([
   //     regularText('Nulla posuere.'),
   //     link(...links.unknown)])]]
 
@@ -142,7 +140,7 @@ const regularLinesWithFacesMappings = {
 
   strikeThroughLine: [
     'Proin quam nisl, +tincidunt+ et, mattis eget, +convallis+ nec, purus.  ',
-    [regularLine(
+    [lineCreators.regularLine(
       [regularText('Proin quam nisl, '),
        strikeThroughText('tincidunt'),
        regularText(' et, mattis eget, '),
@@ -151,14 +149,14 @@ const regularLinesWithFacesMappings = {
 
   underlineLine: [
     'Nunc aliquet, augue _nec_ adipiscing interdum, lacus tellus malesuada massa, quis varius mi purus non odio.  ',
-    [regularLine(
+    [lineCreators.regularLine(
       [regularText('Nunc aliquet, augue') ,
        underlineTextCreator('nec') ,
        regularText(' adipiscing interdum, lacus tellus malesuada massa, quis varius mi purus non odio.  ')])]],
 
   boldLine: [
     'Fusce sagittis, libero non molestie mollis, *magna* orci ultrices dolor, at *vulputate* neque nulla *lacinia* eros.  ',
-    [regularLine(
+    [lineCreators.regularLine(
       [regularText('Fusce sagittis, libero non molestie mollis,') ,
        boldTextCreator('magna') ,
        regularText('orci ultrices dolor, at') ,
@@ -169,29 +167,20 @@ const regularLinesWithFacesMappings = {
 
   codeLine: [
     '~convallis~',
-    [regularLine(
+    [lineCreators.regularLine(
       [codeText('convallis')])]],
 
   verbatimLine: [
     '=Integer=',
-    [regularLine(
+    [lineCreators.regularLine(
       [verbatimTextCreator('Integer')])]],
 
   italicLine: [
     '/bibendum/',
-    [regularLine(
+    [lineCreators.regularLine(
       [italicTextCreator('bibendum')])]]}
 
 // * Tests
-
-const testNodesMappings = (mappingResults, mappedProp, extractPath) =>
-      Object.keys(mappingResults).forEach(
-        (key) => {
-          const node = createNode({ [mappedProp]: mappingResults[key][0] });
-          const nodeMappingResult = mapNodeContentToObject(node);
-          const extractedPath = R.path(extractPath, nodeMappingResult);
-          const expectation = mappingResults[key][1];
-          expect(extractedPath).toEqual(expectation)})
 
 describe("mapsNodeContentToObject", () => {
 
