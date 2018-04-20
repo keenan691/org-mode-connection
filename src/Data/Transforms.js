@@ -45,4 +45,15 @@ export const mapFileToPlainObject = (f) => ({
   isChanged: f.isChanged,
   isConflicted: f.isConflicted,});
 
-export const mapNodeContentToObjectForm = (node) => ;
+// * node pretiffy
+// Traktować wszystkie linie tak samo. Nie gupować.
+
+// Stowrzyć drugi array z liniami zawierający wartości odpowiadające
+
+// Może coś zlinked list jest narzeczy
+
+export const mapNodeContentToObject = (node) => ({
+  plainContent: node,
+  objectContent: node
+
+})

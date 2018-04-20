@@ -67,37 +67,9 @@ const numericListLine = (elements) => ({
 
 // * Test data
 
-// ** Links
-
-const links = {
-
-  unknown: {
-    url: 'https://reactnavigation.org/docs/drawer-navigator.html ',
-    urlTitle: 'DrawerNavigator reference · React Navigation]]'}};
-
-const linksMappings = {
-  generic: ' [[https://reactnavigation.org/docs/drawer-navigator.html][DrawerNavigator reference · React Navigation]]',
-  web: ' [[https://reactnavigation.org/docs/drawer-navigator.html][DrawerNavigator reference · React Navigation]]',
-  mail: ' [[https://reactnavigation.org/docs/drawer-navigator.html][DrawerNavigator reference · React Navigation]]'};
-
-// ** Headers
-
-const headerMappings = {
-
-  regular: [
-    'Nulla posuere.',
-    [regularLine(
-      [regularText('Nulla posuere.')])]],
-
-  withLink: [
-    `Nulla posuere. ${link(...links.unknown)} Proin neque massa`,
-    [regularLine([
-      regularText('Nulla posuere.'),
-      link('')])]]};
-
 // ** Line types
 
-const linesMappings = {
+const contentLinesMappings = {
 
   emptyLine: [
     '\n',
@@ -135,9 +107,38 @@ const linesMappings = {
     [numericListLine(
       [regularText('Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')])]]};
 
+// ** Links
+
+const links = {
+  unknown: {
+    url: 'https://reactnavigation.org/docs/drawer-navigator.html ',
+    urlTitle: 'DrawerNavigator reference · React Navigation]]'}};
+
+const linksMappings = {
+  generic: ' [[https://reactnavigation.org/docs/drawer-navigator.html][DrawerNavigator reference · React Navigation]]',
+  web: ' [[https://reactnavigation.org/docs/drawer-navigator.html][DrawerNavigator reference · React Navigation]]',
+  mail: ' [[https://reactnavigation.org/docs/drawer-navigator.html][DrawerNavigator reference · React Navigation]]'};
+
+// ** Headers
+
+const headerMappings = {
+
+  regular: [
+    'Nulla posuere.',
+    [regularLine(
+      [regularText('Nulla posuere.')])]],
+
+  // withLink: [
+  //   `Nulla posuere. ${link(...links.unknown)} Proin neque massa`,
+  //   [regularLine([
+  //     regularText('Nulla posuere.'),
+  //     link(...links.unknown)])]]
+
+};
+
 // ** Faces
 
-const regularLinesWithFaces = {
+const regularLinesWithFacesMappings = {
 
   strikeThroughLine: [
     'Proin quam nisl, +tincidunt+ et, mattis eget, +convallis+ nec, purus.  ',
@@ -183,18 +184,22 @@ const regularLinesWithFaces = {
 
 // * Tests
 
-describe("mapNodeContentToObject", () => {
+const testNodesMappings = (mappingResults, mappedProp, extractPath) =>
+      Object.keys(mappingResults).forEach(
+        (key) => {
+          const node = createNode({ [mappedProp]: mappingResults[key][0] });
+          const nodeMappingResult = mapNodeContentToObject(node);
+          const extractedPath = R.path(extractPath, nodeMappingResult);
+          const expectation = mappingResults[key][1];
+          expect(extractedPath).toEqual(expectation)})
+
+describe("mapsNodeContentToObject", () => {
 
   test.only("returns input object in plainContent prop", () => {
-    const testData = createNode();
-    const expectation = testData;
-    expect(mapNodeContentToObject(testData).plainContent).toBe(expectation)})
+    const node = createNode();
+    const expectation = node;
+    expect(mapNodeContentToObject(node).plainContent).toBe(expectation)});
 
-  test.only("mapping lines to objects", () => {
-    const testData = ;
-    const expectation = ;
-    expect(mapNodeContentToObject(testData)).toBe(expectation)
-  });
-
-
+  test.only("maps content lines to line objects", () => {
+    testNodesMappings(contentLinesMappings, 'content', ['objectContent'])});
 })
