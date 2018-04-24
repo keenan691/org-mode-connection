@@ -17,7 +17,7 @@ const testNodesMappings = (mappingResults, mappedProp, extractPath) =>
           const nodeMappingResult = mapNodeContentToObject(node);
           const extractedPath = R.path(extractPath, nodeMappingResult);
           const expectation = mappingResults[key][1];
-          expect(extractedPath).toEqual(expectation)})
+          expect(extractedPath).toMatchObject(expectation)})
 
 // ** Node
 
@@ -36,6 +36,8 @@ const link = (url, urlTitle) => ({
 
 const regularText = (t) => ({
   type: 'regularText',
+  indexStart: expect.any(Number),
+  indexEnd: expect.any(Number),
   content: t});
 
 const codeText = (t) => ({
@@ -72,7 +74,10 @@ const contentLinesMappings = {
 
   emptyLine: [
     '\n',
-    [regularLineCreator([regularText('')]), regularLineCreator([regularText('')])]],
+    [regularLineCreator(
+      []),
+     regularLineCreator(
+       [])]],
 
   regularLine: [
     'Suspendisse potenti.  ',
@@ -97,15 +102,15 @@ const contentLinesMappings = {
   checkboxLineWithBold: [
     '- [ ] *Lorem* ipsum dolor sit amet, consectetuer adipiscing elit.',
     [regexLineCreators.checkboxLine(
-      [regularText('- [ ]'),
+      [regularText('- [ ] '),
        boldTextCreator('Lorem'),
-        regularText('ipsum dolor sit amet, consectetuer adipiscing elit.')],
+       regularText(' ipsum dolor sit amet, consectetuer adipiscing elit.')],
       false)]],
 
   numericListLine: [
     '1. Lorem ipsum dolor sit amet, consectetuer adipiscing elit.',
     [regexLineCreators.numericListLine(
-      [regularText('Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')])]]};
+      [regularText('1. Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')])]]};
 
 // ** Links
 
@@ -186,10 +191,10 @@ const regularLinesWithFacesMappings = {
 
 describe("mapsNodeContentToObject", () => {
 
-  test.only("returns input object in plainContent prop", () => {
-    const node = createNode();
-    const expectation = node;
-    expect(mapNodeContentToObject(node).plainContent).toBe(expectation)});
+  // test.only("returns input object in plainContent prop", () => {
+  //   const node = createNode();
+  //   const expectation = node;
+  //   expect(mapNodeContentToObject(node).plainContent).toBe(expectation)});
 
   test.only("maps content lines to line objects", () => {
     testNodesMappings(contentLinesMappings, 'content', ['objectContent'])});

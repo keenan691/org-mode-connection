@@ -3,23 +3,23 @@ import time
 import sys
 from time import sleep
 
-from bnorg import config
-from bnorg.helpers import ui
+# from bnorg import config
+# from bnorg.helpers import ui
 from invoke import task
 from plumbum import local
 from os import system
 
 # * Config
-TEST_REGEX = "simple parse"
+TEST_REGEX = "content"
 
 @task
 def t(ctx):
     system(f'./node_modules/.bin/jest -b --watch --notify')
 
 
-@task
-def s(ctx):
-    ui.open_in_terminal('yarn start', 'bundler')
+# @task
+# def s(ctx):
+#     ui.open_in_terminal('yarn start', 'bundler')
 
 
 @task

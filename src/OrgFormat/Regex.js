@@ -43,11 +43,11 @@ export const nodeContentLinesR = {
 }
 
 export const nodeContentInlineElementsR = {
-  link: /d/,
-  codeText: /d/,
-  strikeThroughText: /d/,
-  underlineText: /d/,
-  verbatimText: /d/,
-  boldText: /d/,
-  italicText: /d/,
+  // link: /d/,
+  // codeText: /d/,
+  // strikeThroughText: /d/,
+  // underlineText: /d/,
+  // verbatimText: /d/,
+  boldText: /\*(\w+)\*/g,
+  // italicText: /d/,
 }

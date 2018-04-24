@@ -1,10 +1,13 @@
 import R from "ramda";
+
 import { hungryLineParser } from '../GenericParsers/HungryLineParser';
 import { nodeContentLinesR, nodeContentInlineElementsR } from '../Regex';
+import { rlog } from '../../Helpers/Debug';
 
 const treis = require('treis');
 
-// * Lines  and Elements creators
+
+// * Fabrics
 
 export const createCreatorsFromRegex = (regexes) => {
   const addValue = (val, propName='value') => R.merge({ [propName]: val });
@@ -26,15 +29,27 @@ export const createCreatorsFromRegex = (regexes) => {
   )(regexes)
 }
 
+const inlineParser = (regex, creator) => ([objects, line]) => {
+  let result;
+  while (result = regex.exec(line)) {
+    const {index, input}  = result
+    const [orig, parsed] = result;
+    const obj = creator(parsed, {
+      indexStart: index,
+      indexEnd: index + orig.length
+    });
+    objects.push(obj)}
+  return [objects, line]
+};
+
+// * Creators
+
+// ** Line creators
+
 export const regexLineCreators = createCreatorsFromRegex(nodeContentLinesR);
+
 export const regularLineCreator = (content) => ({
   type: 'regularLine',
-  content
-});
-
-export const inlineElementsCreators = createCreatorsFromRegex(nodeContentInlineElementsR);
-export const regularTextCreator = (content) => ({
-  type: 'regularText',
   content
 });
 
@@ -48,33 +63,71 @@ const getLineCreator = (line,
         defaultCreator,
         R.keys(creators));
 
+// ** Inline creators
 
-// * Parse content line
+export const inlineElementsCreators = createCreatorsFromRegex(nodeContentInlineElementsR);
 
-const getContent = R.prop('content')
-const splitLines = R.split('\n');
+export const regularTextCreator = (content, params) => ({
+  type: 'regularText',
+  content,
+  ...params
+});
 
-const log = (obj) => {
-  console.log(obj)
-  return obj}
 
-// * Inline parseLine
+// * Parse line
 
+// TODO
 const createInlineParsers = () => [
-  hungryLineParser(nodeContentInlineElementsR.boldText,
-                   inlineElementsCreators, 'lines')];
+  inlineParser(nodeContentInlineElementsR.boldText,
+               inlineElementsCreators.boldText)];
 
-const parseRegularLine = ([objects, line]) => {
-  objects.push(regularTextCreator(line))
-  return objects}
+const inlineParsers = createInlineParsers();
+
+const parseRegularLines = ([objects, line]) => {
+  const lineMap = R.range(0, line.length)
+
+  // Mark objects on map
+  objects.forEach((obj) => {
+    const objShadow = R.range(obj.indexStart, obj.indexEnd);
+    objShadow.forEach((val) => lineMap[val] = null)})
+
+  const mapGroupToText = R.pipe(
+    R.map((idx) => line[idx]),
+    R.join(''))
+
+  const mapGroupsToObjects = R.map(
+    R.converge(regularTextCreator,
+               [mapGroupToText, R.applySpec({
+                 indexStart: R.head,
+                 indexEnd: R.last})]));
+
+  const filterByRegularTextGroups = R.filter(R.pipe(R.head, R.complement(R.equals(null))));
+  const sortByPlacement = R.sortBy(R.prop('indexStart'))
+  // Extract regular text ranges from lineMap
+  const makeGroups = R.groupWith(R.eqBy(R.type))
+
+  const mergeObjects = R.concat(objects);
+
+  return R.pipe(
+    makeGroups,
+    filterByRegularTextGroups,
+    mapGroupsToObjects,
+    mergeObjects,
+    sortByPlacement
+  )(lineMap)
+}
 
 const parseLine = (line) => {
   const innerRepr = [[], line];
   return R.pipe(
-    parseRegularLine)(innerRepr)}
+    inlineParsers[0],
+    treis(parseRegularLines)
+  )(innerRepr)}
 
 // * Parser
 
+const getContent = R.prop('content')
+const splitLines = R.split('\n');
 const prepareContent = R.pipe(getContent,
                               splitLines)
 

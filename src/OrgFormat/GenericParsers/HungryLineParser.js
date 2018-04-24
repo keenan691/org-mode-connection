@@ -2,8 +2,6 @@ import R from "ramda";
 
 import { parser } from './Common';
 
-// Wycina z objektu z liniami bloki oddzielone dwoma wyrażeniami regularnymi.
-
 const hungryLineParser = (regex, transform, wrapIn=null) => {
   const parseLine = (input) => {
     let results = [], result;
