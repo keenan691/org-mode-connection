@@ -9,7 +9,7 @@
                    (my/defprojectshortcut ?i "tasks.py")
                    (my/defprojectshortcut ?o "project.org")
                    (my/defprojectshortcut ?r "src/OrgFormat/Regex.js")
-                   (my/defprojectshortcut ?t "src/OrgFormat/Transformations.js")
+                   (my/defprojectshortcut ?t "src/OrgFormat/Transforms.js")
                    (my/defprojectshortcut ?f "src/Helpers/Functions.js")
                    (my/defprojectshortcut ?p "src/OrgFormat/Parser.js")
                    (my/defprojectshortcut ?d "src/Data/Db/Db.js")
@@ -30,8 +30,7 @@
                            ("helpers" "src/Helpers" ("index.js" ".story.js" "Styles" ".md") ".js")
                            ("org" "src/OrgFormat" ("index.js" ".story.js" "Styles" ".md") ".js")
                            ("atomic parsers" "src/OrgFormat/AtomicParsers" ("index.js" ".story.js" "Styles" ".md") ".js")
-                           ("generic parsers" "src/OrgFormat/GenericParsers" ("index.js" ".story.js" "Styles" ".md") ".js")
-                           ))
+                           ("generic parsers" "src/OrgFormat/GenericParsers" ("index.js" ".story.js" "Styles" ".md") ".js")))
 
                    (setenv "NODE_PATH"
                            (concat (projectile-project-root) "node_modules" ":"
