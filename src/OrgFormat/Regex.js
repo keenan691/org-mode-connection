@@ -36,16 +36,14 @@ export const nodeContentR = {
 export const fileMetadataR = /^#\+(\w+):\s*(.*)/
 
 export const nodeContentLinesR = {
-  // emptyLine: /^.*\n$/,
-  emptyLine: /^\s*$/,
+  checkedCheckboxLine: /^\s*-\s+[x]\s+/,
   listLine: /^\s*-\s+/,
-  checkboxLine: /^\s*-\s+[ ]\s+/,
+  checkboxLine: /^\s*-\s+\[ \]\s+/,
   numericListLine: /^\s*[0-9]\./,
 }
 
 export const nodeContentInlineElementsR = {
   link: /d/,
-  regularText: /d/,
   codeText: /d/,
   strikeThroughText: /d/,
   underlineText: /d/,

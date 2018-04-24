@@ -1,8 +1,9 @@
 import R from "ramda";
 
 import {
-  lineCreators,
   mapNodeContentToObject,
+  regexLineCreators,
+  regularLineCreator,
 } from '../../../src/OrgFormat/AtomicParsers/NodeContentParser';
 
 // * Factory functions
@@ -34,32 +35,32 @@ const link = (url, urlTitle) => ({
   urlTitle});
 
 const regularText = (t) => ({
-  type: 'regular',
-  text: t});
+  type: 'regularText',
+  content: t});
 
 const codeText = (t) => ({
-  type: 'code',
-  text: t});
+  type: 'codeText',
+  content: t});
 
 const strikeThroughText = (t) => ({
-  type: 'strikeThrough',
-  text: t});
+  type: 'strikeThroughText',
+  content: t});
 
 const underlineTextCreator = (t) => ({
-  type: 'underline',
-  text: t});
+  type: 'underlineText',
+  content: t});
 
 const verbatimTextCreator = (t) => ({
-  type: 'verbatim',
-  text: t});
+  type: 'verbatimText',
+  content: t});
 
 const boldTextCreator = (t) => ({
-  type: 'bold',
-  text: t});
+  type: 'boldText',
+  content: t});
 
 const italicTextCreator = (t) => ({
-  type: 'italic',
-  text: t});
+  type: 'italicText',
+  content: t});
 
 // ** Line containers
 
@@ -71,38 +72,39 @@ const contentLinesMappings = {
 
   emptyLine: [
     '\n',
-    [lineCreators.emptyLine(), lineCreators.emptyLine()]],
+    [regularLineCreator([regularText('')]), regularLineCreator([regularText('')])]],
 
   regularLine: [
     'Suspendisse potenti.  ',
-    [lineCreators.regularLine(
+    [regularLineCreator(
       [regularText('Suspendisse potenti.  ')])]],
 
   twoLines: [
     'one\ntwo',
-    [lineCreators.regularLine([regularText('one')]),
-     lineCreators.regularLine([regularText('two')])]],
+    [regularLineCreator([regularText('one')]),
+     regularLineCreator([regularText('two')])]],
 
   listLine: [
     '- Lorem ipsum dolor sit amet, consectetuer adipiscing elit.',
-    [lineCreators.listLine(
-      [regularText('Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')])]],
+    [regexLineCreators.listLine(
+      [regularText('- Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')])]],
 
   checkboxLine: [
     '- [ ] Lorem ipsum dolor sit amet, consectetuer adipiscing elit.',
-    [lineCreators.checkboxLine(
-      [regularText('Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')])]],
+    [regexLineCreators.checkboxLine(
+      [regularText('- [ ] Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')])]],
 
   checkboxLineWithBold: [
     '- [ ] *Lorem* ipsum dolor sit amet, consectetuer adipiscing elit.',
-    [lineCreators.checkboxLine(
-      [boldTextCreator('Lorem'),
-       regularText('ipsum dolor sit amet, consectetuer adipiscing elit.')],
+    [regexLineCreators.checkboxLine(
+      [regularText('- [ ]'),
+       boldTextCreator('Lorem'),
+        regularText('ipsum dolor sit amet, consectetuer adipiscing elit.')],
       false)]],
 
   numericListLine: [
     '1. Lorem ipsum dolor sit amet, consectetuer adipiscing elit.',
-    [lineCreators.numericListLine(
+    [regexLineCreators.numericListLine(
       [regularText('Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')])]]};
 
 // ** Links
@@ -123,12 +125,12 @@ const headerMappings = {
 
   regular: [
     'Nulla posuere.',
-    [lineCreators.regularLine(
+    [regularLineCreator(
       [regularText('Nulla posuere.')])]],
 
   // withLink: [
   //   `Nulla posuere. ${link(...links.unknown)} Proin neque massa`,
-  //   [lineCreators.regularLine([
+  //   [regularLineCreator([
   //     regularText('Nulla posuere.'),
   //     link(...links.unknown)])]]
 
@@ -140,7 +142,7 @@ const regularLinesWithFacesMappings = {
 
   strikeThroughLine: [
     'Proin quam nisl, +tincidunt+ et, mattis eget, +convallis+ nec, purus.  ',
-    [lineCreators.regularLine(
+    [regularLineCreator(
       [regularText('Proin quam nisl, '),
        strikeThroughText('tincidunt'),
        regularText(' et, mattis eget, '),
@@ -149,14 +151,14 @@ const regularLinesWithFacesMappings = {
 
   underlineLine: [
     'Nunc aliquet, augue _nec_ adipiscing interdum, lacus tellus malesuada massa, quis varius mi purus non odio.  ',
-    [lineCreators.regularLine(
+    [regularLineCreator(
       [regularText('Nunc aliquet, augue') ,
        underlineTextCreator('nec') ,
        regularText(' adipiscing interdum, lacus tellus malesuada massa, quis varius mi purus non odio.  ')])]],
 
   boldLine: [
     'Fusce sagittis, libero non molestie mollis, *magna* orci ultrices dolor, at *vulputate* neque nulla *lacinia* eros.  ',
-    [lineCreators.regularLine(
+    [regularLineCreator(
       [regularText('Fusce sagittis, libero non molestie mollis,') ,
        boldTextCreator('magna') ,
        regularText('orci ultrices dolor, at') ,
@@ -167,17 +169,17 @@ const regularLinesWithFacesMappings = {
 
   codeLine: [
     '~convallis~',
-    [lineCreators.regularLine(
+    [regularLineCreator(
       [codeText('convallis')])]],
 
   verbatimLine: [
     '=Integer=',
-    [lineCreators.regularLine(
+    [regularLineCreator(
       [verbatimTextCreator('Integer')])]],
 
   italicLine: [
     '/bibendum/',
-    [lineCreators.regularLine(
+    [regularLineCreator(
       [italicTextCreator('bibendum')])]]}
 
 // * Tests

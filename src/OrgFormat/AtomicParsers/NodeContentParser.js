@@ -1,87 +1,55 @@
-import { nodeContentLinesR } from '../Regex';
-
-/** @flow */
-
 import R from "ramda";
-
 import { hungryLineParser } from '../GenericParsers/HungryLineParser';
-import { nodeContentInlineElementsR } from '../Regex';
+import { nodeContentLinesR, nodeContentInlineElementsR } from '../Regex';
 
-export const parseContent = (lines) => ({
-  content: lines
+const treis = require('treis');
+
+// * Lines  and Elements creators
+
+export const createCreatorsFromRegex = (regexes) => {
+  const addValue = (val, propName='value') => R.merge({ [propName]: val });
+  const isCheckedCheckbox = R.propEq('type', 'checkedCheckboxLine');
+  const isNotCheckedCheckbox = R.propEq('type', 'checkboxLine');
+
+  const createLineObjects = R.mapObjIndexed((regexObj, key) => R.pipe(
+    R.when(isCheckedCheckbox, addValue(true, 'checked')),
+    R.when(isNotCheckedCheckbox, addValue(false, 'checked')))(
+    { type: key }));
+
+  const mapObjToCreators = R.map(
+    (obj) => (content, additionalProps) =>
+      R.merge(obj, {content, ...additionalProps}));
+
+  return R.pipe(
+    createLineObjects,
+    mapObjToCreators
+  )(regexes)
+}
+
+export const regexLineCreators = createCreatorsFromRegex(nodeContentLinesR);
+export const regularLineCreator = (content) => ({
+  type: 'regularLine',
+  content
 });
 
-// * Content to object transform
-// Traktować wszystkie linie tak samo. Nie gupować.
-// Stowrzyć drugi array z liniami zawierający wartości odpowiadające
-// Może coś zlinked list jest narzeczy
+export const inlineElementsCreators = createCreatorsFromRegex(nodeContentInlineElementsR);
+export const regularTextCreator = (content) => ({
+  type: 'regularText',
+  content
+});
 
-// ** Inline elements
+const getLineCreator = (line,
+                        regexObj=nodeContentLinesR,
+                        creators=regexLineCreators ,
+                        defaultCreator=regularLineCreator) =>
+      R.reduceWhile(
+        (acc, x) => acc !== x,
+        (acc, x) => regexObj[x].test(line) ? creators[x] : acc,
+        defaultCreator,
+        R.keys(creators));
 
-const inlineElementsCreators = {
 
-  link: (url, urlTitle) => ({
-    type: 'link',
-    url,
-    urlTitle}),
-
-  regularText: (t) => ({
-    type: 'regular',
-    text: t}),
-
-  codeText: (t) => ({
-    type: 'code',
-    text: t}),
-
-  strikeThroughText: (t) => ({
-    type: 'strikeThrough',
-    text: t}),
-
-  underlineTextCreator: (t) => ({
-    type: 'underline',
-    text: t}),
-
-  verbatimTextCreator: (t) => ({
-    type: 'verbatim',
-    text: t}),
-
-  boldTextCreator: (t) => ({
-    type: 'bold',
-    text: t}),
-
-  italicTextCreator: (t) => ({
-    type: 'italic',
-    text: t}),
-
-}
-
-// ** Line containers
-
-export const lineCreators = {
-
-  emptyLine: () => ({
-    type: 'emptyLine'}),
-
-  regularLine: (elements) => ({
-    type: 'regularLine',
-    elements}),
-
-  listLine: (elements) => ({
-    type: 'listLine',
-    elements}),
-
-  checkboxLine: (elements, value=false) => ({
-    type: 'checkboxLine',
-    value,
-    elements}),
-
-  numericListLine: (elements) => ({
-    type: 'numericListLine',
-    elements}),
-
-}
-
-// ** Parse content line
+// * Parse content line
 
 const getContent = R.prop('content')
 const splitLines = R.split('\n');
@@ -90,34 +58,33 @@ const log = (obj) => {
   console.log(obj)
   return obj}
 
-const getLineCreator = (line) => R.reduce(
-  (acc, key) =>
-    R.test(nodeContentLinesR[key], line) ?
-    R.reduced(lineCreators[key]) : acc,
-  lineCreators.regularLine,
-  Object.keys(nodeContentLinesR))
+// * Inline parseLine
 
 const createInlineParsers = () => [
   hungryLineParser(nodeContentInlineElementsR.boldText,
                    inlineElementsCreators, 'lines')];
 
-const makeRegularTextObjects = ([objects, line]) => {
-  objects.push(inlineElementsCreators.regularText(line))
+const parseRegularLine = ([objects, line]) => {
+  objects.push(regularTextCreator(line))
   return objects}
 
 const parseLine = (line) => {
   const innerRepr = [[], line];
   return R.pipe(
-    // ...createInlineParsers(),
-    makeRegularTextObjects
-  )(innerRepr)}
+    parseRegularLine)(innerRepr)}
 
-const mapContent = R.pipe(
-  getContent,
-  splitLines,
-  R.tap(console.log),
-  R.map(R.converge(R.call, [getLineCreator, parseLine])))
+// * Parser
+
+const prepareContent = R.pipe(getContent,
+                              splitLines)
+
+const parseContent = R.pipe(
+  prepareContent,
+  R.map(
+    R.converge(
+      R.call,
+      [getLineCreator, parseLine])))
 
 export const mapNodeContentToObject = R.applySpec({
   plainContent: getContent,
-  objectContent: mapContent})
+  objectContent: parseContent})
