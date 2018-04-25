@@ -6,8 +6,7 @@ import { rlog } from '../../Helpers/Debug';
 
 const treis = require('treis');
 
-
-// * Fabrics
+// * Functions
 
 export const createCreatorsFromRegex = (regexes) => {
   const addValue = (val, propName='value') => R.merge({ [propName]: val });
@@ -65,31 +64,31 @@ const getLineCreator = (line,
 
 // ** Inline creators
 
-export const inlineElementsCreators = createCreatorsFromRegex(nodeContentInlineElementsR);
-
 export const regularTextCreator = (content, params) => ({
   type: 'regularText',
   content,
   ...params
 });
 
+export const regexTextCreators = createCreatorsFromRegex(nodeContentInlineElementsR);
 
 // * Parse line
 
-// TODO
-const createInlineParsers = () => [
-  inlineParser(nodeContentInlineElementsR.boldText,
-               inlineElementsCreators.boldText)];
+const propOf = R.flip(R.prop);
+const createParserFromProp = R.converge(
+  inlineParser, [propOf(nodeContentInlineElementsR), propOf(regexTextCreators)]);
+const specialTextParsers = R.map(createParserFromProp, R.keys(regexTextCreators))
 
-const inlineParsers = createInlineParsers();
+const regularTextParser = ([objects, line]) => {
+  const mapOfLine = R.range(0, line.length)
 
-const parseRegularLines = ([objects, line]) => {
-  const lineMap = R.range(0, line.length)
-
-  // Mark objects on map
+  // mark objects on map
   objects.forEach((obj) => {
     const objShadow = R.range(obj.indexStart, obj.indexEnd);
-    objShadow.forEach((val) => lineMap[val] = null)})
+    objShadow.forEach((val) => mapOfLine[val] = null)})
+
+  const makeGroups = R.groupWith(R.eqBy(R.type))
+  const filterByRegularTextGroups = R.filter(R.pipe(R.head, R.complement(R.equals(null))));
 
   const mapGroupToText = R.pipe(
     R.map((idx) => line[idx]),
@@ -101,35 +100,32 @@ const parseRegularLines = ([objects, line]) => {
                  indexStart: R.head,
                  indexEnd: R.last})]));
 
-  const filterByRegularTextGroups = R.filter(R.pipe(R.head, R.complement(R.equals(null))));
-  const sortByPlacement = R.sortBy(R.prop('indexStart'))
-  // Extract regular text ranges from lineMap
-  const makeGroups = R.groupWith(R.eqBy(R.type))
-
-  const mergeObjects = R.concat(objects);
+  const mergeInputObjects = R.concat(objects);
+  const sortByInlinePosition = R.sortBy(R.prop('indexStart'))
 
   return R.pipe(
     makeGroups,
     filterByRegularTextGroups,
     mapGroupsToObjects,
-    mergeObjects,
-    sortByPlacement
-  )(lineMap)
+    mergeInputObjects,
+    sortByInlinePosition
+  )(mapOfLine)
 }
 
 const parseLine = (line) => {
   const innerRepr = [[], line];
   return R.pipe(
-    inlineParsers[0],
-    treis(parseRegularLines)
+    ...specialTextParsers,
+    regularTextParser
   )(innerRepr)}
 
-// * Parser
+// * Prepare content
 
 const getContent = R.prop('content')
 const splitLines = R.split('\n');
 const prepareContent = R.pipe(getContent,
                               splitLines)
+// * Parse
 
 const parseContent = R.pipe(
   prepareContent,

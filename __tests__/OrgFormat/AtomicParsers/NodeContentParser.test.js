@@ -157,20 +157,20 @@ const regularLinesWithFacesMappings = {
   underlineLine: [
     'Nunc aliquet, augue _nec_ adipiscing interdum, lacus tellus malesuada massa, quis varius mi purus non odio.  ',
     [regularLineCreator(
-      [regularText('Nunc aliquet, augue') ,
+      [regularText('Nunc aliquet, augue ') ,
        underlineTextCreator('nec') ,
        regularText(' adipiscing interdum, lacus tellus malesuada massa, quis varius mi purus non odio.  ')])]],
 
   boldLine: [
     'Fusce sagittis, libero non molestie mollis, *magna* orci ultrices dolor, at *vulputate* neque nulla *lacinia* eros.  ',
     [regularLineCreator(
-      [regularText('Fusce sagittis, libero non molestie mollis,') ,
+      [regularText('Fusce sagittis, libero non molestie mollis, ') ,
        boldTextCreator('magna') ,
-       regularText('orci ultrices dolor, at') ,
+       regularText(' orci ultrices dolor, at ') ,
        boldTextCreator('vulputate') ,
-       regularText('neque nulla') ,
+       regularText(' neque nulla ') ,
        boldTextCreator('lacinia') ,
-       regularText('eros.')])]],
+       regularText(' eros.  ')])]],
 
   codeLine: [
     '~convallis~',
@@ -191,10 +191,8 @@ const regularLinesWithFacesMappings = {
 
 describe("mapsNodeContentToObject", () => {
 
-  // test.only("returns input object in plainContent prop", () => {
-  //   const node = createNode();
-  //   const expectation = node;
-  //   expect(mapNodeContentToObject(node).plainContent).toBe(expectation)});
+  test.only("mappings lines to text objects", () => {
+    testNodesMappings(regularLinesWithFacesMappings, 'content', ['objectContent'])});
 
   test.only("maps content lines to line objects", () => {
     testNodesMappings(contentLinesMappings, 'content', ['objectContent'])});

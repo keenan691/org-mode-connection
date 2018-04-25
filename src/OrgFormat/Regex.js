@@ -42,12 +42,14 @@ export const nodeContentLinesR = {
   numericListLine: /^\s*[0-9]\./,
 }
 
+const createInlineR = (reg) => mrg(reg, /(\w+)/, reg)
+
 export const nodeContentInlineElementsR = {
-  // link: /d/,
-  // codeText: /d/,
-  // strikeThroughText: /d/,
-  // underlineText: /d/,
-  // verbatimText: /d/,
-  boldText: /\*(\w+)\*/g,
-  // italicText: /d/,
+  // link: createInlineR(/\*/),
+  strikeThroughText: createInlineR(/\+/),
+  boldText: createInlineR(/\*/),
+  codeText: createInlineR(/\~/),
+  underlineText: createInlineR(/\_/),
+  verbatimText: createInlineR(/\=/),
+  italicText: createInlineR(/\//),
 }
