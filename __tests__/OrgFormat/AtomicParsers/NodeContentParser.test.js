@@ -110,7 +110,13 @@ const contentLinesMappings = {
   numericListLine: [
     '1. Lorem ipsum dolor sit amet, consectetuer adipiscing elit.',
     [regexLineCreators.numericListLine(
-      [regularText('1. Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')])]]};
+      [regularText('1. Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')])]],
+
+  link: [
+    'Suspendisse potenti. [[https://reactnavigation.org/docs/drawer-navigator.html][DrawerNavigator reference · React Navigation]]',
+    [regularLineCreator(
+      [regularText('Suspendisse potenti.  '), link()])]],
+};
 
 // ** Links
 

@@ -31,13 +31,25 @@ export const createCreatorsFromRegex = (regexes) => {
 const inlineParser = (regex, creator) => ([objects, line]) => {
   let result;
   while (result = regex.exec(line)) {
+    // console.log(result)
     const {index, input}  = result
-    const [orig, parsed] = result;
-    const obj = creator(parsed, {
+
+    const [orig, ...parsed] = result;
+    // console.log("parsed = ", parsed);
+
+    const obj = creator(parsed[0], {
       indexStart: index,
       indexEnd: index + orig.length
     });
-    objects.push(obj)}
+
+    const isLink = R.propSatisfies(R.test(/link/i), 'type');
+    const addTitle = R.merge({ title: parsed[1] });
+
+    const enhanceObj = R.pipe(
+      R.when(isLink, addTitle)
+    );
+
+    objects.push(enhanceObj(obj))}
   return [objects, line]
 };
 
