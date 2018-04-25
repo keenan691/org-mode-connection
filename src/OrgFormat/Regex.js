@@ -44,17 +44,8 @@ export const nodeContentLinesR = {
 
 const createInlineR = (reg) => mrg(/(?<=\s|^)/, reg, /(\w+)/, reg, /(?=\s|$)/)
 
-//       .replace(/\[\[file:\s*([^ ]+)\.(?:PNG|JPG|BMP|GIF|TIFF|SVG)\]\]/i, '<img src="$1" alt="$1" />')
-// // image file, no bracket
-//       .replace(/(?:^|[^[])file:([^ ]+)\.(?:PNG|JPG|BMP|GIF|TIFF|SVG)(?:[^\]]|$)/i, '<img src="$1" alt="$1" />')
-// // hyperlink with description
-//       .replace(/\[\[(?:file:)?(.*?)\]\[(.*?)\]\]/g, '<a href="$1">$2</a>')
-// // hyperlink without description
-//       .replace(/\[\[(?:file:)?(.*?)\]\]/i, '<a href="$1">$1</a>');
-
 export const nodeContentInlineElementsR = {
-  linkWithDescription: /\[\[(.*?)\]\[(.*?)\]\]/g,
-  // link: createInlineR(/\*/),
+  link: /\[\[(.*?)\]\[(.*?)\]\]/g,
   strikeThroughText: createInlineR(/\+/),
   boldText: createInlineR(/\*/),
   codeText: createInlineR(/\~/),

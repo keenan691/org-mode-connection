@@ -28,14 +28,11 @@ export const createCreatorsFromRegex = (regexes) => {
   )(regexes)
 }
 
-const inlineParser = (regex, creator) => ([objects, line]) => {
+const inlineParserCreator = (regex, creator) => ([objects, line]) => {
   let result;
   while (result = regex.exec(line)) {
-    // console.log(result)
     const {index, input}  = result
-
     const [orig, ...parsed] = result;
-    // console.log("parsed = ", parsed);
 
     const obj = creator(parsed[0], {
       indexStart: index,
@@ -87,20 +84,20 @@ export const regexTextCreators = createCreatorsFromRegex(nodeContentInlineElemen
 // * Parse line
 
 const propOf = R.flip(R.prop);
-const createParserFromProp = R.converge(
-  inlineParser, [propOf(nodeContentInlineElementsR), propOf(regexTextCreators)]);
-const specialTextParsers = R.map(createParserFromProp, R.keys(regexTextCreators))
+const createParserFromKey = R.converge(
+  inlineParserCreator, [propOf(nodeContentInlineElementsR), propOf(regexTextCreators)]);
+const specialTextParsers = R.map(createParserFromKey, R.keys(regexTextCreators))
 
-const regularTextParser = ([objects, line]) => {
-  const mapOfLine = R.range(0, line.length)
-
-  // mark objects on map
-  objects.forEach((obj) => {
+// creates regularText objects from rest of line
+const regularTextParser = ([parsedObjects, line]) => {
+  const regularTextMap = R.range(0, line.length)
+  parsedObjects.forEach((obj) => {
     const objShadow = R.range(obj.indexStart, obj.indexEnd);
-    objShadow.forEach((val) => mapOfLine[val] = null)})
+    objShadow.forEach((val) => regularTextMap[val] = null)
+  })
 
   const makeGroups = R.groupWith(R.eqBy(R.type))
-  const filterByRegularTextGroups = R.filter(R.pipe(R.head, R.complement(R.equals(null))));
+  const filterOutShadowedGroups = R.filter(R.pipe(R.head, R.complement(R.equals(null))));
 
   const mapGroupToText = R.pipe(
     R.map((idx) => line[idx]),
@@ -112,16 +109,16 @@ const regularTextParser = ([objects, line]) => {
                  indexStart: R.head,
                  indexEnd: R.last})]));
 
-  const mergeInputObjects = R.concat(objects);
+  const mergeInputObjects = R.concat(parsedObjects);
   const sortByInlinePosition = R.sortBy(R.prop('indexStart'))
 
   return R.pipe(
     makeGroups,
-    filterByRegularTextGroups,
+    filterOutShadowedGroups,
     mapGroupsToObjects,
     mergeInputObjects,
     sortByInlinePosition
-  )(mapOfLine)
+  )(regularTextMap)
 }
 
 const parseLine = (line) => {
@@ -131,21 +128,13 @@ const parseLine = (line) => {
     regularTextParser
   )(innerRepr)}
 
-// * Prepare content
-
-const getContent = R.prop('content')
-const splitLines = R.split('\n');
-const prepareContent = R.pipe(getContent,
-                              splitLines)
 // * Parse
 
-const parseContent = R.pipe(
-  prepareContent,
+const splitLines = R.split('\n');
+
+export default R.pipe(
+  splitLines,
   R.map(
     R.converge(
       R.call,
       [getLineCreator, parseLine])))
-
-export const mapNodeContentToObject = R.applySpec({
-  plainContent: getContent,
-  objectContent: parseContent})

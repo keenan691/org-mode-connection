@@ -1,7 +1,6 @@
 import R from "ramda";
 
-import {
-  mapNodeContentToObject,
+import parseOrgNodeContent, {
   regexLineCreators,
   regularLineCreator,
 } from '../../../src/OrgFormat/AtomicParsers/NodeContentParser';
@@ -14,10 +13,9 @@ const testNodesMappings = (mappingResults, mappedProp, extractPath) =>
       Object.keys(mappingResults).forEach(
         (key) => {
           const node = createNode({ [mappedProp]: mappingResults[key][0] });
-          const nodeMappingResult = mapNodeContentToObject(node);
-          const extractedPath = R.path(extractPath, nodeMappingResult);
+          const result = parseOrgNodeContent(node.content);
           const expectation = mappingResults[key][1];
-          expect(extractedPath).toMatchObject(expectation)})
+          expect(result).toMatchObject(expectation)})
 
 // ** Node
 
@@ -31,8 +29,7 @@ const createNode = (props) => ({
 
 const link = (url, urlTitle) => ({
   type: 'link',
-  url,
-  urlTitle});
+  title: expect.any(String)});
 
 const regularText = (t) => ({
   type: 'regularText',
@@ -115,7 +112,7 @@ const contentLinesMappings = {
   link: [
     'Suspendisse potenti. [[https://reactnavigation.org/docs/drawer-navigator.html][DrawerNavigator reference · React Navigation]]',
     [regularLineCreator(
-      [regularText('Suspendisse potenti.  '), link()])]],
+      [regularText('Suspendisse potenti. '), link()])]],
 };
 
 // ** Links
@@ -129,23 +126,6 @@ const linksMappings = {
   generic: ' [[https://reactnavigation.org/docs/drawer-navigator.html][DrawerNavigator reference · React Navigation]]',
   web: ' [[https://reactnavigation.org/docs/drawer-navigator.html][DrawerNavigator reference · React Navigation]]',
   mail: ' [[https://reactnavigation.org/docs/drawer-navigator.html][DrawerNavigator reference · React Navigation]]'};
-
-// ** Headers
-
-const headerMappings = {
-
-  regular: [
-    'Nulla posuere.',
-    [regularLineCreator(
-      [regularText('Nulla posuere.')])]],
-
-  // withLink: [
-  //   `Nulla posuere. ${link(...links.unknown)} Proin neque massa`,
-  //   [regularLineCreator([
-  //     regularText('Nulla posuere.'),
-  //     link(...links.unknown)])]]
-
-};
 
 // ** Faces
 
