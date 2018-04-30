@@ -71,27 +71,29 @@ import Queries from './Queries';
 
 // * Add file
 
-const addFile = (filepath, type='agenda') => FileAccess.read(filepath).then(fileContent => {
-  const parsingResult = parse(fileContent)
+const addFile = (filepath, type='agenda') => {
+  const getFileContent = FileAccess.read(filepath);
+  const getFileStats = FileAccess.stat(filepath);
+  const parse = ([fileStat, fileContent]) => [fileStat, parse(fileContent)];
+  const addToDb = ([fileStat, parsedObj]) => Queries.connectDb().then(realm => realm.write(() => {
 
-  Queries.connectDb().then(
-    realm => realm.write(() => {
+    // Create OrgFile object
+    const orgFile = realm.create('OrgFile', {
+      path: filepath,
+      lastSync: new Date(),
+      description: parsedObj.file.description,
+      metadata: JSON.stringify(parsedObj.file.metadata),
+      size: fileStat.size,
+      mtime: fileStat.mtime,
+      ctime: fileStat.ctime,
+      type})
 
-      // Creating file object
-      const orgFile = realm.create('OrgFile', {
-        path: filepath,
-        lastSync: new Date(),
-        description: parsingResult.file.description,
-        metadata: JSON.stringify(parsingResult.file.metadata),
-        type})
+    // Creating node objects
+    prepareNodes(parsedObj.nodes, orgFile).forEach(node => {
+      const orgNode = realm.create('OrgNode', node, true)})}));
 
-      // Creating node objects
-      prepareNodes(parsingResult.nodes, orgFile).forEach(node => {
-        const orgNode = realm.create('OrgNode', node, true)})
-
-      Queries.flagFileAsSynced(orgFile)
-
-      return 1}))})
+  return Promise.all([getFileStats, getFileContent]).then(parse).then(addToDb)
+}
 
 // * Sync
 
