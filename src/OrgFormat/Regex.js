@@ -42,7 +42,8 @@ export const nodeContentLinesR = {
   numericListLine: /^\s*[0-9]\./,
 }
 
-const createInlineR = (reg) => mrg(/(?<=\s|^)/, reg, /(\w+)/, reg, /(?=\s|$)/)
+// const createInlineR = (reg) => mrg(/(?<=\s|^|\(\{)/, reg, /(\w+)/, reg, /(?=\s|$)/)
+const createInlineR = (reg) => mrg(reg, /(\w+)/, reg)
 
 export const nodeContentInlineElementsR = {
   link: /\[\[(.*?)\]\[(.*?)\]\]/g,
