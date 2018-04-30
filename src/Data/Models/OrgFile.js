@@ -9,7 +9,7 @@ export default {
     // File
     path: 'string',
     name: 'string?',
-    size: 'string?',
+    size: 'int?',
     mtime: 'date?',
     ctime: 'date?',
 
