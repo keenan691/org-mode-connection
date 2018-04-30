@@ -97,9 +97,9 @@ const contentLinesMappings = {
       [regularText('- [ ] Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')])]],
 
   checkboxLineWithBold: [
-    '- [ ] *Lorem* ipsum dolor sit amet, consectetuer adipiscing elit.',
+    '- [ ] df(*Lorem* ipsum dolor sit amet, consectetuer adipiscing elit.',
     [regexLineCreators.checkboxLine(
-      [regularText('- [ ] '),
+      [regularText('- [ ] df('),
        boldTextCreator('Lorem'),
        regularText(' ipsum dolor sit amet, consectetuer adipiscing elit.')],
       false)]],
@@ -132,9 +132,9 @@ const linksMappings = {
 const regularLinesWithFacesMappings = {
 
   strikeThroughLine: [
-    'Proin quam nisl, +tincidunt+ et, mattis eget, +convallis+ nec, purus.  ',
+    'proin quam nisl, +tincidunt+ et, mattis eget, +convallis+ nec, purus.  ',
     [regularLineCreator(
-      [regularText('Proin quam nisl, '),
+      [regularText('proin quam nisl, '),
        strikeThroughText('tincidunt'),
        regularText(' et, mattis eget, '),
        strikeThroughText('convallis'),

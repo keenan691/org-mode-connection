@@ -124,17 +124,15 @@ const getFiles = () => getObjects('OrgFile');
 const getNodeById = getObjectByIdAndEnhance('OrgNode', enhanceNode)
 
 // Flags file as synced and updates file stats
-const flagFileAsSynced = (file) =>
-      FileAccess.stat(file.path).then(
-        ({name, size, mtime, ctime}) =>
-          dbConn.then(realm => realm.write(
-            () => Object.assign(file, {
-              name,
-              size,
-              mtime,
-              ctime,
-              isChanged: false,
-              isConflicted: false }))))
+const flagFileAsSynced = (file) => FileAccess.stat(file.path).then(
+  (stats) => dbConn.then(realm => realm.write(
+    () => Object.assign(file, {
+      size: stats.size,
+      mtime: stats.mtime,
+      ctime: stats.ctime,
+      isChanged: false,
+      isConflicted: false }))))
+
 
 // ** Timestamps
 

@@ -11,7 +11,6 @@ import Queries, { enhanceNode } from '../../src/Data/Queries';
 var Realm = require('realm')
 
 jest.mock('../../src/Helpers/FileAccess');
-
 afterAll(() => {
   DbHelper.init()
   DbHelper.getInstance().then(realm => Db(realm).cleanUpDatabase())})

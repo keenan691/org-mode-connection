@@ -10,10 +10,11 @@ const printHour = date => {
   return hour !== '00:00' ? ' ' +hour : ''};
 
 const inactivePar = date => `[${ date }]`;
-const asOrgDate = date =>
-      `${ date.getFullYear() }-${ asTwoDigit(date.getMonth() + 1) }-${ asTwoDigit(date.getDate()) }`+
-      ` ${date.toLocaleDateString('en-GB', { weekday: 'short' }).toLowerCase()}` +
-      printHour(date)
+
+export const asOrgDate = (date, withVerboseDay=true) =>
+  `${ date.getFullYear() }-${ asTwoDigit(date.getMonth() + 1) }-${ asTwoDigit(date.getDate()) }`+
+  (withVerboseDay ? ` ${date.toLocaleDateString('en-GB', { weekday: 'short' }).toLowerCase()}` : '') +
+  printHour(date)
 
 const dateAsOrgActiveDate = date => `<${ asOrgDate(date) }>`;
 const dateAsOrgInactiveDate = date => `[${ asOrgDate(date) }]`;
