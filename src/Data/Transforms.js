@@ -19,12 +19,29 @@ export const prepareNodes = (parsedNodes, file) =>
 export const mapNodeToPlainObject = (n) => ({
   id: n.id,
   level: n.level,
+  position: n.position,
   headline: n.headline,
   content: n.content,
   category: null,
   todo: n.todo,
   priority: n.priority,
   drawers: n.drawers,
+  tags: Array.from(n.tags).map(t => t.name),
+  timestamps: Array.from(n.timestamps).map(t => ({
+    type: t.type,
+    warningPeriod: t.warningPeriod,
+    repeater: t.repeater,
+    date: t.date,
+    dateRangeEnd: t.dateRangeEnd}))})
+
+export const mapNodeToSearchResult = (n) => ({
+  id: n.id,
+  level: n.level,
+  headline: n.headline,
+  content: n.content.slice(0, n.content.length < 100 ? n.content.length : 100).trim(),
+  category: n.file.title,
+  todo: n.todo,
+  priority: n.priority,
   tags: Array.from(n.tags).map(t => t.name),
   timestamps: Array.from(n.timestamps).map(t => ({
     type: t.type,

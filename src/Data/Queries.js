@@ -3,6 +3,7 @@ import R from "ramda";
 import {
   mapFileToPlainObject,
   mapNodeToPlainObject,
+  mapNodeToSearchResult,
   prepareNodes,
 } from './Transforms';
 import { parse } from '../OrgFormat/Parser';
@@ -152,22 +153,39 @@ export const addTimestamp = (node, type, timestampObj) => dbConn.then(realm => r
 
 const getAgenda = (dateStart, dateEnd) => getObjects('OrgTimestamp', 'date >= $0 && date <= $1', dateStart, dateEnd)
 
-// ** Search
-
-const search = (term) => getObjects('OrgNode', 'headline CONTAINS[c] $0 || content CONTAINS[c] $0', term)
-
 // ** Get as plain objects
+
+const mapNodesToPlainObject = (nodes) => Array.from(nodes).map(mapNodeToPlainObject)
+const mapNodesToSearchResults = (nodes) => Array.from(nodes).map(mapNodeToSearchResult)
 
 // Returns whole file content including nodes as plain object
 const getFileAsPlainObject = (id) => dbConn.then(realm => {
   const f = realm.objects('OrgFile').filtered(`path = '${id}'`)[0]
   const filePlain = mapFileToPlainObject(f);
   const nodesPlain = {
-    nodes: Array.from(f.nodes).map(mapNodeToPlainObject)}
+    nodes: mapNodesToPlainObject(f.nodes)
+  }
   return Object.assign(filePlain, nodesPlain)})
 
 // Return only files fields as plain object, without nodes
 const getAllFilesAsPlainObject = () => getFiles().then(files => files.map(mapFileToPlainObject))
+const getTagsAsPlainObject = () => getObjects('OrgTag').then(tags => tags.map(tag => tag.name));
+
+// ** Search
+
+const search = ({searchTerm, todos, tags, priority, isScheduled, hasDeadline}) => {
+  return getObjects('OrgNode').then(res => {
+    if (searchTerm) {
+      res = res.filtered('headline CONTAINS[c] $0 || content CONTAINS[c] $0', searchTerm)
+    }
+    if (!R.isEmpty(todos)) {
+      res = res.filtered('todo == "TODO"')
+    }
+    return mapNodesToSearchResults(res)
+    // let res = getObjects('OrgNode', 'headline CONTAINS[c] $0 || content CONTAINS[c] $0', query.searchTerm).then(nodes => mapNodesToSearchResults(nodes))
+  })
+}
+
 
 // * Export
 
@@ -175,6 +193,7 @@ export default {
   clearDb: () => dbConn.then(realm => Db(realm).cleanUpDatabase()),
   getFileAsPlainObject,
   getAllFilesAsPlainObject,
+  getTagsAsPlainObject,
   addNodes,
   getFiles,
   getNodes,
