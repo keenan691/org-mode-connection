@@ -12,7 +12,6 @@ const lazyLineParser = (regex, transform, wrapIn=null) => {
              R.apply(transform)))
 
   const makeOutput = (inputObjects, inputLines, parserOutput) => {
-    console.log(parserOutput)
     R.forEach(
       (parsed) => {
         inputObjects.push(

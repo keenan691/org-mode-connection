@@ -119,9 +119,6 @@ const regularTextParser = ([parsedObjects, line]) => {
   )(regularTextMap)
 }
 
-// zamienić na lens
-// jesli zamienię na lens to nie b export default export miał dostepu do lini
-// chyba że dwa różne lensy mają do sie bie dośtęp - to by było sppoko
 const filterOutNotIsolatedSentences = ([parsedObjs, line]) => [
   R.filter(R.allPass([
     obj => [undefined, '(', '{', ' '].includes(line[obj.indexStart-1]),
