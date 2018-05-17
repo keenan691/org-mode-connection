@@ -1,0 +1,14 @@
+#+TITLE: searching-test
+
+* In id erat non orci commodo lobortis.
+* TODO Pellentesque dapibus suscipit ligula.
+* Aliquam feugiat tellus ut neque.
+* DONE Nam a sapien.
+CLOSED: [2018-05-17 czw 14:44]
+* Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus.
+* DONE Phasellus at dui in ligula mollis ultricies.
+CLOSED: [2018-05-17 czw 14:44]
+* TODO Nullam eu ante vel est convallis dignissim.
+* Pellentesque dapibus suscipit ligula.
+* TODO Nulla facilisis, risus a rhoncus fermentum, tellus tellus lacinia purus, et dictum nunc justo sit amet elit.
+* Nullam tristique diam non turpis.

@@ -10,28 +10,101 @@ import OrgApi from '../../src/OrgApi';
 import Queries, { enhanceNode } from '../../src/Data/Queries';
 var Realm = require('realm')
 
+// * Prepare
+
 jest.mock('../../src/Helpers/FileAccess');
-afterAll(() => {
-  DbHelper.init()
-  DbHelper.getInstance().then(realm => Db(realm).cleanUpDatabase())})
+
+const loadTestFile = (fileName) => FileAccess.
+      write('file', getOrgFileContent(fileName).join('\n')).
+      then(() => OrgApi.addFile(fileName))
 
 beforeAll(() => {
   OrgApi.configureDb(Realm)
   OrgApi.connectDb()
-  FileAccess.write('file', getOrgFileContent('full.org').join('\n')).then(() => OrgApi.addFile('fixtures/full.org'))})
-
-describe("Search", () => {
-
-  test("search", () => {
-    expect.assertions(1)
-    return expect(Queries.search("Node")).resolves.toHaveLength(5);});
-
-  test("search", () => {
-    expect.assertions(1)
-    return expect(Queries.search("nunc")).resolves.toHaveLength(2);});
 })
 
+// * Searching tests
+// ** Data generators
+
+const blankSearchQuery = {
+  todos: {},
+  tags: {},
+  priority: {
+    '#A': 0,
+    '#B': 0,
+    '#C': 0
+  },
+  isScheduled: false,
+  hasDeadline: false,
+  searchTerm: ''
+};
+
+const createSearchQuery = (obj) => R.merge(blankSearchQuery, obj);
+
+// ** Tests
+
+describe("Search", () => {
+  beforeAll(() => {
+    OrgApi.clearDb()
+    return loadTestFile('searching-test.org')})
+
+  const searchTest = (testData, expectation) => expect(OrgApi.search(testData)).resolves.
+        toHaveLength(expectation)
+
+  test.only("Not performing search when passed query is blank", () => {
+    return searchTest(blankSearchQuery, 0)});
+
+  describe("Todo", () => {
+    test.only("Searching of all TODO items", () => {
+      const searchQuery = createSearchQuery({
+        todos: {
+          TODO: 1
+        }})
+      const nodesFound = 3
+      return searchTest(searchQuery, nodesFound)})
+
+    test.only("Searching of all DONE items", () => {
+      const searchQuery = createSearchQuery({
+        todos: {
+          DONE: 1
+        }})
+      const nodesFound = 2
+      return searchTest(searchQuery, nodesFound)})
+
+    test.only("Searching of all DONE and TODO items", () => {
+      const searchQuery = createSearchQuery({
+        todos: {
+          DONE: 1,
+          TODO: 1
+        }})
+      const nodesFound = 5
+      return searchTest(searchQuery, nodesFound)})
+
+    test.only("Searching of all tasks with state not equal DONE items", () => {
+      const searchQuery = createSearchQuery({
+        todos: {
+          DONE: -1,
+        }})
+      const nodesFound = 3
+      return searchTest(searchQuery, nodesFound)})
+
+    test.only("Using only positive query when given both", () => {
+      const searchQuery = createSearchQuery({
+        todos: {
+          DONE: -1,
+          TODO: 1,
+        }})
+      const nodesFound = 3
+      return searchTest(searchQuery, nodesFound)})})
+
+})
+
+// * Queries tests
+
 describe("Queries", () => {
+  beforeAll(() => {
+    OrgApi.clearDb()
+    return loadTestFile('full.org')})
 
   test("getFileAsPlainObject", () => {
     expect.assertions(1)

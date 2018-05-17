@@ -173,18 +173,41 @@ const getTagsAsPlainObject = () => getObjects('OrgTag').then(tags => tags.map(ta
 
 // ** Search
 
-const search = ({searchTerm, todos, tags, priority, isScheduled, hasDeadline}) => {
-  return getObjects('OrgNode').then(res => {
-    if (searchTerm) {
-      res = res.filtered('headline CONTAINS[c] $0 || content CONTAINS[c] $0', searchTerm)
-    }
-    if (!R.isEmpty(todos)) {
-      res = res.filtered('todo == "TODO"')
-    }
-    return mapNodesToSearchResults(res)
-    // let res = getObjects('OrgNode', 'headline CONTAINS[c] $0 || content CONTAINS[c] $0', query.searchTerm).then(nodes => mapNodesToSearchResults(nodes))
-  })
-}
+const prepareSearchFilter = (fieldName, filter) => R.pipe(
+  R.reject(R.equals(0)),    // Exclude neutral filters
+  R.partition(R.equals(1)), // Partition to positive and negative filters
+  R.converge(Array, [R.pipe(R.head, R.keys,
+                            R.map(todo => `${fieldName} = "${todo}"`),
+                            R.join(' || ')),
+                     R.pipe(R.last, R.keys,
+                            R.map(todo => `${fieldName} != "${todo}"`),
+                            R.join(' || '))]))(filter);
+
+const search = ({searchTerm,
+                 todos,
+                 tags,
+                 priority,
+                 isScheduled,
+                 hasDeadline}) => getObjects('OrgNode').
+      then(nodes => {
+
+        let filteredNodes = nodes
+
+        if (searchTerm) {
+          filteredNodes = filteredNodes.
+            filtered('headline CONTAINS[c] $0 || content CONTAINS[c] $0', searchTerm)}
+
+        if (!R.isEmpty(todos)) {
+          const [positiveQuery, negativeQuery] = prepareSearchFilter('todo', todos)
+          filteredNodes = filteredNodes.filtered("todo != null")
+          filteredNodes = filteredNodes.filtered(positiveQuery || negativeQuery)
+        }
+
+        // In case if non of filters was applied return empty result
+        if (filteredNodes === nodes) {
+          return []}
+
+        return mapNodesToSearchResults(filteredNodes)})
 
 
 // * Export
