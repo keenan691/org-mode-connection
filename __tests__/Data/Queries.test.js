@@ -54,6 +54,29 @@ describe("Search", () => {
   test.only("Not performing search when passed query is blank", () => {
     return searchTest(blankSearchQuery, 0)});
 
+  describe("Scheduled and Deadline", () => {
+
+    test.only("Searching for scheduled items", () => {
+      const searchQuery = createSearchQuery({
+        isScheduled: true})
+      const nodesFound = 3
+      return searchTest(searchQuery, nodesFound)})
+
+    test.only("Searching for items with deadline", () => {
+      const searchQuery = createSearchQuery({
+        hasDeadline: true})
+      const nodesFound = 2
+      return searchTest(searchQuery, nodesFound)})
+
+    test.only("Searching for scheduled items with deadline", () => {
+      const searchQuery = createSearchQuery({
+        isScheduled: true,
+        hasDeadline: true})
+      const nodesFound = 1
+      return searchTest(searchQuery, nodesFound)})
+
+  })
+
   describe("Priority", () => {
 
     test.only("Searching nodes with A priority", () => {

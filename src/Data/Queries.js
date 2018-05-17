@@ -193,6 +193,7 @@ const search = ({searchTerm,
                  priority,
                  isScheduled,
                  hasDeadline}) => getObjects('OrgNode').
+
       then(nodes => {
 
         let filteredNodes = nodes
@@ -204,17 +205,25 @@ const search = ({searchTerm,
           filteredNodes = filteredNodes.
             filtered('headline CONTAINS[c] $0 || content CONTAINS[c] $0', searchTerm)}
 
+        if (isScheduled) {
+          filteredNodes = filteredNodes.filtered('timestamps.type = "scheduled"')
+        }
+
+        if (hasDeadline) {
+          filteredNodes = filteredNodes.filtered('timestamps.type = "deadline"')
+        }
+
         if (!R.isEmpty(todos)) {
           const [positiveQuery, negativeQuery] = prepareSearchFilter('todo', todos)
           const query = positiveQuery || negativeQuery;
-          filteredNodes = filteredNodes.filtered("todo != null")
+          filteredNodes = filteredNodes.filtered('todo != null')
           filteredNodes = filteredNodes.filtered(query)
         }
 
         if (!R.isEmpty(priority)) {
           const [positiveQuery, negativeQuery] = prepareSearchFilter('priority', priority)
           const query = positiveQuery || negativeQuery;
-          filteredNodes = filteredNodes.filtered("priority != null")
+          filteredNodes = filteredNodes.filtered('priority != null')
           filteredNodes = filteredNodes.filtered(query)
         }
 
@@ -234,7 +243,6 @@ const search = ({searchTerm,
           return []}
 
         return mapNodesToSearchResults(filteredNodes)})
-
 
 // * Export
 
