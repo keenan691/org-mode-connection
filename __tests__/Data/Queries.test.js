@@ -205,6 +205,30 @@ describe("Search", () => {
       const nodesFound = 3
       return searchTest(searchQuery, nodesFound)})})
 
+  describe("Mixed filters", () => {
+
+    test.only("Searching todos with deadline", () => {
+      const searchQuery = createSearchQuery({
+        todos: {
+          TODO: 1,
+        },
+        hasDeadline: true
+      })
+      const nodesFound = 1
+      return searchTest(searchQuery, nodesFound)})
+
+    test.only("Searching scheduled items tagged with drill", () => {
+      const searchQuery = createSearchQuery({
+        tags: {
+          drill: 1,
+        },
+        isScheduled: true
+      })
+      const nodesFound = 2
+      return searchTest(searchQuery, nodesFound)})
+
+  })
+
 })
 
 // * Queries tests

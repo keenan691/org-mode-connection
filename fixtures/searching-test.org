@@ -1,7 +1,6 @@
 #+TITLE: searching-test
 
 * [#A] In id erat non orci commodo lobortis.                          :drill:
-DEADLINE: <2018-05-18 czw>
 * TODO Pellentesque dapibus suscipit ligula.
 * [#B] Aliquam feugiat tellus ut neque.                    :javascript:drill:
 SCHEDULED: <2018-05-17 czw> DEADLINE: <2018-05-18 czw>
@@ -12,6 +11,7 @@ CLOSED: [2018-05-17 czw 14:44]
 * DONE [#C] Phasellus at dui in ligula mollis ultricies.
 CLOSED: [2018-05-17 czw 14:44]
 * TODO Nullam eu ante vel est convallis dignissim.                  :onlyOne:
+DEADLINE: <2018-05-18 czw>
 * Pellentesque dapibus suscipit ligula.                               :drill:
 SCHEDULED: <2018-05-17 czw>
 * TODO [#A] Nulla facilisis, risus a rhoncus fermentum, tellus tellus lacinia purus, et dictum nunc justo sit amet elit.
