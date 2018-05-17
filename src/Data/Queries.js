@@ -173,15 +173,19 @@ const getTagsAsPlainObject = () => getObjects('OrgTag').then(tags => tags.map(ta
 
 // ** Search
 
+const removeNeutralFilters = R.reject(R.equals(0))
+
 const prepareSearchFilter = (fieldName, filter) => R.pipe(
-  R.reject(R.equals(0)),    // Exclude neutral filters
   R.partition(R.equals(1)), // Partition to positive and negative filters
   R.converge(Array, [R.pipe(R.head, R.keys,
                             R.map(todo => `${fieldName} = "${todo}"`),
                             R.join(' || ')),
                      R.pipe(R.last, R.keys,
-                            R.map(todo => `${fieldName} != "${todo}"`),
-                            R.join(' || '))]))(filter);
+                            R.map(todo => `${fieldName} = "${todo}"`),
+                            R.join(' || '),
+                            R.when(R.complement(R.isEmpty),
+                                   R.pipe(R.concat('NOT ('), R.concat(R.__, ')')))
+                           )]))(filter);
 
 const search = ({searchTerm,
                  todos,
@@ -192,6 +196,9 @@ const search = ({searchTerm,
       then(nodes => {
 
         let filteredNodes = nodes
+        priority = removeNeutralFilters(priority)
+        todos = removeNeutralFilters(todos)
+        tags = removeNeutralFilters(tags)
 
         if (searchTerm) {
           filteredNodes = filteredNodes.
@@ -199,8 +206,27 @@ const search = ({searchTerm,
 
         if (!R.isEmpty(todos)) {
           const [positiveQuery, negativeQuery] = prepareSearchFilter('todo', todos)
+          const query = positiveQuery || negativeQuery;
           filteredNodes = filteredNodes.filtered("todo != null")
-          filteredNodes = filteredNodes.filtered(positiveQuery || negativeQuery)
+          filteredNodes = filteredNodes.filtered(query)
+        }
+
+        if (!R.isEmpty(priority)) {
+          const [positiveQuery, negativeQuery] = prepareSearchFilter('priority', priority)
+          const query = positiveQuery || negativeQuery;
+          filteredNodes = filteredNodes.filtered("priority != null")
+          filteredNodes = filteredNodes.filtered(query)
+        }
+
+        if (!R.isEmpty(tags)) {
+          const [positiveQuery, negativeQuery] = prepareSearchFilter('tags.name', tags)
+
+          if (!positiveQuery && R.isEmpty(todos)) {
+            filteredNodes = filteredNodes.filtered('tags.@size > 0')
+          }
+
+          const query = R.pipe(R.reject(R.isEmpty), R.join(' AND '))([positiveQuery, negativeQuery])
+          filteredNodes = filteredNodes.filtered(query)
         }
 
         // In case if non of filters was applied return empty result

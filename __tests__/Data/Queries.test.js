@@ -30,9 +30,9 @@ const blankSearchQuery = {
   todos: {},
   tags: {},
   priority: {
-    '#A': 0,
-    '#B': 0,
-    '#C': 0
+    'A': 0,
+    'B': 0,
+    'C': 0
   },
   isScheduled: false,
   hasDeadline: false,
@@ -54,8 +54,93 @@ describe("Search", () => {
   test.only("Not performing search when passed query is blank", () => {
     return searchTest(blankSearchQuery, 0)});
 
+  describe("Priority", () => {
+
+    test.only("Searching nodes with A priority", () => {
+      const searchQuery = createSearchQuery({
+        priority: {
+          A: 1
+        }})
+      const nodesFound = 2
+      return searchTest(searchQuery, nodesFound)})
+
+    test.only("Searching nodes with A and B priority", () => {
+      const searchQuery = createSearchQuery({
+        priority: {
+          A: 1,
+          B: 1
+        }})
+      const nodesFound = 3
+      return searchTest(searchQuery, nodesFound)})
+
+    test.only("Searching nodes without B priority", () => {
+      const searchQuery = createSearchQuery({
+        priority: {
+          B: -1
+        }})
+      const nodesFound = 4
+      return searchTest(searchQuery, nodesFound)})
+
+  })
+
+  describe("Tags", () => {
+
+    test.only("Searching all drill tags", () => {
+      const searchQuery = createSearchQuery({
+        tags: {
+          drill: 1
+        }})
+      const nodesFound = 3
+      return searchTest(searchQuery, nodesFound)})
+
+    test.only("Searching all javascript tags", () => {
+      const searchQuery = createSearchQuery({
+        tags: {
+          javascript: 1
+        }})
+      const nodesFound = 1
+      return searchTest(searchQuery, nodesFound)})
+
+    test.only("Searching both javascript and drill tags", () => {
+      const searchQuery = createSearchQuery({
+        tags: {
+          javascript: 1,
+          drill: 1
+        }})
+      const nodesFound = 3
+      return searchTest(searchQuery, nodesFound)})
+
+    test.only("Searching javascript without drill tags", () => {
+      const searchQuery = createSearchQuery({
+        tags: {
+          javascript: 1,
+          drill: -1
+        }})
+      const nodesFound = 0
+      return searchTest(searchQuery, nodesFound)})
+
+    test.only("Searching drill and without javascript tags", () => {
+      const searchQuery = createSearchQuery({
+        tags: {
+          javascript: -1,
+          drill: 1
+        }})
+      const nodesFound = 2
+      return searchTest(searchQuery, nodesFound)})
+
+    test.only("Searching all tagged items without javascript and drill tags", () => {
+      const searchQuery = createSearchQuery({
+        tags: {
+          javascript: -1,
+          drill: -1
+        }})
+      const nodesFound = 1
+      return searchTest(searchQuery, nodesFound)})
+
+  })
+
   describe("Todo", () => {
-    test.only("Searching of all TODO items", () => {
+    test.only("Searching all TODO items", () => {
       const searchQuery = createSearchQuery({
         todos: {
           TODO: 1
@@ -63,7 +148,7 @@ describe("Search", () => {
       const nodesFound = 3
       return searchTest(searchQuery, nodesFound)})
 
-    test.only("Searching of all DONE items", () => {
+    test.only("Searching all DONE items", () => {
       const searchQuery = createSearchQuery({
         todos: {
           DONE: 1
@@ -71,7 +156,7 @@ describe("Search", () => {
       const nodesFound = 2
       return searchTest(searchQuery, nodesFound)})
 
-    test.only("Searching of all DONE and TODO items", () => {
+    test.only("Searching all DONE and TODO items", () => {
       const searchQuery = createSearchQuery({
         todos: {
           DONE: 1,
@@ -80,7 +165,7 @@ describe("Search", () => {
       const nodesFound = 5
       return searchTest(searchQuery, nodesFound)})
 
-    test.only("Searching of all tasks with state not equal DONE items", () => {
+    test.only("Searching all tasks with state not equal DONE items", () => {
       const searchQuery = createSearchQuery({
         todos: {
           DONE: -1,
