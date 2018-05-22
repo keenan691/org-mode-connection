@@ -61,8 +61,7 @@ afterAll(() => {
 })
 
 // * TODO [1/3] Tests
-
-// ** Code
+// ** Recognize if file needs sync
 
 describe('getNewExternalMtime', () => {
 
@@ -81,6 +80,8 @@ describe('getNewExternalMtime', () => {
     return FileAccess.write(MOCKED_FILES['basic']).then(
       () => Queries.getFiles().then(
         files => expect(getNewExternalMtime(files[0])).resolves.toBeTruthy()))})})
+
+// ** Get external changes
 
 describe('getChanges external', () => {
 
@@ -122,6 +123,8 @@ describe('getChanges external', () => {
     return writeToFile('externalChanges1').then(
       () => Queries.getFiles().then(
         (files) => expect(getChanges(files[0])).resolves.toHaveProperty('localChanges', null)))})})
+
+// ** Synchronization
 
 describe("sync", () => {
   expect.assertions(1)
@@ -181,3 +184,25 @@ describe("sync", () => {
          status: 'success',
          localChanges: null,
          externalChanges: {addedNodes: 1, deletedNodes: 2, notChangedNodes: 2}}])})})
+
+// ** Sync special cases
+
+describe("External sync special cases", () => {
+  beforeAll(() => {
+    return createAndAddFileToCleanDb('empty')})
+
+  const testSync = (testData) => expect(
+    FileAccess.write('empty', testData.newFileContent).then(
+      () => OrgApi.syncDb())).resolves.toEqual(
+        [{ file: 'empty',
+           status: 'success',
+           localChanges: null,
+           externalChanges: testData.externalChangesSummary}])
+
+  test.only("add nodes to empty file", () => {
+    return testSync({
+      newFileContent: `* node 1 \n* node 2`,
+      externalChangesSummary: {
+        addedNodes: 2}})});
+
+})

@@ -169,12 +169,20 @@ const applyLocalChanges = changes => {
   return FileAccess.write(changes.file.path, newFileContent).then(() => ({ status: 'success' }))}
 
 const applyExternalChanges = changes => {
+  let promises = []
   const externalChanges = changes.externalChanges;
-  const nodesToAdd = externalChanges.addedNodes.map(n => parseNode(n));
-  const deleteNodes = Queries.deleteNodes(externalChanges.deletedNodes);
-  const addNodes = Queries.addNodes(nodesToAdd, changes.file)
-  const updateNodes = Queries.updateNodes(externalChanges.notChangedNodes, { isChanged: false })
-  return Promise.all([deleteNodes, addNodes, updateNodes]).then(() => ({ status: 'success' }))}
+
+  if (externalChanges.addedNodes) {
+    const nodesToAdd = externalChanges.addedNodes.map(n => parseNode(n));
+    promises.push(Queries.addNodes(nodesToAdd, changes.file))}
+
+  if (externalChanges.deletedNodes) {
+    promises.push(Queries.deleteNodes(externalChanges.deletedNodes))}
+
+  if (externalChanges.notChangedNodes) {
+    promises.push(Queries.updateNodes(externalChanges.notChangedNodes, { isChanged: false }))}
+
+  return Promise.all(promises).then(() => ({ status: 'success' }))}
 
 const mergeChanges = changes => {
   // At the moment only notify aboout conflict
