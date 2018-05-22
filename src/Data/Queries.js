@@ -164,7 +164,7 @@ const getFileAsPlainObject = (id) => dbConn.then(realm => {
   const filePlain = mapFileToPlainObject(f);
   return  {
     fileData: filePlain,
-    nodesList: mapNodesToPlainObject(f.nodes)
+    nodesList: mapNodesToPlainObject(f.nodes.sorted('position'))
   }
 })
 
