@@ -14,8 +14,10 @@ export default (function (){
   return {
     write (path, content) {
       return new Promise((resolve, reject) => {
-        __mockFile.content = content
-        __mockFile.stat.mtime = new Date()
+        if (__mockFile.content != content) {
+          __mockFile.content = content
+          __mockFile.stat.mtime = new Date()
+        }
         return resolve(true)})},
 
     read ()  { return new Promise(
