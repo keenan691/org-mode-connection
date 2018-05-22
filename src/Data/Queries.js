@@ -162,10 +162,11 @@ const mapNodesToSearchResults = (nodes) => Array.from(nodes).map(mapNodeToSearch
 const getFileAsPlainObject = (id) => dbConn.then(realm => {
   const f = realm.objects('OrgFile').filtered(`path = '${id}'`)[0]
   const filePlain = mapFileToPlainObject(f);
-  const nodesPlain = {
-    nodes: mapNodesToPlainObject(f.nodes)
+  return  {
+    fileData: filePlain,
+    nodesList: mapNodesToPlainObject(f.nodes)
   }
-  return Object.assign(filePlain, nodesPlain)})
+})
 
 // Return only files fields as plain object, without nodes
 const getAllFilesAsPlainObject = () => getFiles().then(files => files.map(mapFileToPlainObject))
