@@ -17,6 +17,8 @@ var Realm = require('realm')
 jest.mock('../../src/Helpers/FileAccess');
 
 const MOCKED_FILES = {
+  empty: `
+`,
 
   basic : `
 * node 1\n`,

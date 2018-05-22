@@ -24,10 +24,9 @@ afterAll(() => {
 beforeAll(() => {
   OrgApi.configureDb(Realm)
   OrgApi.connectDb()
-  FileAccess.write('file',getOrgFileContent('parse-export-test.org').join('\n')).then(() => OrgApi.addFile('fixtures/full.org'))})
+  FileAccess.write('file', getOrgFileContent('parse-export-test.org').join('\n')).then(() => OrgApi.addFile('fixtures/full.org'))})
 
 test("full parse-export test", () => {
   expect.assertions(5)
   return Queries.getNodes().then(nodes => {
-    nodes.forEach(node => expect(recreateOriginalNode(node)).toEqual(createNewNode(node)))
-  })})
+    nodes.forEach(node => expect(recreateOriginalNode(node)).toEqual(createNewNode(node)))})})
