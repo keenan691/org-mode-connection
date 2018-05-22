@@ -155,7 +155,7 @@ const getAgenda = (dateStart, dateEnd) => getObjects('OrgTimestamp', 'date >= $0
 
 // ** Get as plain objects
 
-const mapNodesToPlainObject = (nodes) => Array.from(nodes).map(mapNodeToPlainObject)
+export const mapNodesToPlainObject = (nodes) => Array.from(nodes).map(mapNodeToPlainObject)
 const mapNodesToSearchResults = (nodes) => Array.from(nodes).map(mapNodeToSearchResult)
 
 // Returns whole file content including nodes as plain object

@@ -101,7 +101,8 @@ const addFile = (filepath, type='agenda') => {
 
 export const getNewExternalMtime =
   file => FileAccess.stat(file.path).then(
-    stat => stat.mtime > file.lastSync ? stat.mtime : false)
+    stat => {
+      return stat.mtime > file.mtime ? stat.mtime : false})
 
 const realmResultToArray = res => res.slice(0, Infinity);
 
@@ -172,12 +173,12 @@ const applyExternalChanges = changes => {
   let promises = []
   const externalChanges = changes.externalChanges;
 
+  if (externalChanges.deletedNodes) {
+    promises.push(Queries.deleteNodes(externalChanges.deletedNodes))}
+
   if (externalChanges.addedNodes) {
     const nodesToAdd = externalChanges.addedNodes.map(n => parseNode(n));
     promises.push(Queries.addNodes(nodesToAdd, changes.file))}
-
-  if (externalChanges.deletedNodes) {
-    promises.push(Queries.deleteNodes(externalChanges.deletedNodes))}
 
   if (externalChanges.notChangedNodes) {
     promises.push(Queries.updateNodes(externalChanges.notChangedNodes, { isChanged: false }))}
