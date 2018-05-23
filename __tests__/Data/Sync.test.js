@@ -72,6 +72,17 @@ describe("Check nodes integrity after sync", () => {
   beforeEach(() => {
     return createAndAddFileToCleanDb('empty')})
 
+  test.only("syncing changes in file header", () => {
+    const expectation = FileAccess.write('empty', '#+TITLE: sdf\ndesc').
+          then(() => OrgApi.syncDb()).
+          then(() => OrgApi.getFileAsPlainObject('empty')).
+          then(R.prop('fileData'))
+    return expect(expectation).resolves.toEqual(
+      expect.objectContaining({
+        description: 'desc',
+        metadata: {
+          TITLE: 'sdf'}}))});
+
   test("remove clone of existing node", () => {
     const expectation = FileAccess.write('empty', '* node\n* node').
           then(OrgApi.syncDb).
@@ -95,6 +106,11 @@ describe("Check nodes integrity after sync", () => {
           then(OrgApi.syncDb).
           then(() => OrgApi.getNodes())
     return expect(expectation).resolves.toHaveLength(2)});
+
+
+  test.only("syncing with now changes", () => {
+    return expect(OrgApi.syncDb()).resolves.toEqual([])});
+
 })
 
 // ** Recognize if file needs sync

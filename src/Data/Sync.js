@@ -1,10 +1,13 @@
 import R from "ramda";
 
-import { extractNodesFromLines } from '../OrgFormat/NodesExtractor';
+import {
+  extractNodesFromLines,
+  extractPreNodeContentFromLines,
+} from '../OrgFormat/NodesExtractor';
 import { headlineT } from '../OrgFormat/Transforms';
 import { log, rlog } from '../Helpers/Debug';
 import { nullWhenEmpty, promisePipe } from '../Helpers/Functions';
-import { parse, parseNode } from '../OrgFormat/Parser';
+import { parse, parseFileContent, parseNode } from '../OrgFormat/Parser';
 import { prepareNodes } from './Transforms';
 import Export from '../OrgFormat/Export';
 import FileAccess from '../Helpers/FileAccess';
@@ -114,6 +117,11 @@ const getRawNodesFromFile = promisePipe(
   R.curry(FileAccess.read),
   extractNodesFromLines)
 
+const getFileHeaderFromFile = promisePipe(
+  R.prop('path'),
+  R.curry(FileAccess.read),
+  parseFileContent)
+
 const externalAndLocalChangesToOneList = promisePipe(
   R.converge((...results) => Promise.all(results), [getNodesFromDbAsArray, getRawNodesFromFile]),
   R.unnest)
@@ -136,7 +144,7 @@ const groupByChangedAndNotChanged = R.groupBy(
     else if (nodesGroup[0].length != nodesGroup[1].length) {
       return 'notSymetricalGroups' }});
 
-const spreadNotSymmetricalNodes = (groupedNodes) => {
+const spreadNotSymmetricalGroups = (groupedNodes) => {
   const { notSymetricalGroups } = groupedNodes;
   if (notSymetricalGroups) {
     notSymetricalGroups.forEach(group => {
@@ -170,25 +178,39 @@ const prepareOutput = R.evolve({
 export const getChanges = (file) => {
   const localChanges = nullWhenEmpty(getLocallyChangedNodes(file))
   let externalChanges = new Promise(r => r(null))
+  let externalFileHeaderChanges = new Promise(r => r(null))
 
   return getNewExternalMtime(file).then(newExternalMtime => {
     if (!newExternalMtime && !localChanges) return null
 
-    if (newExternalMtime) externalChanges = promisePipe(
-      externalAndLocalChangesToOneList,
-      groupBySimilarity,
-      partitionEachGroupByIdPossesion,
-      groupByChangedAndNotChanged,
-      spreadNotSymmetricalNodes,
-      prepareOutput,
-    )(file)
+    if (newExternalMtime) {
+      externalChanges = promisePipe(
+        externalAndLocalChangesToOneList,
+        groupBySimilarity,
+        partitionEachGroupByIdPossesion,
+        groupByChangedAndNotChanged,
+        spreadNotSymmetricalGroups,
+        prepareOutput)(file)
 
-    return externalChanges.then(externalChanges => ({
-      externalChanges,
-      localChanges,
-      file}))})};
+      externalFileHeaderChanges = getFileHeaderFromFile(file)
+
+    }
+
+    return Promise.all([externalChanges, externalFileHeaderChanges]).then(
+      ([externalChanges, externalFileHeaderChanges]) => ({
+        externalChanges,
+        externalFileHeaderChanges,
+        localChanges,
+        file}))})};
 
 // ** Apply changes
+
+const applyFileHeaderExternalChanges = (changes) => {
+  if (!changes) return changes
+  const fileChanges = changes.externalFileHeaderChanges;
+  if (fileChanges) Queries.updateFile(changes.file.path, fileChanges)
+  return changes
+};
 
 const applyLocalChanges = changes => {
   const newFileContent = Array.from(changes.file.nodes).map(n => Export(n)).join();
@@ -197,6 +219,11 @@ const applyLocalChanges = changes => {
 const applyExternalChanges = changes => {
   let promises = []
   const externalChanges = changes.externalChanges;
+  const externalFileHeaderChanges = changes.externalFileHeaderChanges;
+
+  // if (externalFileHeaderChanges) {
+  //   promises.push(Queries.updateFile(changes.file.id, externalFileHeaderChanges))
+  // }
 
   if (externalChanges.deletedNodes) {
     promises.push(Queries.deleteNodes(externalChanges.deletedNodes))}
@@ -240,6 +267,7 @@ const generateReportAndUpdateFileStatus = changes => syncResult => syncResult.th
     return new Promise(r => r(null))});
 
 const syncFile = file => getChanges(file).then(changes => R.pipe(
+  applyFileHeaderExternalChanges,
   R.cond([
     [noChangesP, () => new Promise(r => r(null))],
     [onlyLocalChangesP, applyLocalChanges],

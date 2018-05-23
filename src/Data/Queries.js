@@ -25,6 +25,12 @@ export const connectDb = () => {
 
 // * Realm helpers
 
+const getObjectById = R.curry((model, realm, id) => {
+  const idField = model === 'OrgFile' ? 'path' : 'id';
+  const res = realm.objects(model).filtered(`${idField} = "${id}"`)
+  return res.length === 1 ? res[0] : null
+})
+
 export const queryRealm = (model, filter) => dbConn.then(realm => {
   let res = realm.objects(model)
   return filter ? res.filtered(filter) : res});
@@ -98,7 +104,28 @@ export const enhanceNode = realmNode => {
 
 // * Queries
 
-// ** Nodes
+// ** Update
+
+const updateNodes = (listOfNodesAndChanges, setForAll) => dbConn.then(realm => realm.write(
+  () => listOfNodesAndChanges.forEach(group => {
+    let [realmNode, toUpdate] = group
+    if (setForAll) Object.assign(toUpdate, setForAll)
+    Object.assign(realmNode, toUpdate)})))
+
+
+const updateFile = (id, changes) => dbConn.then(
+  realm => realm.write(() => {
+    const file = getFileById(realm, id);
+    const toMerge = R.evolve({metadata: JSON.stringify}, changes)
+    Object.assign(file, toMerge)
+  })
+)
+
+// ** Get
+
+const getFileById = getObjectById('OrgFile');
+
+// ** Other
 
 const addNodes = (nodes, file) => dbConn.then(realm => realm.write(
   () => prepareNodes(nodes, file).forEach(node => {
@@ -111,12 +138,6 @@ const deleteNode = (node) => dbConn.then(realm => realm.write(
 
 const deleteNodes = (nodes) => dbConn.then(realm => realm.write(
   () => nodes.forEach(node => realm.delete(node))));
-
-const updateNodes = (listOfNodesAndChanges, setForAll) => dbConn.then(realm => realm.write(
-  () => listOfNodesAndChanges.forEach(group => {
-    let [realmNode, toUpdate] = group
-    if (setForAll) Object.assign(toUpdate, setForAll)
-    Object.assign(realmNode, toUpdate)})))
 
 // ** Files
 
@@ -185,8 +206,7 @@ const prepareSearchFilter = (fieldName, filter) => R.pipe(
                             R.map(todo => `${fieldName} = "${todo}"`),
                             R.join(' || '),
                             R.when(R.complement(R.isEmpty),
-                                   R.pipe(R.concat('NOT ('), R.concat(R.__, ')')))
-                           )]))(filter);
+                                   R.pipe(R.concat('NOT ('), R.concat(R.__, ')'))))]))(filter);
 
 const search = ({searchTerm,
                  todos,
@@ -262,6 +282,7 @@ export default {
   deleteNodes,
   updateNodes,
   flagFileAsSynced,
-  connectDb
+  connectDb,
+  updateFile
 
 }
