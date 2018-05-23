@@ -61,14 +61,47 @@ afterAll(() => {
   Queries.clearDb()
 })
 
+beforeAll(() => {
+  OrgApi.configureDb(Realm)
+  return OrgApi.connectDb()
+})
+
 // * Tests
+
+describe("Check nodes integrity after sync", () => {
+  beforeEach(() => {
+    return createAndAddFileToCleanDb('empty')})
+
+  test("remove clone of existing node", () => {
+    const expectation = FileAccess.write('empty', '* node\n* node').
+          then(OrgApi.syncDb).
+          then(() => FileAccess.write('empty', '* node')).
+          then(OrgApi.syncDb).
+          then(() => OrgApi.getNodes())
+    return expect(expectation).resolves.toHaveLength(1)});
+
+  test("adding clone of existing node", () => {
+    const expectation = FileAccess.write('empty', '* node').
+          then(OrgApi.syncDb).
+          then(() => FileAccess.write('empty', '* node\n* node')).
+          then(OrgApi.syncDb).
+          then(() => OrgApi.getNodes())
+    return expect(expectation).resolves.toHaveLength(2)});
+
+  test("changing one node", () => {
+    const expectation = FileAccess.write('empty', '* node 1\n* node 2').
+          then(OrgApi.syncDb).
+          then(() => FileAccess.write('empty', '* node 1\n* node 3')).
+          then(OrgApi.syncDb).
+          then(() => OrgApi.getNodes())
+    return expect(expectation).resolves.toHaveLength(2)});
+})
+
 // ** Recognize if file needs sync
 
 describe('getNewExternalMtime', () => {
 
   beforeAll(() => {
-    OrgApi.configureDb(Realm)
-    OrgApi.connectDb()
     return createAndAddFileToCleanDb('basic') })
 
   test('recognizing no external change', () => {
@@ -139,12 +172,12 @@ describe("sync", () => {
           () => expect(FileAccess.read('externalChanges1')).resolves.
             toEqual(expect.arrayContaining(["* NEXT node1"])))})
 
-  // test('syncing external changes to db', () => {
-  //   expect.assertions(1)
-  //   return writeToFile('externalChanges4').then(
-  //     () => OrgApi.syncDb().then(
-  //       () => OrgApi.getNodes().then(nodes => {
-  //         expect(nodes).toHaveLength(3)})))})
+  test('syncing external changes to db', () => {
+    expect.assertions(1)
+    return writeToFile('externalChanges4').then(
+      () => OrgApi.syncDb().then(
+        () => OrgApi.getNodes().then(nodes => {
+          expect(nodes).toHaveLength(3)})))})
 
   test('externally repositioned nodes syncing in right order', () => {
     expect.assertions(2)
@@ -212,26 +245,4 @@ describe("External sync special cases", () => {
     return testSync({
       newFileContent: `* node 1 \n* node 2`,
       syncResult: []})});
-})
-
-describe("Check nodes integrity after sync", () => {
-  beforeEach(() => {
-    return createAndAddFileToCleanDb('empty')})
-
-  test("changing one node", () => {
-    const expectation = FileAccess.write('empty', '* node 1\n* node 2').
-          then(OrgApi.syncDb).
-          then(() => FileAccess.write('empty', '* node 1\n* node 3')).
-          then(OrgApi.syncDb).
-          then(() => OrgApi.getNodes())
-    return expect(expectation).resolves.toHaveLength(2)});
-
-  test("adding clone of existing node", () => {
-    const expectation = FileAccess.write('empty', '* node').
-          then(OrgApi.syncDb).
-          then(() => FileAccess.write('empty', '* node\n* node')).
-          then(OrgApi.syncDb).
-          then(() => OrgApi.getNodes())
-    return expect(expectation).resolves.toHaveLength(2)});
-
 })

@@ -127,12 +127,35 @@ const partitionEachGroupByIdPossesion = R.map(R.partition(
 
 const groupByChangedAndNotChanged = R.groupBy(
   nodesGroup => {
-    if (nodesGroup.length === 2 && nodesGroup[0].length === nodesGroup[1].length) {
+    if (nodesGroup[0].length === nodesGroup[1].length) {
       return 'notChangedNodes' }
     else if (nodesGroup[1][0] == undefined) {
       return 'addedNodes'
-    } else {
-      return 'deletedNodes'}});
+    } else if (nodesGroup[0][0] === undefined){
+      return 'deletedNodes'}
+    else if (nodesGroup[0].length != nodesGroup[1].length) {
+      return 'notSymetricalGroups' }});
+
+const spreadNotSymmetricalNodes = (groupedNodes) => {
+  const { notSymetricalGroups } = groupedNodes;
+  if (notSymetricalGroups) {
+    notSymetricalGroups.forEach(group => {
+      const [newNodes, existingNodes] = group;
+      for (let i = 0; i < Math.max(newNodes.length, existingNodes.length); i++) {
+
+        if (newNodes[i] && existingNodes[i]) {
+          if (!groupedNodes.notChangedNodes) groupedNodes.notChangedNodes = []
+          groupedNodes.notChangedNodes.push([[newNodes[i]], [existingNodes[i]]])}
+
+        else if (newNodes[i]) {
+          if (!groupedNodes.addedNodes) groupedNodes.addedNodes = []
+          groupedNodes.addedNodes.push([[newNodes[i]]])}
+
+        else if (existingNodes[i]) {
+          if (!groupedNodes.deletedNodes) groupedNodes.deletedNodes = []
+          groupedNodes.deletedNodes.push([[existingNodes[i]]])}}})}
+
+  return groupedNodes};
 
 const getLocallyChangedNodes = file => file.nodes.filtered('isChanged = true')
 
@@ -156,7 +179,9 @@ export const getChanges = (file) => {
       groupBySimilarity,
       partitionEachGroupByIdPossesion,
       groupByChangedAndNotChanged,
-      prepareOutput)(file)
+      spreadNotSymmetricalNodes,
+      prepareOutput,
+    )(file)
 
     return externalChanges.then(externalChanges => ({
       externalChanges,
