@@ -131,6 +131,16 @@ const linksMappings = {
 
 const regularLinesWithFacesMappings = {
 
+  verbatimLine: [
+    '=Integer=with spaces and= and =second= d=d',
+    [regularLineCreator(
+      [
+        verbatimTextCreator('Integer=with spaces and'),
+        regularText(' and '),
+        verbatimTextCreator('second'),
+        regularText(' d=d'),
+      ])]],
+
   strikeThroughLine: [
     'proin quam nisl, +tincidunt+ et, mattis eget, +convallis+ nec, purus.  ',
     [regularLineCreator(
@@ -163,11 +173,6 @@ const regularLinesWithFacesMappings = {
     [regularLineCreator(
       [codeText('convallis')])]],
 
-  verbatimLine: [
-    '=Integer=',
-    [regularLineCreator(
-      [verbatimTextCreator('Integer')])]],
-
   italicLine: [
     '/bibendum/',
     [regularLineCreator(
@@ -180,6 +185,6 @@ describe("mapsNodeContentToObject", () => {
   test.only("mappings lines to text objects", () => {
     testNodesMappings(regularLinesWithFacesMappings, 'content', ['objectContent'])});
 
-  test.only("maps content lines to line objects", () => {
+  test("maps content lines to line objects", () => {
     testNodesMappings(contentLinesMappings, 'content', ['objectContent'])});
 })
