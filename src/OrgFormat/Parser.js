@@ -37,7 +37,7 @@ const mapMetadataLinesToObject = R.pipe(
     R.drop(1))),
   R.fromPairs)
 
-const parseFileContent = R.pipe(
+export const parseFileContent = R.pipe(
   extractPreNodeContentFromLines,
   R.partition(R.test(fileMetadataR)),
   R.applySpec({
