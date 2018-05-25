@@ -1,10 +1,27 @@
 import R from "ramda";
 
 import { hungryLineParser } from '../GenericParsers/HungryLineParser';
+import { makeRegex } from '../../Helpers/Functions';
 import { nodeContentLinesR, nodeContentInlineElementsR } from '../Regex';
 import { rlog } from '../../Helpers/Debug';
 
 // * Functions
+
+const splitLines = R.split('\n');
+const ireduce = R.addIndex(R.reduce);
+
+function indexesOf(string, regex) {
+  var match,
+      indexes = [];
+
+  const regexx = new RegExp(regex);
+
+  while (match = regexx.exec(string)) {
+    indexes.push(match.index);
+  }
+
+  return indexes;
+}
 
 const measure = (text='perf: ', fun) => (...args) => {
   const start = Date.now();
@@ -34,11 +51,27 @@ export const createCreatorsFromRegex = (regexes) => {
   )(regexes)
 }
 
-// * Inline functional parser
+const beginsBySpecialBlock = R.pipe(R.head, R.equals(0));
+const propOf = R.flip(R.prop);
 
-// ** new functional parser
+const safeAddFirstIndex = R.unless(
+  R.pipe(R.head, R.equals(0)),
+  R.prepend(0)
+);
+
+// * Inline functional parser
+// ** font face parser
 
 const spaceChars = [undefined, ' ', ',', '.', '!', ')', '('];
+
+const orgTextFaces = {
+  strikeThroughText: '+',
+  boldText: '*',
+  codeText: '~',
+  underlineText: '_',
+  verbatimText: '=',
+  italicText: '/'
+}
 
 const isTextFaceStart = R.curry(
   (line, idx) => spaceChars.includes(line[idx-1]) && !spaceChars.includes(line[idx+1]))
@@ -46,28 +79,22 @@ const isTextFaceStart = R.curry(
 const isTextFaceEnd = R.curry(
   (line, idx) => !spaceChars.includes(line[idx-1]) && spaceChars.includes(line[idx+1]))
 
-const ireduce = R.addIndex(R.reduce);
 
 const createOrgTextFaceParser = (name, specialChar) => ([objects, line]) => {
   const s = Date.now();
-  const findSpecialCharsIndexes = ireduce((acc, char, idx) => {
-    if (char === specialChar) acc.push(idx)
-    return acc} , [])
 
-  // const findIndicesUsingRegex = ;
+  const findSpecialCharsIndexes = (line) => indexesOf(line, new RegExp("\\"+specialChar, 'g'));
 
   const getCharType = R.cond([
     [isTextFaceStart(line), R.always('s')],
     [isTextFaceEnd(line), R.always('e')]]);
 
-  const mapToObjects = R.pipe(
-    R.map(([indexStart, indexEnd]) => ({
-      type: name,
-      content: line.slice(indexStart+1, indexEnd),
-      indexStart,
-      indexEnd: indexEnd + 1
-    }))
-  )
+  const mapToObjects = R.map(([indexStart, indexEnd]) => ({
+    type: name,
+    content: line.slice(indexStart+1, indexEnd),
+    indexStart,
+    indexEnd: indexEnd + 1
+  }))
 
   const parsedObjects = R.pipe(
     findSpecialCharsIndexes,
@@ -80,27 +107,14 @@ const createOrgTextFaceParser = (name, specialChar) => ([objects, line]) => {
 
   if (parsedObjects.length > 0) objects = R.concat(objects, parsedObjects)
 
-  const e = Date.now();
-  console.log('special measure',e-s)
   return [objects, line]
 };
 
-const orgTextFaces = {
-  strikeThroughText: '+',
-  boldText: '*',
-  codeText: '~',
-  underlineText: '_',
-  verbatimText: '=',
-  italicText: '/'
-}
-
-
 // Creates special parsers from configuration object
 const textFacesParsers = R.pipe(
-  R.toPairs, R.map(([name, char]) => createOrgTextFaceParser(name, char)),
+  R.toPairs, R.map(([name, char]) => createOrgTextFaceParser(name, char))
 )(orgTextFaces)
 
-// ** old parser
 
 const inlineParserCreator = (regex, creator) => ([objects, line]) => {
   let result;
@@ -124,9 +138,36 @@ const inlineParserCreator = (regex, creator) => ([objects, line]) => {
   return [objects, line]
 };
 
-// * Creators
+// ** regular text parser
 
-// ** Line creators
+const regularTextParser = ([objects, line]) => {
+  const addLastIndex = R.unless(
+    R.pipe(R.last, R.equals(line.length)),
+    R.append(line.length))
+
+  const mapGroupsToObjects = R.map(([indexStart, indexEnd]) => ({
+    content: line.slice(indexStart, indexEnd),
+    type: 'regularText',
+    indexStart,
+    indexEnd}))
+
+  const newObjects = R.pipe(
+    R.chain(obj => [obj.indexStart, obj.indexEnd]),
+    addLastIndex,
+    R.ifElse(beginsBySpecialBlock, R.pipe(R.drop(1)), safeAddFirstIndex),
+    R.when(R.pipe(R.length, R.equals(1)), R.drop(1)),
+    R.splitEvery(2),
+    mapGroupsToObjects,
+    R.concat(objects),
+    R.sortBy(R.prop('indexStart'))
+  )(objects)
+
+  return newObjects
+};
+
+
+
+// * Line creators
 
 export const regexLineCreators = createCreatorsFromRegex(nodeContentLinesR);
 
@@ -135,101 +176,30 @@ export const regularLineCreator = (content) => ({
   content
 });
 
-const getLineCreator = (line,
-                        regexObj=nodeContentLinesR,
-                        creators=regexLineCreators ,
-                        defaultCreator=regularLineCreator) =>
+const getLineCreator = (
+  line,
+  regexObj=nodeContentLinesR,
+  creators=regexLineCreators ,
+  defaultCreator=regularLineCreator) =>
       R.reduceWhile(
         (acc, x) => acc !== x,
         (acc, x) => regexObj[x].test(line) ? creators[x] : acc,
         defaultCreator,
         R.keys(creators));
 
-// ** Inline creators
 
-export const regularTextCreator = (content, params) => ({
-  type: 'regularText',
-  content,
-  ...params
-});
-
-export const regexTextCreators = createCreatorsFromRegex(nodeContentInlineElementsR);
-
-// * Parse line
-// ** fun
-
-const beginsBySpecialBlock = R.pipe(R.head, R.equals(0));
-const sortByInlinePosition = R.sortBy(R.prop('indexStart'))
-const propOf = R.flip(R.prop);
-
-const safeAddFirstIndex = R.unless(
-  R.pipe(R.head, R.equals(0)),
-  R.prepend(0)
-);
-
-// ** create parsers from regex
-
-const createParserFromKey = R.converge(
-  inlineParserCreator, [propOf(nodeContentInlineElementsR), propOf(regexTextCreators)]);
-const specialTextParsers = R.map(createParserFromKey, R.keys(regexTextCreators))
-
-// ** regular text parser
-
-const regularTextParser = ([objects, line]) => {
-  const addLastIndex = R.unless(
-    R.pipe(R.last, R.equals(line.length)),
-    R.append(line.length))
-
-  const mapGroupsToObjects = R.map(R.pipe(
-    R.applySpec({
-      content: ([startIdx, endIdx]) => line.slice(startIdx, endIdx),
-      indexStart: R.head,
-      indexEnd: R.last
-    }),
-    R.merge({
-      type: 'regularText'
-    })
-  ));
-
-  const textObjects = R.pipe(
-    R.chain(obj => [obj.indexStart, obj.indexEnd]),
-    addLastIndex,
-    R.ifElse(beginsBySpecialBlock, R.pipe(R.drop(1)), safeAddFirstIndex),
-    R.when(R.pipe(R.length, R.equals(1)), R.drop(1)),
-    R.splitEvery(2),
-    mapGroupsToObjects,
-  )(objects)
-
-  return sortByInlinePosition(R.concat(objects, textObjects))
-};
-
-
-// ** parser line
-
-const filterOutNotIsolatedSentences = ([parsedObjs, line]) => [
-  R.filter(R.allPass([
-    obj => [undefined, '(', '{', ' '].includes(line[obj.indexStart-1]),
-    // obj => [undefined, ')', '}', ' '].includes(line[obj.indexEnd+2]),
-  ]))(parsedObjs),
-  line
-]
+// * Parser
 
 const parseLine = (line) => {
   const innerRepr = [[], line];
   return R.pipe(
-    // ...specialTextParsers,
     ...textFacesParsers,
-    filterOutNotIsolatedSentences,
     regularTextParser,
   )(innerRepr)}
 
-// * Parse
-
-const splitLines = R.split('\n');
 
 export default R.pipe(
-  measure('split',splitLines),
-  R.tap(() => console.log('parsing start')),
+  splitLines,
   R.map(
     R.converge(
       R.call,
