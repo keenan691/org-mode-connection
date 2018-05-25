@@ -9,7 +9,7 @@ import parseOrgNodeContent, {
 
 // ** Test
 
-const testNodesMappings = (mappingResults, mappedProp, extractPath) =>
+const testLines = (mappingResults, mappedProp, extractPath) =>
       Object.keys(mappingResults).forEach(
         (key) => {
           const node = createNode({ [mappedProp]: mappingResults[key][0] });
@@ -27,9 +27,11 @@ const createNode = (props) => ({
 
 // ** Inline elements
 
-const link = (url, urlTitle) => ({
-  type: 'link',
-  title: expect.any(String)});
+const createLink = (type, url, urlTitle) => ({
+  type: `${type}Link`,
+  title: expect.any(String),
+  url
+});
 
 const regularText = (t) => ({
   type: 'regularText',
@@ -67,7 +69,7 @@ const italicTextCreator = (t) => ({
 
 // ** Line types
 
-const contentLinesMappings = {
+const contentLinesTests = {
 
   emptyLine: [
     '\n',
@@ -109,10 +111,6 @@ const contentLinesMappings = {
     [regexLineCreators.numericListLine(
       [regularText('1. Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')])]],
 
-  link: [
-    'Suspendisse potenti. [[https://reactnavigation.org/docs/drawer-navigator.html][DrawerNavigator reference · React Navigation]]',
-    [regularLineCreator(
-      [regularText('Suspendisse potenti. '), link()])]],
 };
 
 // ** Links
@@ -122,14 +120,19 @@ const links = {
     url: 'https://reactnavigation.org/docs/drawer-navigator.html ',
     urlTitle: 'DrawerNavigator reference · React Navigation]]'}};
 
-const linksMappings = {
-  generic: ' [[https://reactnavigation.org/docs/drawer-navigator.html][DrawerNavigator reference · React Navigation]]',
-  web: ' [[https://reactnavigation.org/docs/drawer-navigator.html][DrawerNavigator reference · React Navigation]]',
-  mail: ' [[https://reactnavigation.org/docs/drawer-navigator.html][DrawerNavigator reference · React Navigation]]'};
+const createLinkTest = (type, url, title) => ([
+  `Suspendisse potenti. [[${url}][${title}]].`,
+  [regularLineCreator(
+    [regularText('Suspendisse potenti. '), createLink(type, url, title)])]
+])
+
+const linesWithLinksTests = {
+  simpleWebLink: createLinkTest('web', 'https://wp.pl', 'WP'),
+};
 
 // ** Faces
 
-const regularLinesWithFacesMappings = {
+const regularLinesWithFacesTests = {
 
   verbatimLine: [
     '=Integer=with spaces and= and =second= d=d',
@@ -182,9 +185,12 @@ const regularLinesWithFacesMappings = {
 
 describe("mapsNodeContentToObject", () => {
 
-  test.only("mappings lines to text objects", () => {
-    testNodesMappings(regularLinesWithFacesMappings, 'content', ['objectContent'])});
+  test.only("mapping lines with links to text objects", () => {
+    testLines(linesWithLinksTests, 'content', ['objectContent'])});
 
-  test("maps content lines to line objects", () => {
-    testNodesMappings(contentLinesMappings, 'content', ['objectContent'])});
+  test("mapping lines to text objects", () => {
+    testLines(regularLinesWithFacesTests, 'content', ['objectContent'])});
+
+  test("maping content lines to line objects", () => {
+    testLines(contentLinesTests, 'content', ['objectContent'])});
 })
