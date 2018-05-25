@@ -11,25 +11,18 @@ const splitLines = R.split('\n');
 const ireduce = R.addIndex(R.reduce);
 
 function indexesOf(string, regex) {
-  var match,
-      indexes = [];
-
+  var match, indexes = [];
   const regexx = new RegExp(regex);
-
   while (match = regexx.exec(string)) {
-    indexes.push(match.index);
-  }
-
-  return indexes;
-}
+    indexes.push(match.index)}
+  return indexes}
 
 const measure = (text='perf: ', fun) => (...args) => {
   const start = Date.now();
   const res = fun(...args)
   const end = Date.now();
   console.log(text, end-start)
-  return res
-};
+  return res}
 
 export const createCreatorsFromRegex = (regexes) => {
   const addValue = (val, propName='value') => R.merge({ [propName]: val });
@@ -56,10 +49,10 @@ const propOf = R.flip(R.prop);
 
 const safeAddFirstIndex = R.unless(
   R.pipe(R.head, R.equals(0)),
-  R.prepend(0)
-);
+  R.prepend(0))
 
 // * Inline functional parser
+
 // ** font face parser
 
 const spaceChars = [undefined, ' ', ',', '.', '!', ')', '('];
@@ -70,8 +63,7 @@ const orgTextFaces = {
   codeText: '~',
   underlineText: '_',
   verbatimText: '=',
-  italicText: '/'
-}
+  italicText: '/'}
 
 const isTextFaceStart = R.curry(
   (line, idx) => spaceChars.includes(line[idx-1]) && !spaceChars.includes(line[idx+1]))
@@ -79,10 +71,7 @@ const isTextFaceStart = R.curry(
 const isTextFaceEnd = R.curry(
   (line, idx) => !spaceChars.includes(line[idx-1]) && spaceChars.includes(line[idx+1]))
 
-
 const createOrgTextFaceParser = (name, specialChar) => ([objects, line]) => {
-  const s = Date.now();
-
   const findSpecialCharsIndexes = (line) => indexesOf(line, new RegExp("\\"+specialChar, 'g'));
 
   const getCharType = R.cond([
@@ -93,8 +82,7 @@ const createOrgTextFaceParser = (name, specialChar) => ([objects, line]) => {
     type: name,
     content: line.slice(indexStart+1, indexEnd),
     indexStart,
-    indexEnd: indexEnd + 1
-  }))
+    indexEnd: indexEnd + 1}))
 
   const parsedObjects = R.pipe(
     findSpecialCharsIndexes,
@@ -102,41 +90,38 @@ const createOrgTextFaceParser = (name, specialChar) => ([objects, line]) => {
     R.reject(R.pipe(R.last, R.equals(undefined))),
     R.map(R.head),
     R.splitEvery(2),
-    mapToObjects,
+    mapToObjects
   )(line)
 
   if (parsedObjects.length > 0) objects = R.concat(objects, parsedObjects)
-
   return [objects, line]
 };
 
-// Creates special parsers from configuration object
 const textFacesParsers = R.pipe(
   R.toPairs, R.map(([name, char]) => createOrgTextFaceParser(name, char))
 )(orgTextFaces)
 
 
-const inlineParserCreator = (regex, creator) => ([objects, line]) => {
-  let result;
-  while (result = regex.exec(line)) {
-    const {index, input}  = result
-    const [orig, ...parsed] = result;
+// const inlineParserCreator = (regex, creator) => ([objects, line]) => {
+//   let result;
+//   while (result = regex.exec(line)) {
+//     const {index, input}  = result
+//     const [orig, ...parsed] = result;
 
-    const obj = creator(parsed[0], {
-      indexStart: index,
-      indexEnd: index + orig.length
-    });
+//     const obj = creator(parsed[0], {
+//       indexStart: index,
+//       indexEnd: index + orig.length
+//     });
 
-    const isLink = R.propSatisfies(R.test(/link/i), 'type');
-    const addTitle = R.merge({ title: parsed[1] });
+//     const isLink = R.propSatisfies(R.test(/link/i), 'type');
+//     const addTitle = R.merge({ title: parsed[1] });
 
-    const enhanceObj = R.pipe(
-      R.when(isLink, addTitle)
-    );
+//     const enhanceObj = R.pipe(
+//       R.when(isLink, addTitle))
 
-    objects.push(enhanceObj(obj))}
-  return [objects, line]
-};
+//     objects.push(enhanceObj(obj))}
+//   return [objects, line]
+// };
 
 // ** regular text parser
 
@@ -165,16 +150,13 @@ const regularTextParser = ([objects, line]) => {
   return newObjects
 };
 
-
-
 // * Line creators
 
 export const regexLineCreators = createCreatorsFromRegex(nodeContentLinesR);
 
 export const regularLineCreator = (content) => ({
   type: 'regularLine',
-  content
-});
+  content});
 
 const getLineCreator = (
   line,
@@ -187,7 +169,6 @@ const getLineCreator = (
         defaultCreator,
         R.keys(creators));
 
-
 // * Parser
 
 const parseLine = (line) => {
@@ -196,7 +177,6 @@ const parseLine = (line) => {
     ...textFacesParsers,
     regularTextParser,
   )(innerRepr)}
-
 
 export default R.pipe(
   splitLines,
