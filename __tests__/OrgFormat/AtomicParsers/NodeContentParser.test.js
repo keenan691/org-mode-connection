@@ -29,7 +29,6 @@ const createNode = (props) => ({
 
 const createLink = (type, url, urlTitle) => ({
   type: `${type}Link`,
-  title: expect.any(String),
   url
 });
 
@@ -115,19 +114,47 @@ const contentLinesTests = {
 
 // ** Links
 
-const links = {
-  unknown: {
-    url: 'https://reactnavigation.org/docs/drawer-navigator.html ',
-    urlTitle: 'DrawerNavigator reference · React Navigation]]'}};
-
 const createLinkTest = (type, url, title) => ([
   `Suspendisse potenti. [[${url}][${title}]].`,
-  [regularLineCreator(
-    [regularText('Suspendisse potenti. '), createLink(type, url, title)])]
+  [regularLineCreator([
+    regularText('Suspendisse potenti. '),
+    createLink(type, url, title),
+    regularText('.')
+  ])]
 ])
 
+const createPlainLinkTest = (url) => ([
+  `${url} .`,
+  [regularLineCreator([
+    // regularText('Suspendisse potenti.'),
+    createLink('plain', url),
+    regularText('.')
+  ])]
+])
+
+// [[elisp:(org-projectile-open-project%20"orgAssistant")][orgAssistant
+// [[https://stackoverflow.com/questions/35914712/es6-conditional-dynamic-import-statements][javascript - ES6: Conditional & Dynamic Import Statements - Stack Overflow
 const linesWithLinksTests = {
-  simpleWebLink: createLinkTest('web', 'https://wp.pl', 'WP'),
+  plainLink: createPlainLinkTest(
+    'http://www.agnisoma.eu/transgresja/'),
+
+  plainLink: createPlainLinkTest(
+    'http://www.racjonalista.pl/forum.php/s,687033'),
+
+  simpleWebLink: createLinkTest(
+    'web',
+    'http://stackoverflow.com/questions/35914712/es6-conditional-dynamic-import-statements/',
+    'javascript - ES6: Conditional & Dynamic Import Statements - Stack Overflow'),
+
+  simpleWebLink: createLinkTest(
+    'web',
+    'https://stackoverflow.com/questions/35914712/es6-conditional-dynamic-import-statements',
+    'javascript - ES6: Conditional & Dynamic Import Statements - Stack Overflow '),
+
+  elispLink: createLinkTest(
+    'web',
+    'elisp:(org-projectile-open-project%20"orgAssistant")' ,
+    'orgAssistant'),
 };
 
 // ** Faces

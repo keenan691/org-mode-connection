@@ -1,16 +1,23 @@
+// * Imports
+
 import R from "ramda";
 
 import { hungryLineParser } from '../GenericParsers/HungryLineParser';
 import { makeRegex } from '../../Helpers/Functions';
-import { nodeContentLinesR, nodeContentInlineElementsR } from '../Regex';
+import {
+  nodeContentInlineElementsR,
+  nodeContentLinesR,
+  nodeContentLinksR,
+} from '../Regex';
 import { rlog } from '../../Helpers/Debug';
 
 // * Functions
 
 const splitLines = R.split('\n');
+
 const ireduce = R.addIndex(R.reduce);
 
-function indexesOf(string, regex) {
+const indexesOf = (string, regex) => {
   var match, indexes = [];
   const regexx = new RegExp(regex);
   while (match = regexx.exec(string)) {
@@ -51,9 +58,12 @@ const safeAddFirstIndex = R.unless(
   R.pipe(R.head, R.equals(0)),
   R.prepend(0))
 
-// * Inline functional parser
+const createParsers = (createParserFunction, parsersDescription) => R.pipe(
+  R.toPairs, R.map(([name, val]) => createParserFunction(name, val))
+)(parsersDescription)
 
-// ** font face parser
+// * Inline parsers
+// ** Config
 
 const spaceChars = [undefined, ' ', ',', '.', '!', ')', '('];
 
@@ -71,7 +81,9 @@ const isTextFaceStart = R.curry(
 const isTextFaceEnd = R.curry(
   (line, idx) => !spaceChars.includes(line[idx-1]) && spaceChars.includes(line[idx+1]))
 
-const createOrgTextFaceParser = (name, specialChar) => ([objects, line]) => {
+// ** Font face parser
+
+const createOrgTextFaceParser = (type, specialChar) => ([objects, line]) => {
   const findSpecialCharsIndexes = (line) => indexesOf(line, new RegExp("\\"+specialChar, 'g'));
 
   const getCharType = R.cond([
@@ -79,10 +91,10 @@ const createOrgTextFaceParser = (name, specialChar) => ([objects, line]) => {
     [isTextFaceEnd(line), R.always('e')]]);
 
   const mapToObjects = R.map(([indexStart, indexEnd]) => ({
-    type: name,
-    content: line.slice(indexStart+1, indexEnd),
+    type,
     indexStart,
-    indexEnd: indexEnd + 1}))
+    indexEnd: indexEnd + 1,
+    content: line.slice(indexStart+1, indexEnd)}))
 
   const parsedObjects = R.pipe(
     findSpecialCharsIndexes,
@@ -97,33 +109,46 @@ const createOrgTextFaceParser = (name, specialChar) => ([objects, line]) => {
   return [objects, line]
 };
 
-const textFacesParsers = R.pipe(
-  R.toPairs, R.map(([name, char]) => createOrgTextFaceParser(name, char))
-)(orgTextFaces)
+const textFacesParsers = createParsers(createOrgTextFaceParser, orgTextFaces);
+
+// ** Links parser
+
+const createLinkParser = (type, regex) => ([objects, line]) => {
+  let result;
+  while (result = regex.exec(line.trim())) {
+    const {index, input}  = result
+    const [orig, ...parsed] = result;
+    // const [] = ;
+
+    const obj = {
+      indexStart: index,
+      indexEnd: index + orig.length,
+      type: `${type}Link`
+    };
+
+    switch (type) {
+    case 'plain':
+      obj.url = orig.trim()
+      break
+    default:
+      obj.url = parsed[0]
+      obj.title = parsed[1]
+    }
+
+    // const isLink = R.propSatisfies(R.test(/link/i), 'type');
+    // const addTitle = R.merge({ title: parsed[1] });
+
+    // const enhanceObj = R.pipe(
+    //   R.when(isLink, addTitle))
+
+    objects.push(obj)}
+  return [objects, line]
+}
+
+const linksParsers = createParsers(createLinkParser, nodeContentLinksR)
 
 
-// const inlineParserCreator = (regex, creator) => ([objects, line]) => {
-//   let result;
-//   while (result = regex.exec(line)) {
-//     const {index, input}  = result
-//     const [orig, ...parsed] = result;
-
-//     const obj = creator(parsed[0], {
-//       indexStart: index,
-//       indexEnd: index + orig.length
-//     });
-
-//     const isLink = R.propSatisfies(R.test(/link/i), 'type');
-//     const addTitle = R.merge({ title: parsed[1] });
-
-//     const enhanceObj = R.pipe(
-//       R.when(isLink, addTitle))
-
-//     objects.push(enhanceObj(obj))}
-//   return [objects, line]
-// };
-
-// ** regular text parser
+// ** Regular text parser
 
 const regularTextParser = ([objects, line]) => {
   const addLastIndex = R.unless(
@@ -175,6 +200,7 @@ const parseLine = (line) => {
   const innerRepr = [[], line];
   return R.pipe(
     ...textFacesParsers,
+    ...linksParsers,
     regularTextParser,
   )(innerRepr)}
 

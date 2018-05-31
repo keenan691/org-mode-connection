@@ -51,24 +51,24 @@ describe("Search", () => {
   const searchTest = (testData, expectation) => expect(OrgApi.search(testData)).resolves.
         toHaveLength(expectation)
 
-  test.only("Not performing search when passed query is blank", () => {
+  test("Not performing search when passed query is blank", () => {
     return searchTest(blankSearchQuery, 0)});
 
   describe("Scheduled and Deadline", () => {
 
-    test.only("Searching for scheduled items", () => {
+    test("Searching for scheduled items", () => {
       const searchQuery = createSearchQuery({
         isScheduled: true})
       const nodesFound = 3
       return searchTest(searchQuery, nodesFound)})
 
-    test.only("Searching for items with deadline", () => {
+    test("Searching for items with deadline", () => {
       const searchQuery = createSearchQuery({
         hasDeadline: true})
       const nodesFound = 2
       return searchTest(searchQuery, nodesFound)})
 
-    test.only("Searching for scheduled items with deadline", () => {
+    test("Searching for scheduled items with deadline", () => {
       const searchQuery = createSearchQuery({
         isScheduled: true,
         hasDeadline: true})
@@ -79,7 +79,7 @@ describe("Search", () => {
 
   describe("Priority", () => {
 
-    test.only("Searching nodes with A priority", () => {
+    test("Searching nodes with A priority", () => {
       const searchQuery = createSearchQuery({
         priority: {
           A: 1
@@ -87,7 +87,7 @@ describe("Search", () => {
       const nodesFound = 2
       return searchTest(searchQuery, nodesFound)})
 
-    test.only("Searching nodes with A and B priority", () => {
+    test("Searching nodes with A and B priority", () => {
       const searchQuery = createSearchQuery({
         priority: {
           A: 1,
@@ -96,7 +96,7 @@ describe("Search", () => {
       const nodesFound = 3
       return searchTest(searchQuery, nodesFound)})
 
-    test.only("Searching nodes without B priority", () => {
+    test("Searching nodes without B priority", () => {
       const searchQuery = createSearchQuery({
         priority: {
           B: -1
@@ -108,7 +108,7 @@ describe("Search", () => {
 
   describe("Tags", () => {
 
-    test.only("Searching all drill tags", () => {
+    test("Searching all drill tags", () => {
       const searchQuery = createSearchQuery({
         tags: {
           drill: 1
@@ -116,7 +116,7 @@ describe("Search", () => {
       const nodesFound = 3
       return searchTest(searchQuery, nodesFound)})
 
-    test.only("Searching all javascript tags", () => {
+    test("Searching all javascript tags", () => {
       const searchQuery = createSearchQuery({
         tags: {
           javascript: 1
@@ -124,7 +124,7 @@ describe("Search", () => {
       const nodesFound = 1
       return searchTest(searchQuery, nodesFound)})
 
-    test.only("Searching both javascript and drill tags", () => {
+    test("Searching both javascript and drill tags", () => {
       const searchQuery = createSearchQuery({
         tags: {
           javascript: 1,
@@ -133,7 +133,7 @@ describe("Search", () => {
       const nodesFound = 3
       return searchTest(searchQuery, nodesFound)})
 
-    test.only("Searching javascript without drill tags", () => {
+    test("Searching javascript without drill tags", () => {
       const searchQuery = createSearchQuery({
         tags: {
           javascript: 1,
@@ -142,7 +142,7 @@ describe("Search", () => {
       const nodesFound = 0
       return searchTest(searchQuery, nodesFound)})
 
-    test.only("Searching drill and without javascript tags", () => {
+    test("Searching drill and without javascript tags", () => {
       const searchQuery = createSearchQuery({
         tags: {
           javascript: -1,
@@ -151,7 +151,7 @@ describe("Search", () => {
       const nodesFound = 2
       return searchTest(searchQuery, nodesFound)})
 
-    test.only("Searching all tagged items without javascript and drill tags", () => {
+    test("Searching all tagged items without javascript and drill tags", () => {
       const searchQuery = createSearchQuery({
         tags: {
           javascript: -1,
@@ -163,7 +163,7 @@ describe("Search", () => {
   })
 
   describe("Todo", () => {
-    test.only("Searching all TODO items", () => {
+    test("Searching all TODO items", () => {
       const searchQuery = createSearchQuery({
         todos: {
           TODO: 1
@@ -171,7 +171,7 @@ describe("Search", () => {
       const nodesFound = 3
       return searchTest(searchQuery, nodesFound)})
 
-    test.only("Searching all DONE items", () => {
+    test("Searching all DONE items", () => {
       const searchQuery = createSearchQuery({
         todos: {
           DONE: 1
@@ -179,7 +179,7 @@ describe("Search", () => {
       const nodesFound = 2
       return searchTest(searchQuery, nodesFound)})
 
-    test.only("Searching all DONE and TODO items", () => {
+    test("Searching all DONE and TODO items", () => {
       const searchQuery = createSearchQuery({
         todos: {
           DONE: 1,
@@ -188,7 +188,7 @@ describe("Search", () => {
       const nodesFound = 5
       return searchTest(searchQuery, nodesFound)})
 
-    test.only("Searching all tasks with state not equal DONE items", () => {
+    test("Searching all tasks with state not equal DONE items", () => {
       const searchQuery = createSearchQuery({
         todos: {
           DONE: -1,
@@ -196,7 +196,7 @@ describe("Search", () => {
       const nodesFound = 3
       return searchTest(searchQuery, nodesFound)})
 
-    test.only("Using only positive query when given both", () => {
+    test("Using only positive query when given both", () => {
       const searchQuery = createSearchQuery({
         todos: {
           DONE: -1,
@@ -207,7 +207,7 @@ describe("Search", () => {
 
   describe("Mixed filters", () => {
 
-    test.only("Searching todos with deadline", () => {
+    test("Searching todos with deadline", () => {
       const searchQuery = createSearchQuery({
         todos: {
           TODO: 1,
@@ -217,7 +217,7 @@ describe("Search", () => {
       const nodesFound = 1
       return searchTest(searchQuery, nodesFound)})
 
-    test.only("Searching scheduled items tagged with drill", () => {
+    test("Searching scheduled items tagged with drill", () => {
       const searchQuery = createSearchQuery({
         tags: {
           drill: 1,
@@ -240,19 +240,9 @@ describe("Queries", () => {
 
   test("getFileAsPlainObject", () => {
     expect.assertions(1)
-    const obj = Queries.getFileAsPlainObject('fixtures/full.org');
+    const obj = Queries.getFileAsPlainObject('full.org');
     const expectation = expect.objectContaining({
-      nodes: expect.any(Array),
-// name: expect.any(String),
-      // metadata: {
-      //   CATEGORY: 'category',
-      //   TITLE: 'title'
-      // },
-      // description: '\ndescription\n',
-      // size: expect.any(String),
-      // mtime: expect.any(Date),
-      // ctime: expect.any(Date),
-      // id: expect.any(String)
+      nodesList: expect.any(Array),
     });
     return expect(obj).resolves.toEqual(expectation)});
 

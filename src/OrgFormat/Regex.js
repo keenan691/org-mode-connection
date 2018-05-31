@@ -13,7 +13,7 @@ const inactiveTimestamp = mr(/\[/, datetimeR, /\]/);
 export const headlineR = {
   priority: /\[#[ABC]\]/,
   todo: /(^TODO\s+|DONE\s+)/,
-  tags: /:.+:\s*$/,
+  tags: /\s+:[^\s]+:(\s*|$)/,
   head: /^\*+\s+/};
 
 export const nodeMetadataR = {
@@ -44,8 +44,12 @@ export const nodeContentLinesR = {
 
 const createInlineR = (reg) => mrg(reg, /(\w+)/, reg)
 
+export const nodeContentLinksR = {
+  web: /\[\[(.*?)\]\[(.*?)\]\]/g,
+  plain: /( |^)(www|http:|https:)+[^\s]+[\w](\/| |$)/g
+}
+
 export const nodeContentInlineElementsR = {
-  link: /\[\[(.*?)\]\[(.*?)\]\]/g,
   strikeThroughText: createInlineR(/\+/),
   boldText: createInlineR(/\*/),
   codeText: createInlineR(/\~/),
