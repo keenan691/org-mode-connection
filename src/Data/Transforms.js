@@ -31,23 +31,26 @@ export const prepareNodes = (parsedNodes, file) =>
 
 // * To plain object transform
 
-export const mapNodeToPlainObject = (n) => ({
-  id: n.id,
-  level: n.level,
-  position: n.position,
-  headline: n.headline,
-  content: n.content,
-  category: null,
-  todo: n.todo,
-  priority: n.priority,
-  drawers: n.drawers,
-  tags: Array.from(n.tags).map(t => t.name),
-  timestamps: Array.from(n.timestamps).map(t => ({
-    type: t.type,
-    warningPeriod: t.warningPeriod,
-    repeater: t.repeater,
-    date: t.date,
-    dateRangeEnd: t.dateRangeEnd}))})
+export const mapNodeToPlainObject = (n, idx, array) => {
+  const nextNode = array[idx + 1]
+  return {
+    id: n.id,
+    level: n.level,
+    position: n.position,
+    headline: n.headline,
+    content: n.content,
+    category: null,
+    todo: n.todo,
+    priority: n.priority,
+    drawers: n.drawers,
+    tags: Array.from(n.tags).map(t => t.name),
+    hasChildren: nextNode && nextNode.level > n.level,
+    timestamps: Array.from(n.timestamps).map(t => ({
+      type: t.type,
+      warningPeriod: t.warningPeriod,
+      repeater: t.repeater,
+      date: t.date,
+      dateRangeEnd: t.dateRangeEnd}))} }
 
 export const mapNodeToSearchResult = (n) => ({
   id: n.id,
