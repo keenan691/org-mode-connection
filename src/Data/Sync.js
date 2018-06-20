@@ -230,7 +230,7 @@ const applyExternalChanges = changes => {
 
   if (externalChanges.addedNodes) {
     const nodesToAdd = externalChanges.addedNodes.map(n => parseNode(n));
-    promises.push(Queries.addNodes(nodesToAdd, changes.file))}
+    promises.push(Queries.addNodes(nodesToAdd, { fileId: changes.file.path }))}
 
   if (externalChanges.notChangedNodes) {
     promises.push(Queries.updateNodes(externalChanges.notChangedNodes, { isChanged: false }))}

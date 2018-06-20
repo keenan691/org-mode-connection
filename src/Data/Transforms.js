@@ -24,7 +24,6 @@ export const prepareNodes = (parsedNodes, file) =>
   parsedNodes.map(node => R.pipe(
     R.merge({
       id: uniqueId(),
-      originalPosition: node.position,
       file}),
     R.evolve({
       drawers: JSON.stringify}))(node));

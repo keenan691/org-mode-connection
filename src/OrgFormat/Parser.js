@@ -28,8 +28,7 @@ export const parseNode = R.converge(
             "rawHeadline",
             "rawContent",
             "level",
-            "position",
-            "originalPosition"])])
+            "position"])])
 
 const mapMetadataLinesToObject = R.pipe(
   R.map(R.pipe(
