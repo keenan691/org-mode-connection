@@ -1,19 +1,19 @@
-import { enhanceNodeWithPosition } from "../../src/Data/Queries";
-
-/** @flow */
-
 import R from "ramda";
 
-import { addNodes } from "../../src/Data/Queries";
 import { getOrgFileContent } from "../../src/Helpers/Fixtures";
 import Db from "../../src/Data/Db/Db";
 import DbHelper from "../../src/Data/Db/DbHelper";
 import FileAccess from "../../src/Helpers/FileAccess";
 import OrgApi from "../../src/OrgApi";
 import Queries, {
+  addNodes,
+  deleteFileById,
+  deleteNodeById,
   enhanceNode,
-  getOrCreateNodeByHeadline
-} from "../../src/Data/Queries";
+  enhanceNodeWithPosition,
+  getObjects,
+  getOrCreateNodeByHeadline,
+} from '../../src/Data/Queries';
 
 var Realm = require("realm");
 
@@ -333,6 +333,46 @@ describe("Queries", () => {
   beforeEach(() => {
     OrgApi.clearDb();
     return loadTestFile("full.org");
+  });
+
+  test("deleteFileById : timestamps are deleted", () => {
+    return getFirstFile().then(file => {
+      return deleteFileById(file.path).then(() => {
+        return expect(getObjects('OrgTimestamp')).resolves.toHaveLength(0)
+      })
+    });
+  });
+
+  test("deleteFileById : nodes are deleted", () => {
+    return getFirstFile().then(file => {
+      return deleteFileById(file.path).then(() => {
+        return expect(getObjects('OrgNode')).resolves.toHaveLength(0)
+      })
+    });
+  });
+
+  test("deleteFileById : file is deleted", () => {
+    return getFirstFile().then(file => {
+      return deleteFileById(file.path).then(() => {
+        return expect(getObjects('OrgFile')).resolves.toHaveLength(0)
+      })
+    });
+  });
+
+  test("deleteNodeById : timestamps deleted", () => {
+    return getFirstFile().then(file => {
+      return expect(
+        deleteNodeById(file.nodes[0].id).then(() => getObjects('OrgTimestamp'))
+      ).resolves.toHaveLength(4);
+    });
+  });
+
+  test("deleteNodeById : node deleted", () => {
+    return getFirstFile().then(file => {
+      return expect(
+        deleteNodeById(file.nodes[0].id).then(() => file.nodes)
+      ).resolves.toHaveLength(4);
+    });
   });
 
   test("addNodes : add in the middle of file by id", () => {

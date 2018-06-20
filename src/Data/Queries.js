@@ -49,7 +49,7 @@ export const getObjectByIdAndEnhance = (objSchema, enhanceFunction) => id =>
     return res.length === 1 ? enhanceFunction(res[0]) : null;
   });
 
-const getObjects = (model, ...filterArgs) =>
+export const getObjects = (model, ...filterArgs) =>
   dbConn.then(
     realm =>
       filterArgs.length > 0
@@ -247,8 +247,29 @@ export const addNodes = (nodes, insertPosition) =>
     return results;
   });
 
-// const deleteNode = (node) => dbConn.then(realm => realm.write(
-//   () => realm.delete(node)));
+export const deleteNodeById = nodeId =>
+  dbConn.then(realm =>
+    realm.write(() => {
+      const node = getNodeById(realm, nodeId);
+      realm.delete(node.timestamps);
+      realm.delete(node);
+    })
+  );
+
+export const deleteFileById = fileId =>
+  dbConn.then(realm =>
+    realm.write(() => {
+      const file = getFileById(realm, fileId);
+      for (var i = 0; i < file.nodes.length; i++) {
+        const node = file.nodes[i];
+        realm.delete(node.timestamps);
+      }
+
+      realm.delete(file.nodes);
+      realm.delete(file);
+      // console.log(realm.objects("OrgNode").length);
+    })
+  );
 
 const deleteNodes = nodes =>
   dbConn.then(realm =>
@@ -270,6 +291,17 @@ const flagFileAsSynced = file =>
           isConflicted: false
         })
       )
+    )
+  );
+
+const updateNodeById = nodeId =>
+  dbConn.then(realm =>
+    realm.write(() =>
+      listOfNodesAndChanges.forEach(group => {
+        let [node, newProps] = group;
+        if (commonChanges) Object.assign(newProps, commonChanges);
+        Object.assign(node, newProps);
+      })
     )
   );
 
@@ -453,9 +485,10 @@ export default {
   getAgenda,
   getNodeById,
   search,
-  // deleteNode,
+  deleteNodeById,
   deleteNodes,
   updateNodes,
+  updateNodeById,
   flagFileAsSynced,
   connectDb,
   updateFile
