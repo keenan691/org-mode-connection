@@ -8,10 +8,37 @@ import { headlineT } from '../OrgFormat/Transforms';
 import { log, rlog } from '../Helpers/Debug';
 import { nullWhenEmpty, promisePipe } from '../Helpers/Functions';
 import { parse, parseFileContent, parseNode } from '../OrgFormat/Parser';
-import { prepareNodes } from './Transforms';
+import { prepareNodes, uniqueId } from './Transforms';
 import Export from '../OrgFormat/Export';
 import FileAccess from '../Helpers/FileAccess';
 import Queries from './Queries';
+
+// * Add file
+
+const importFile = (filepath, type='agenda') => {
+  const getFileContent = FileAccess.read(filepath);
+  const getFileStats = FileAccess.stat(filepath);
+  const transform = ([fileStat, fileContent]) => [fileStat, parse(fileContent)];
+  const addToDb = ([fileStat, parsedObj]) => Queries.connectDb().then(realm => realm.write(() => {
+
+    // Create OrgFile object
+    const orgFile = realm.create('OrgFile', {
+      id: uniqueId(),
+      path: filepath,
+      lastSync: new Date(),
+      description: parsedObj.file.description,
+      metadata: JSON.stringify(parsedObj.file.metadata),
+      size: fileStat.size,
+      mtime: fileStat.mtime,
+      ctime: fileStat.ctime,
+      type})
+
+    // Creating node objects
+    prepareNodes(parsedObj.nodes, orgFile).forEach(node => {
+      const orgNode = realm.create('OrgNode', node, true)})}));
+
+  return Promise.all([getFileStats, getFileContent]).then(transform).then(addToDb)
+}
 
 // * Description
 
@@ -71,32 +98,6 @@ import Queries from './Queries';
 //    - delete those nodes and sync file
 //    - force version from db
 //    - merge nodes to manual resolve with tag resolve
-
-// * Add file
-
-const addFile = (filepath, type='agenda') => {
-  const getFileContent = FileAccess.read(filepath);
-  const getFileStats = FileAccess.stat(filepath);
-  const transform = ([fileStat, fileContent]) => [fileStat, parse(fileContent)];
-  const addToDb = ([fileStat, parsedObj]) => Queries.connectDb().then(realm => realm.write(() => {
-
-    // Create OrgFile object
-    const orgFile = realm.create('OrgFile', {
-      path: filepath,
-      lastSync: new Date(),
-      description: parsedObj.file.description,
-      metadata: JSON.stringify(parsedObj.file.metadata),
-      size: fileStat.size,
-      mtime: fileStat.mtime,
-      ctime: fileStat.ctime,
-      type})
-
-    // Creating node objects
-    prepareNodes(parsedObj.nodes, orgFile).forEach(node => {
-      const orgNode = realm.create('OrgNode', node, true)})}));
-
-  return Promise.all([getFileStats, getFileContent]).then(transform).then(addToDb)
-}
 
 // * Sync
 
@@ -208,13 +209,13 @@ export const getChanges = (file) => {
 const applyFileHeaderExternalChanges = (changes) => {
   if (!changes) return changes
   const fileChanges = changes.externalFileHeaderChanges;
-  if (fileChanges) Queries.updateFile(changes.file.path, fileChanges)
+  if (fileChanges) Queries.updateFile(changes.file.id, fileChanges)
   return changes
 };
 
 const applyLocalChanges = changes => {
   const newFileContent = Array.from(changes.file.nodes).map(n => Export(n)).join();
-  return FileAccess.write(changes.file.path, newFileContent).then(() => ({ status: 'success' }))}
+  return FileAccess.write(changes.file.id, newFileContent).then(() => ({ status: 'success' }))}
 
 const applyExternalChanges = changes => {
   let promises = []
@@ -230,7 +231,7 @@ const applyExternalChanges = changes => {
 
   if (externalChanges.addedNodes) {
     const nodesToAdd = externalChanges.addedNodes.map(n => parseNode(n));
-    promises.push(Queries.addNodes(nodesToAdd, { fileId: changes.file.path }))}
+    promises.push(Queries.addNodes(nodesToAdd, { fileId: changes.file.id }))}
 
   if (externalChanges.notChangedNodes) {
     promises.push(Queries.updateNodes(externalChanges.notChangedNodes, { isChanged: false }))}
@@ -276,11 +277,13 @@ const syncFile = file => getChanges(file).then(changes => R.pipe(
   generateReportAndUpdateFileStatus(changes),
 )(changes))
 
-const syncAllFiles = () => Queries.getFiles().then(
-  files => Promise.all(files.map(file => syncFile(file)))).then(res => res.filter(i => i !== null))
+const syncAllFiles = () => Queries.getFiles()
+// .then(files => files.filter(file => file.path != undefined))
+      .then(
+        files => Promise.all(files.map(file => syncFile(file)))).then(res => res.filter(i => i !== null))
 
 // * Exports
 
 export default {
-  addFile,
+  importFile,
   syncDb: () => syncAllFiles()}

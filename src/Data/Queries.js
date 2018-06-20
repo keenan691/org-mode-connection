@@ -6,7 +6,8 @@ import {
   mapFileToPlainObject,
   mapNodeToPlainObject,
   mapNodeToSearchResult,
-  prepareNodes
+  prepareNodes,
+  uniqueId
 } from "./Transforms";
 import { parse } from "../OrgFormat/Parser";
 import { promisePipe } from "../Helpers/Functions";
@@ -29,8 +30,7 @@ export const connectDb = () => {
 // * Realm helpers
 
 const getObjectById = R.curry((model, realm, id) => {
-  const idField = model === "OrgFile" ? "path" : "id";
-  const res = realm.objects(model).filtered(`${idField} = "${id}"`);
+  const res = realm.objects(model).filtered(`id = "${id}"`);
   return res.length === 1 ? res[0] : null;
 });
 
@@ -247,6 +247,16 @@ export const addNodes = (nodes, insertPosition) =>
     return results;
   });
 
+export const addFile = title =>
+  dbConn.then(realm =>
+    realm.write(() => {
+      realm.create("OrgFile", {
+        id: uniqueId(),
+        title
+      });
+    })
+  );
+
 export const deleteNodeById = nodeId =>
   dbConn.then(realm =>
     realm.write(() => {
@@ -294,15 +304,12 @@ const flagFileAsSynced = file =>
     )
   );
 
-const updateNodeById = nodeId =>
+export const updateNodeById = nodeObj =>
   dbConn.then(realm =>
-    realm.write(() =>
-      listOfNodesAndChanges.forEach(group => {
-        let [node, newProps] = group;
-        if (commonChanges) Object.assign(newProps, commonChanges);
-        Object.assign(node, newProps);
-      })
-    )
+    realm.write(() => {
+      deleteNodeById(nodeObj.id);
+      realm.create("OrgNode", nodeObj);
+    })
   );
 
 const updateNodes = (listOfNodesAndChanges, commonChanges) =>
@@ -475,21 +482,22 @@ const getAgenda = (dateStart, dateEnd) =>
 // * Export
 
 export default {
-  clearDb: () => dbConn.then(realm => Db(realm).cleanUpDatabase()),
-  getFileAsPlainObject,
-  getAllFilesAsPlainObject,
-  getTagsAsPlainObject,
   addNodes,
-  getFiles,
-  getNodes,
-  getAgenda,
-  getNodeById,
-  search,
+  addFile,
+  clearDb: () => dbConn.then(realm => Db(realm).cleanUpDatabase()),
+  connectDb,
   deleteNodeById,
   deleteNodes,
-  updateNodes,
-  updateNodeById,
   flagFileAsSynced,
-  connectDb,
-  updateFile
+  getAgenda,
+  getAllFilesAsPlainObject,
+  getFileAsPlainObject,
+  getFiles,
+  getNodeById,
+  getNodes,
+  getTagsAsPlainObject,
+  search,
+  updateFile,
+  updateNodeById,
+  updateNodes
 };

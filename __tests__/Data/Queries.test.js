@@ -6,6 +6,7 @@ import DbHelper from "../../src/Data/Db/DbHelper";
 import FileAccess from "../../src/Helpers/FileAccess";
 import OrgApi from "../../src/OrgApi";
 import Queries, {
+  addFile,
   addNodes,
   deleteFileById,
   deleteNodeById,
@@ -25,8 +26,8 @@ jest.mock("../../src/Helpers/FileAccess");
 
 const loadTestFile = fileName =>
   FileAccess.write("file", getOrgFileContent(fileName).join("\n")).then(() =>
-    OrgApi.addFile(fileName)
-  );
+                                                                        OrgApi.importFile(fileName)
+                                                                       );
 
 beforeAll(() => {
   OrgApi.configureDb(Realm);
@@ -329,6 +330,17 @@ describe("Helper functions", () => {
 
 // * Queries tests
 
+describe("Queries with empty db", () => {
+  beforeEach(() => {
+    OrgApi.clearDb();
+  });
+
+  test("addFile", () => {
+    return expect(addFile('new').then(getFirstFile)).resolves.toEqual(expect.objectContaining({ title: 'new'}));
+  });
+
+})
+
 describe("Queries", () => {
   beforeEach(() => {
     OrgApi.clearDb();
@@ -337,7 +349,7 @@ describe("Queries", () => {
 
   test("deleteFileById : timestamps are deleted", () => {
     return getFirstFile().then(file => {
-      return deleteFileById(file.path).then(() => {
+      return deleteFileById(file.id).then(() => {
         return expect(getObjects('OrgTimestamp')).resolves.toHaveLength(0)
       })
     });
@@ -345,7 +357,7 @@ describe("Queries", () => {
 
   test("deleteFileById : nodes are deleted", () => {
     return getFirstFile().then(file => {
-      return deleteFileById(file.path).then(() => {
+      return deleteFileById(file.id).then(() => {
         return expect(getObjects('OrgNode')).resolves.toHaveLength(0)
       })
     });
@@ -353,7 +365,7 @@ describe("Queries", () => {
 
   test("deleteFileById : file is deleted", () => {
     return getFirstFile().then(file => {
-      return deleteFileById(file.path).then(() => {
+      return deleteFileById(file.id).then(() => {
         return expect(getObjects('OrgFile')).resolves.toHaveLength(0)
       })
     });
@@ -379,7 +391,7 @@ describe("Queries", () => {
     return getFirstFile().then(file => {
       const nodesToAdd = [{ headline: "new" }];
       const target = {
-        fileId: file.path,
+        fileId: file.id,
         nodeId: file.nodes[0].id
       };
       const expectation = [
@@ -405,7 +417,7 @@ describe("Queries", () => {
     return getFirstFile().then(file => {
       const nodesToAdd = [{ headline: "new" }];
       const target = {
-        fileId: file.path,
+        fileId: file.id,
         headline: file.nodes[0].headline
       };
       const expectation = [
@@ -431,7 +443,7 @@ describe("Queries", () => {
     return getFirstFile().then(file => {
       const nodesToAdd = [{ headline: "new" }];
       const target = {
-        fileId: file.path,
+        fileId: file.id,
         headline: file.nodes[1].headline
       };
       const expectation = [
@@ -449,7 +461,7 @@ describe("Queries", () => {
     return getFirstFile().then(file => {
       const nodesToAdd = [{ headline: "new" }];
       const target = {
-        fileId: file.path
+        fileId: file.id
       };
       const expectation = [
         expect.objectContaining({
@@ -470,7 +482,7 @@ describe("Queries", () => {
     return expect(obj).resolves.toEqual(expectation);
   });
 
-  test("addFile", () => {
+  test("importFile", () => {
     expect.assertions(1);
     return expect(Queries.getFiles()).resolves.toHaveLength(1);
   });

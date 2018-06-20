@@ -1,20 +1,21 @@
 export default {
   name: 'OrgFile',
-  primaryKey: 'path',
+  primaryKey: 'id',
   properties: {
+    id: 'string',
 
     // Related objects
     nodes: { type: 'linkingObjects', objectType: 'OrgNode', property: 'file'},
 
     // File
-    path: 'string',
+    path: 'string?',
     name: 'string?',
     size: 'int?',
     mtime: 'date?',
     ctime: 'date?',
 
     // Sync
-    type: 'string', // agenda, referenece
+    type: 'string?', // agenda, referenece
     lastSync: 'date?',
     isChanged: { type: 'bool', default: false},
     isConflicted: { type: 'bool', default: false},

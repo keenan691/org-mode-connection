@@ -56,7 +56,7 @@ export const mapNodeToSearchResult = (n) => ({
   level: n.level,
   headline: n.headline,
   content: n.content.slice(0, n.content.length < 100 ? n.content.length : 100).trim(),
-  fileID: n.file.path,
+  fileID: n.file.id,
   todo: n.todo,
   priority: n.priority,
   tags: Array.from(n.tags).map(t => t.name),
