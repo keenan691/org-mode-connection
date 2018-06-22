@@ -13,7 +13,7 @@ const inactiveTimestamp = mr(/\[/, datetimeR, /\]/);
 export const headlineR = {
   priority: /\[#[ABC]\]/,
   todo: /(^TODO\s+|DONE\s+)/,
-  tags: /\s+:[^\s]+:(\s*|$)/,
+  tags: /\s*:[^\s]+:(\s*|$)/,
   head: /^\*+\s+/};
 
 export const nodeMetadataR = {
