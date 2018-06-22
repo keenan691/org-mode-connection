@@ -440,7 +440,7 @@ const mapNodesToSearchResults = nodes =>
 // Returns whole file content including nodes as plain object
 const getFileAsPlainObject = id =>
   dbConn.then(realm => {
-    const f = realm.objects("OrgFile").filtered(`path = '${id}'`)[0];
+    const f = realm.objects("OrgFile").filtered(`id = '${id}'`)[0];
     const filePlain = mapFileToPlainObject(f);
     return {
       fileData: filePlain,

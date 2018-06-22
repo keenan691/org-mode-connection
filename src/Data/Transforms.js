@@ -30,6 +30,8 @@ export const prepareNodes = (parsedNodes, file) =>
 
 // * To plain object transform
 
+export const pathToFileName = R.pipe(R.split('/'), R.last)
+
 export const mapNodeToPlainObject = (n, idx, array) => {
   const nextNode = array[idx + 1]
   return {
@@ -56,7 +58,7 @@ export const mapNodeToSearchResult = (n) => ({
   level: n.level,
   headline: n.headline,
   content: n.content.slice(0, n.content.length < 100 ? n.content.length : 100).trim(),
-  fileID: n.file.id,
+  fileId: n.file.id,
   todo: n.todo,
   priority: n.priority,
   tags: Array.from(n.tags).map(t => t.name),
@@ -68,7 +70,7 @@ export const mapNodeToSearchResult = (n) => ({
     dateRangeEnd: t.dateRangeEnd}))})
 
 export const mapFileToPlainObject = (f) => ({
-  id: f.path,
+  id: f.id,
   type: f.type,
   name: f.name,
   size: f.size,
