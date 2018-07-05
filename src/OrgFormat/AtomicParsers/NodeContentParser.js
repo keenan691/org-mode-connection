@@ -73,7 +73,8 @@ const orgTextFaces = {
   codeText: '~',
   underlineText: '_',
   verbatimText: '=',
-  italicText: '/'}
+  // italicText: '/'
+}
 
 const isTextFaceStart = R.curry(
   (line, idx) => spaceChars.includes(line[idx-1]) && !spaceChars.includes(line[idx+1]))

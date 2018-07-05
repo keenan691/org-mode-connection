@@ -12,7 +12,7 @@ const inactiveTimestamp = mr(/\[/, datetimeR, /\]/);
 
 export const headlineR = {
   priority: /\[#[ABC]\]/,
-  todo: /(^TODO\s+|DONE\s+)/,
+  todo: /(^TODO\s+|DONE\s+|NEXT\s+|PROJECT\s+|WAITING\s+|REVIEW\s+|IDEA\s+)/,
   tags: /\s*:[^\s]+:(\s*|$)/,
   head: /^\*+\s+/};
 
@@ -49,11 +49,11 @@ export const nodeContentLinksR = {
   plain: /( |^)(www|http:|https:)+[^\s]+[\w](\/| |$)/g
 }
 
-export const nodeContentInlineElementsR = {
-  strikeThroughText: createInlineR(/\+/),
-  boldText: createInlineR(/\*/),
-  codeText: createInlineR(/\~/),
-  underlineText: createInlineR(/\_/),
-  verbatimText: createInlineR(/\=/),
-  italicText: createInlineR(/\//),
-}
+// export const nodeContentInlineElementsR = {
+//   strikeThroughText: createInlineR(/\+/),
+//   boldText: createInlineR(/\*/),
+//   codeText: createInlineR(/\~/),
+//   underlineText: createInlineR(/\_/),
+//   verbatimText: createInlineR(/\=/),
+//   // italicText: createInlineR(/\//),
+// }

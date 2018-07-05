@@ -427,7 +427,7 @@ const search = ({
       return [];
     }
 
-    return mapNodesToSearchResults(filteredNodes);
+    return mapNodesToSearchResults(filteredNodes.sorted("file.id"));
   });
 
 // ** Get as plain objects
