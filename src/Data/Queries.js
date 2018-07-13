@@ -3,12 +3,13 @@
 import R from "ramda";
 
 import {
+  mapAgendaToPlainObject,
   mapFileToPlainObject,
   mapNodeToPlainObject,
   mapNodeToSearchResult,
   prepareNodes,
   uniqueId
-} from "./Transforms";
+} from './Transforms';
 import { parse } from "../OrgFormat/Parser";
 import { promisePipe } from "../Helpers/Functions";
 import Db from "./Db/Db";
@@ -59,6 +60,35 @@ export const getObjects = (model, ...filterArgs) =>
 
 // * Functions
 
+const getDescendants = (node, nodes) =>
+      {
+        const lowerNodes = nodes.filtered(`position > "${node.position}"`).sorted('position')
+        return R.pipe(
+          R.takeWhile(n => n.level > node.level)
+        )(lowerNodes);
+      }
+
+const getParents = (node, nodes) => {
+  const upperNodes = nodes.filtered(`position < "${node.position}"`).sorted('position')
+  return R.pipe(
+    R.reverse,
+    R.reduce(
+      (acc, node) => {
+        const level = node.level
+        const lastLevel = R.last(acc).level;
+        if (level < lastLevel) {
+          acc.push(node);
+          if (level === 1) return R.reduced(acc);
+        }
+        return acc;
+      },
+      [node]
+    ),
+    R.drop(1),
+    R.reverse
+  )(upperNodes);
+};
+
 const markNodeAsChanged = node => {
   node.isChanged = true;
   node.file.isChanged = true;
@@ -98,11 +128,11 @@ const RealmOrgNodeGetters = (function() {
 
 const OrgNodeMethods = Object.create(null);
 OrgNodeMethods.prototype = {
-  setNodeProperty(name, value) {
+  setNodeProperty(nextNodeSameLevel, value) {
     return dbConn.then(realm =>
       realm.write(() => {
         markNodeAsChanged(this._node);
-        return (this._node[name] = value);
+        return (this._node[nextNodeSameLevel] = value);
       })
     );
   },
@@ -164,30 +194,35 @@ export const getOrCreateNodeByHeadline = (file, headline) => {
   return [newNode, true];
 };
 
+const getPrevNode = node =>
+      node.file.nodes.filtered(
+        `position < ${node.position}`
+      ).sorted('position')[0];
+
 const getNextNodeSameLevel = node =>
   node.file.nodes.filtered(
     `level = "${node.level}" AND position > ${node.position}`
-  )[0];
+  ).sorted('position')[0];
 
 // Enahances node with position and level if these props are undefined
 export const enhanceNodeWithPosition = (file, targetNode) =>
   R.when(R.propEq("position", undefined), node => {
-    let level;
-    let position;
+    // Add to ond of file
+    let level = 1;
+    let position = file.nodes.length;
 
     if (targetNode) {
       // Add as child of target node
-      const nextNodeSameLevel = getNextNodeSameLevel(targetNode);
-      position = nextNodeSameLevel
-        ? nextNodeSameLevel.position
-        : file.nodes.length;
       level = targetNode.level + 1;
-    } else {
-      // Add to end of file
-      position = file.nodes.length;
-      level = 1;
-    }
 
+      const nextNodeSameLevel = getNextNodeSameLevel(targetNode);
+      if (nextNodeSameLevel) {
+        const position2 = nextNodeSameLevel.position
+        const position1 = getPrevNode(nextNodeSameLevel).position
+        position = (position2 + position1) / 2
+      }
+
+    }
     return R.merge(node, { level, position });
   });
 
@@ -202,6 +237,20 @@ const getNodeById = getObjectById("OrgNode");
 const getFiles = () => getObjects("OrgFile");
 
 const getNodes = (...filter) => getObjects("OrgNode", ...filter);
+
+const getRelatedNodes = (nodeId) => dbConn.then(realm => {
+  const result = [];
+  const node = getNodeById(realm, nodeId);
+  const fileNodes = node.file.nodes;
+  const parentNodes = getParents(node, fileNodes);
+  const descendantsNodes = getDescendants(node, fileNodes)
+
+  return [
+    ...mapNodesToPlainObject(parentNodes),
+    ...mapNodesToPlainObject([node]),
+    ...mapNodesToPlainObject(descendantsNodes)
+  ]
+});
 
 // ** Add/delete
 
@@ -229,22 +278,21 @@ export const addNodes = (nodes, insertPosition) =>
       prepareNodes(nodes, file).forEach(node => {
         const enhancedNode = enhance(node);
 
-        if (headline || nodeId) {
-          // update next nodes positions, if node will be appended as other nodes child
-          const toShift = file.nodes.filtered(
-            `position >= "${enhancedNode.position}"`
-          );
-          for (var i = 0; i < toShift.length; i++) {
-            toShift[i].position += 1;
-          }
-        }
+        // if (headline || nodeId) {
+        //   // update next nodes positions, if node will be appended as other nodes child
+        //   const toShift = file.nodes.filtered(
+        //     `position >= "${enhancedNode.position}"`
+        //   );
+        //   for (var i = 0; i < toShift.length; i++) {
+        //     toShift[i].position += 1;
+        //   }
+        // }
 
         realm.create("OrgNode", enhancedNode, true);
         results.push(enhancedNode);
       })
     );
-
-    return results;
+    return results
   });
 
 export const addFile = title =>
@@ -304,24 +352,24 @@ const flagFileAsSynced = file =>
     )
   );
 
-export const updateNodeById = nodeObj =>
+export const updateNodeById = (id, changes) =>
   dbConn.then(realm =>
     realm.write(() => {
-      deleteNodeById(nodeObj.id);
-      realm.create("OrgNode", nodeObj);
+      const node = realm.objects('OrgNode').filtered(`id = '${id}'`)[0]
+      Object.assign(node, {...changes, isChanged: true})
     })
-  );
+             );
 
 const updateNodes = (listOfNodesAndChanges, commonChanges) =>
-  dbConn.then(realm =>
-    realm.write(() =>
-      listOfNodesAndChanges.forEach(group => {
-        let [node, newProps] = group;
-        if (commonChanges) Object.assign(newProps, commonChanges);
-        Object.assign(node, newProps);
-      })
-    )
-  );
+      dbConn.then(realm =>
+                  realm.write(() =>
+                              listOfNodesAndChanges.forEach(group => {
+                                let [node, newProps] = group;
+                                if (commonChanges) Object.assign(newProps, commonChanges);
+                                Object.assign(node, newProps);
+                              })
+                             )
+                 );
 
 const updateFile = (id, changes) =>
   dbConn.then(realm =>
@@ -452,7 +500,10 @@ const getFileAsPlainObject = id =>
 const getAllFilesAsPlainObject = () =>
   getFiles().then(files => files.map(mapFileToPlainObject));
 const getTagsAsPlainObject = () =>
-  getObjects("OrgTag").then(tags => tags.map(tag => tag.name));
+  getObjects("OrgTag").then(tags => tags.map(tag => tag.nextNodeSameLevel));
+
+const getAgendaAsPlainObject = () => getObjects("OrgTimestamp").then(mapAgendaToPlainObject);
+
 
 // ** Timestamps
 
@@ -495,7 +546,9 @@ export default {
   getFiles,
   getNodeById,
   getNodes,
+  getRelatedNodes,
   getTagsAsPlainObject,
+  getAgendaAsPlainObject,
   search,
   updateFile,
   updateNodeById,

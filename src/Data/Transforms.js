@@ -1,4 +1,5 @@
 import R from "ramda";
+import moment from 'moment'
 
 // * To db transforms
 
@@ -32,6 +33,16 @@ export const prepareNodes = (parsedNodes, file) =>
 
 export const pathToFileName = R.pipe(R.split('/'), R.last)
 
+export const mapNodeToPlainObjectShort = (n) => {
+  return {
+    id: n.id,
+    headline: n.headline,
+    todo: n.todo,
+    priority: n.priority,
+    tags: Array.from(n.tags).map(t => t.name),
+  }
+}
+
 export const mapNodeToPlainObject = (n, idx, array) => {
   const nextNode = array[idx + 1]
   return {
@@ -58,6 +69,7 @@ export const mapNodeToSearchResult = (n) => ({
   level: n.level,
   headline: n.headline,
   content: n.content.slice(0, n.content.length < 100 ? n.content.length : 100).trim(),
+  // content: '',
   fileId: n.file.id,
   todo: n.todo,
   priority: n.priority,
@@ -69,18 +81,62 @@ export const mapNodeToSearchResult = (n) => ({
     date: t.date,
     dateRangeEnd: t.dateRangeEnd}))})
 
-export const mapFileToPlainObject = (f) => ({
-  id: f.id,
-  type: f.type,
-  name: f.name,
-  size: f.size,
-  ctime: f.ctime,
-  mtime: f.mtime,
-  path: f.path,
-  title: f.title,
-  description: f.description,
-  metadata: JSON.parse(f.metadata),
-  category: f.category,
-  lastSync: f.lastSync,
-  isChanged: f.isChanged,
-  isConflicted: f.isConflicted,});
+const safePushItemtoKey = (obj={}) => (key='', data={})  => R.ifElse(
+  R.has(key),
+  R.over(R.lensProp(key), R.append(data)),
+  R.assoc(key, R.of(data))
+)(obj);
+
+export const mapAgendaToPlainObject = (timestamps) => timestamps.sorted('date').reduce(
+  (acc, ts) => {
+    const addDay = safePushItemtoKey(acc);
+    const day = moment(ts.date).format('YYYY-MM-DD');
+    const agendaDayItem = {
+      date: ts.date,
+      dateRangeEnd: ts.dateRangeEnd,
+      repeater: ts.repeater,
+      warningPeriod: ts.warningPeriod,
+      type: ts.type,
+      node: Array.from(ts.nodes).map(mapNodeToPlainObjectShort)[0]
+    };
+
+    return addDay(day, agendaDayItem)
+
+  }, {})
+// ({
+//   date: t.date,
+//   dateRangeEnd: t.dateRangeEnd,
+//   repeater: t.repeater,
+//   warningPeriod: t.warningPeriod,
+//   type: t.type,
+//   node: Array.from(t.nodes).map(mapNodeToPlainObjectShort)
+//   // node: mapNodeToPlainObjectShort(t.node)
+// });
+
+export const mapFileToPlainObject = (f) => {
+  const tocNodes = f.nodes.filtered('level = 1');
+  const toc = [];
+  const nodesData = {}
+  for (var i = 0; i < tocNodes.length; i++) {
+    const node = tocNodes[i];
+    toc.push(node.id)
+    nodesData[node.id] = mapNodeToPlainObject(node, node.position, f.nodes)
+  }
+  return {
+    id: f.id,
+    type: f.type,
+    name: f.name,
+    size: f.size,
+    ctime: f.ctime,
+    mtime: f.mtime,
+    path: f.path,
+    title: f.title,
+    description: f.description,
+    metadata: JSON.parse(f.metadata),
+    category: f.category,
+    lastSync: f.lastSync,
+    isChanged: f.isChanged,
+    isConflicted: f.isConflicted,
+    toc,
+    nodesData
+  } };

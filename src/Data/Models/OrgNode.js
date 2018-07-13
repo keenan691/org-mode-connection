@@ -15,7 +15,8 @@ export default  {
 
     // Position
     level: 'int', // horizontal position - is not used to crc check
-    position: 'int', // vertical position - is not used to crc check
+    position: 'double', // vertical position - is not used to crc check
+
 
     // Tree props
     // parent: 'OrgNode?',

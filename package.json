@@ -69,6 +69,7 @@
   },
   "dependencies": {
     "babel-runtime": "^6.26.0",
+    "moment": "^2.22.2",
     "promisify-node": "^0.4.0",
     "ramda": "^0.25.0",
     "realm": "^2.7.1"

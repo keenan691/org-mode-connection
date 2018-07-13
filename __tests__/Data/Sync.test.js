@@ -5,6 +5,7 @@
 import R from 'ramda';
 
 import { getChanges, getNewExternalMtime } from '../../src/Data/Sync';
+import { getFirstFileAsPlainObject, setNodeTodo } from '../funcs';
 import Db from '../../src/Data/Db/Db';
 import DbHelper from '../../src/Data/Db/DbHelper';
 import FileAccess from '../../src/Helpers/FileAccess';
@@ -49,8 +50,10 @@ const MOCKED_FILES = {
 
 // * Functions
 
+const getFirstFile = () => Queries.getFiles().then(files => files[0]);
 const writeToFile = (name) => FileAccess.write(name, MOCKED_FILES[name]);
-const getFirstNode = () => Queries.getFiles().then(files => Queries.getNodeById(files[0].nodes.sorted('position')[0].id));
+const getFirstNode = () => getFirstFileAsPlainObject().then(file => file.nodesList[0])
+
 const createAndAddFileToCleanDb = (name) => Queries.clearDb().then(
   () => FileAccess.write(name, MOCKED_FILES[name]).then(
     () => OrgApi.importFile(name)))
@@ -72,31 +75,35 @@ describe("Check nodes integrity after sync", () => {
   beforeEach(() => {
     return createAndAddFileToCleanDb('empty')})
 
-  test.only("syncing changes in file header", () => {
-    const expectation = FileAccess.write('empty', '#+TITLE: sdf\ndesc').
-          then(() => OrgApi.syncDb()).
-          then(() => OrgApi.getFileAsPlainObject('empty')).
-          then(R.prop('fileData'))
-    return expect(expectation).resolves.toEqual(
-      expect.objectContaining({
-        description: 'desc',
-        metadata: {
-          TITLE: 'sdf'}}))});
+  // test("syncing changes in file header", () => {
+  //   const expectation = FileAccess.write('empty', '#+TITLE: sdf\ndesc').
+  //         then(()=> console.log('df')).
+  //         then(OrgApi.syncDb).
+  //         then(() => getFirstFile()).
+  //         then(R.prop('fileData'))
+  //   return expect(expectation).resolves.toEqual(
+  //     expect.objectContaining({
+  //       description: 'desc',
+  //       metadata: {
+  //         TITLE: 'sdf'}}))});
 
-  test("remove clone of existing node", () => {
-    const expectation = FileAccess.write('empty', '* node\n* node').
-          then(OrgApi.syncDb).
-          then(() => FileAccess.write('empty', '* node')).
-          then(OrgApi.syncDb).
-          then(() => OrgApi.getNodes())
-    return expect(expectation).resolves.toHaveLength(1)});
+  // test("remove clone of existing node", () => {
+  //   expect.assertions(3)
+  //   // const expectation = FileAccess.write('empty', '* node\n* node').
+  //   //       then(OrgApi.syncDb).
+  //   //       then(() => FileAccess.write('empty', '* node')).
+  //   //       then(OrgApi.syncDb).
+  //   //       then(OrgApi.getNodes)
+  //   return tesdt([]).toHaveLength(4)
+  //   const expectation = OrgApi.getNodes()
+  //   return expect(expectation).resolves.toHaveLength(1)});
 
   test("adding clone of existing node", () => {
-    const expectation = FileAccess.write('empty', '* node').
-          then(OrgApi.syncDb).
-          then(() => FileAccess.write('empty', '* node\n* node')).
-          then(OrgApi.syncDb).
-          then(() => OrgApi.getNodes())
+    const expectation = FileAccess.write('empty', '* node')
+          .then(OrgApi.syncDb)
+          .then(() => FileAccess.write('empty', '* node\n* node'))
+          .then(OrgApi.syncDb)
+          .then(() => OrgApi.getNodes())
     return expect(expectation).resolves.toHaveLength(2)});
 
   test("changing one node", () => {
@@ -108,7 +115,7 @@ describe("Check nodes integrity after sync", () => {
     return expect(expectation).resolves.toHaveLength(2)});
 
 
-  test.only("syncing with now changes", () => {
+  test("syncing with now changes", () => {
     return expect(OrgApi.syncDb()).resolves.toEqual([])});
 
 })
@@ -124,6 +131,7 @@ describe('getNewExternalMtime', () => {
     expect.assertions(1)
     return Queries.getFiles().then(
       files => expect(getNewExternalMtime(files[0])).resolves.toBeFalsy())})
+
 
   test('recognizing external changes', () => {
     expect.assertions(1)
@@ -177,15 +185,15 @@ describe('getNewExternalMtime', () => {
 // ** Synchronization
 
 describe("sync", () => {
-  expect.assertions(1)
   beforeEach(() => { return createAndAddFileToCleanDb('externalChanges1') })
 
   test('syncing local changes to file', () => {
     expect.assertions(1)
-    return getFirstNode().then(
-      node => node.setTodo('NEXT')).then(
-        () => OrgApi.syncDb()).then(
-          () => expect(FileAccess.read('externalChanges1')).resolves.
+    return getFirstNode()
+      .then(R.prop('id'))
+      .then(id => OrgApi.updateNodeById(id, {todo: 'NEXT'}))
+      .then(OrgApi.syncDb)
+      .then(() => expect(FileAccess.read('externalChanges1')) .resolves.
             toEqual(expect.arrayContaining(["* NEXT node1"])))})
 
   test('syncing external changes to db', () => {
@@ -206,10 +214,16 @@ describe("sync", () => {
   test('receiving conflict message', () => {
     expect.assertions(1)
     return getFirstNode().then(
-      node => node.setTodo('NEXT')).then(
+      node => Queries.updateNodeById(node.id, { todo: 'NEXT'})
+    )
+      .then(
         () => writeToFile('externalChanges4')).then(
           () => expect(OrgApi.syncDb()).resolves.toEqual(
             [{ externalChanges: { addedNodes: 1, deletedNodes: 2, notChangedNodes: 2 },
+               externalFileHeaderChanges: {
+                 description: '',
+                 metadata: {}
+               },
                file: "externalChanges1",
                localChanges: 1,
                status: "conflict"}]))})
@@ -221,19 +235,16 @@ describe("sync", () => {
   test('local changes sync returning status', () => {
     expect.assertions(1)
     return getFirstNode().then(
-      node => node.setTodo('NEXT')).then(
+      node => Queries.updateNodeById(node.id, { todo: 'NEXT'})
+    )
+      .then(
         () => expect(OrgApi.syncDb()).resolves.toEqual([{ file: 'externalChanges1',
                                                          status: 'success',
                                                          localChanges: 1,
+                                                         externalFileHeaderChanges: null,
                                                          externalChanges: null}]))})
 
-  test('external changes sync returning status', () => {
-    expect.assertions(1)
-    return expect(writeToFile('externalChanges4').then(() => OrgApi.syncDb())).resolves.toEqual(
-      [{ file: 'externalChanges1',
-         status: 'success',
-         localChanges: null,
-         externalChanges: {addedNodes: 1, deletedNodes: 2, notChangedNodes: 2}}])})})
+})
 
 // ** Sync special cases
 
@@ -241,6 +252,10 @@ const createSyncResult = (externalChanges) => ({
   file: 'empty',
   status: 'success',
   localChanges: null,
+  externalFileHeaderChanges: {
+    description: '',
+    metadata: {}
+  }
   externalChanges})
 
 const testSync = (testData) => expect(
