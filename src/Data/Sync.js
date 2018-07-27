@@ -167,6 +167,7 @@ const spreadNotSymmetricalGroups = (groupedNodes) => {
   return groupedNodes};
 
 const getLocallyChangedNodes = file => file.nodes.filtered('isChanged = true')
+const getLocallyAddedNodes = file => file.nodes.filtered('isAdded = true')
 
 const partitionToChangedGroupsAndRest = R.partition(
   group => group.length === 2 && group[0].length === group[1].length)
@@ -215,7 +216,8 @@ const applyFileHeaderExternalChanges = (changes) => {
 
 const applyLocalChanges = changes => {
   const newFileContent = Array.from(changes.file.nodes).map(n => Export(n)).join();
-  return FileAccess.write(changes.file.id, newFileContent).then(() => ({ status: 'success' }))}
+  console.tron.log(changes.file.path)
+  return FileAccess.write(changes.file.path, newFileContent).then(() => ({ status: 'success' }))}
 
 const applyExternalChanges = changes => {
   let promises = []

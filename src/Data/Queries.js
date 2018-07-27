@@ -197,7 +197,7 @@ export const getOrCreateNodeByHeadline = (file, headline) => {
 const getPrevNode = node =>
       node.file.nodes.filtered(
         `position < ${node.position}`
-      ).sorted('position')[0];
+      ).sorted('position', true)[0];
 
 const getNextNodeSameLevel = node =>
   node.file.nodes.filtered(
@@ -261,6 +261,7 @@ export const addNodes = (nodes, insertPosition) =>
     let enhance;
     const results = [];
 
+    // Add level, position and id
     if (nodeId) {
       const targetNode = getNodeById(realm, nodeId);
       enhance = enhanceNodeWithPosition(file, targetNode);
@@ -276,31 +277,24 @@ export const addNodes = (nodes, insertPosition) =>
 
     realm.write(() =>
       prepareNodes(nodes, file).forEach(node => {
-        const enhancedNode = enhance(node);
+        const enhancedNode = enhance(R.merge(node, { isAdded: true}));
 
-        // if (headline || nodeId) {
-        //   // update next nodes positions, if node will be appended as other nodes child
-        //   const toShift = file.nodes.filtered(
-        //     `position >= "${enhancedNode.position}"`
-        //   );
-        //   for (var i = 0; i < toShift.length; i++) {
-        //     toShift[i].position += 1;
-        //   }
-        // }
-
-        realm.create("OrgNode", enhancedNode, true);
-        results.push(enhancedNode);
+        let createdNode = realm.create("OrgNode", enhancedNode, true);
+        results.push(createdNode);
+        file.isChanged = true
       })
     );
-    return results
+    return mapNodesToPlainObject(results)
   });
 
 export const addFile = title =>
   dbConn.then(realm =>
     realm.write(() => {
-      realm.create("OrgFile", {
+      const newFile = realm.create("OrgFile", {
         id: uniqueId(),
-        title
+        metadata: JSON.stringify({
+          TITLE: title
+        })
       });
     })
   );
@@ -325,7 +319,6 @@ export const deleteFileById = fileId =>
 
       realm.delete(file.nodes);
       realm.delete(file);
-      // console.log(realm.objects("OrgNode").length);
     })
   );
 
@@ -356,7 +349,7 @@ export const updateNodeById = (id, changes) =>
   dbConn.then(realm =>
     realm.write(() => {
       const node = realm.objects('OrgNode').filtered(`id = '${id}'`)[0]
-      Object.assign(node, {...changes, isChanged: true})
+      Object.assign(node, {...R.omit(['id'],changes), isChanged: true})
     })
              );
 
@@ -376,7 +369,7 @@ const updateFile = (id, changes) =>
     realm.write(() => {
       const file = getFileById(realm, id);
       const toMerge = R.evolve({ metadata: JSON.stringify }, changes);
-      Object.assign(file, toMerge);
+      Object.assign(file, toMerge, { isChanged: true});
     })
   );
 
@@ -539,6 +532,7 @@ export default {
   connectDb,
   deleteNodeById,
   deleteNodes,
+  deleteFileById,
   flagFileAsSynced,
   getAgenda,
   getAllFilesAsPlainObject,

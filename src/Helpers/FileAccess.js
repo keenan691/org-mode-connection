@@ -7,6 +7,6 @@ export const configureFileAccess = (fsInterface) => {
 
 export default {
   stat: (path) => FileSystemInterface.stat(path),
-  write (path, content) {},
+  write: (path, content) => FileSystemInterface.writeFile(path, content),
   read: (path) => FileSystemInterface.readFile(path, 'utf8').then(
     content => content.split('\n'))}
