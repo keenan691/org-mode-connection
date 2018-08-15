@@ -5,7 +5,7 @@ import { headlineT, nodeMetadataT } from './Transforms';
 
 export const recreateOriginalNode = (node) =>
   headlineT.level.toOrg(node) +
-  node.rawHeadline + '\n' + node.rawContent
+  node.rawHeadline + '\n' + node.content
 
 export const createNewNode = (rawNode) => {
   const node = enhanceNode(rawNode);
@@ -21,6 +21,8 @@ export const createNewNode = (rawNode) => {
       key => `:${key}:\n${ node.drawers[key].length > 0 ? node.drawers[key].join('\n') + '\n' : '' }:END:`).join('\n'): '') +
     node.content }
 
-const exportNodeToOrgRepr = (node) => node.isAdded || node.isChanged ? createNewNode(node) : recreateOriginalNode(node)
+
+// const exportNodeToOrgRepr = (node) => (node.isAdded || node.isChanged) ? createNewNode(node) : recreateOriginalNode(node)
+const exportNodeToOrgRepr = (node) =>  createNewNode(node)
 
 export default exportNodeToOrgRepr

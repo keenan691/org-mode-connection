@@ -51,6 +51,7 @@ export const mapNodeToPlainObject = (n, idx, array) => {
     position: n.position,
     headline: n.headline,
     content: n.content,
+    fileId: n.file.id,
     category: null,
     todo: n.todo,
     priority: n.priority,
@@ -114,7 +115,7 @@ export const mapAgendaToPlainObject = (timestamps) => timestamps.sorted('date').
 // });
 
 export const mapFileToPlainObject = (f) => {
-  const tocNodes = f.nodes.filtered('level = 1');
+  const tocNodes = f.nodes.filtered('level = 1').sorted('position');
   const toc = [];
   const nodesData = {}
   for (var i = 0; i < tocNodes.length; i++) {

@@ -54,8 +54,11 @@ const timePointer = (type, useWarningPeriod=false) => ({
     // Bulid result object
     let res = {
       date: new Date(...datetimeArgs), type
+      dateWithTime: Boolean(time)
     }
-    if (!R.isEmpty(datetimeRangeEndArgs)) {res = Object.assign(res, { dateRangeEnd: new Date(...datetimeRangeEndArgs)})};
+    if (!R.isEmpty(datetimeRangeEndArgs)) {res = Object.assign(res, {
+      dateRangeWithTime: Boolean(timeRangeEnd),
+      dateRangeEnd: new Date(...datetimeRangeEndArgs)})};
 
     if (repeater) {res = Object.assign(res, { repeater })}
     if (useWarningPeriod && warningPeriod) {res = Object.assign(res, { warningPeriod })}
@@ -88,7 +91,7 @@ export const headlineT = {
             isContextTag: tag.startsWith('@') ? true : false })))(val)}}},
 
   priority: {
-    toOrg(node) {return addSpaceBefore(node.priority)},
+    toOrg(node) {return addSpaceBefore(node.priority ? `[#${node.priority}] ` : undefined)},
     fromOrg(val) {return {priority: val[2]}}},
 
   todo: {

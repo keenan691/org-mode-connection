@@ -215,8 +215,7 @@ const applyFileHeaderExternalChanges = (changes) => {
 };
 
 const applyLocalChanges = changes => {
-  const newFileContent = Array.from(changes.file.nodes).map(n => Export(n)).join();
-  console.tron.log(changes.file.path)
+  const newFileContent = Array.from(changes.file.nodes.sorted('position')).map(n => Export(n)).join('\n');
   return FileAccess.write(changes.file.path, newFileContent).then(() => ({ status: 'success' }))}
 
 const applyExternalChanges = changes => {
@@ -252,7 +251,7 @@ const onlyLocalChangesP = changes => changes.localChanges && !changes.externalCh
 const onlyExternalChangesP = changes => !changes.localChanges && changes.externalChanges;
 const bothExternalAndLocalChangesP = changes => changes.localChanges && changes.externalChanges;
 
-const generateReportAndUpdateFileStatus = changes => syncResult => syncResult.then(
+const generateReportAndUpdateStatus = changes => syncResult => syncResult.then(
   result => {
     if (result) {
       if (result.status === 'success') Queries.flagFileAsSynced(changes.file)
@@ -265,6 +264,7 @@ const generateReportAndUpdateFileStatus = changes => syncResult => syncResult.th
           deletedNodes: R.length,
           notChangedNodes: R.length})))};
 
+      Queries.updateNodesAsSynced(changes.localChanges)
       return Object.assign(result, R.evolve(changesToSummary, changes))}
 
     return new Promise(r => r(null))});
@@ -276,13 +276,13 @@ const syncFile = file => getChanges(file).then(changes => R.pipe(
     [onlyLocalChangesP, applyLocalChanges],
     [onlyExternalChangesP, applyExternalChanges],
     [bothExternalAndLocalChangesP, mergeChanges]]),
-  generateReportAndUpdateFileStatus(changes),
+  generateReportAndUpdateStatus(changes),
 )(changes))
 
 const syncAllFiles = () => Queries.getFiles()
 // .then(files => files.filter(file => file.path != undefined))
       .then(
-        files => Promise.all(files.map(file => syncFile(file)))).then(res => res.filter(i => i !== null))
+        files => Promise.all(files.filter(file => file.path != null).map(file => syncFile(file)))).then(res => res.filter(i => i !== null))
 
 // * Exports
 

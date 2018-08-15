@@ -9,7 +9,7 @@ import {
   mapNodeToSearchResult,
   prepareNodes,
   uniqueId
-} from './Transforms';
+} from "./Transforms";
 import { parse } from "../OrgFormat/Parser";
 import { promisePipe } from "../Helpers/Functions";
 import Db from "./Db/Db";
@@ -60,21 +60,22 @@ export const getObjects = (model, ...filterArgs) =>
 
 // * Functions
 
-const getDescendants = (node, nodes) =>
-      {
-        const lowerNodes = nodes.filtered(`position > "${node.position}"`).sorted('position')
-        return R.pipe(
-          R.takeWhile(n => n.level > node.level)
-        )(lowerNodes);
-      }
+const getDescendants = (node, nodes) => {
+  const lowerNodes = nodes
+    .filtered(`position > "${node.position}"`)
+    .sorted("position");
+  return R.pipe(R.takeWhile(n => n.level > node.level))(lowerNodes);
+};
 
 const getParents = (node, nodes) => {
-  const upperNodes = nodes.filtered(`position < "${node.position}"`).sorted('position')
+  const upperNodes = nodes
+    .filtered(`position < "${node.position}"`)
+    .sorted("position");
   return R.pipe(
     R.reverse,
     R.reduce(
       (acc, node) => {
-        const level = node.level
+        const level = node.level;
         const lastLevel = R.last(acc).level;
         if (level < lastLevel) {
           acc.push(node);
@@ -180,29 +181,35 @@ export const getOrCreateNodeByHeadline = (file, headline) => {
   if (nodes.length > 0) return [nodes[0], false];
 
   // create new node
-  const newNode = prepareNodes([
-    {
-      headline,
-      content: "",
-      level: 1,
-      position: file.nodes.length,
-      isAdded: true,
-      file
-    }
-  ])[0];
+  // let newNode = prepareNodes([
+  //   {
+  //     headline,
+  //     content: "",
+  //     level: 1,
+  //     position: file.nodes.length,
+  //     isAdded: true,
+  //     file
+  //   }
+  // ])[0];
+
+  // newNode = dbConn().then(realm => {
+  //   realm.write(() => {
+  //     realm.create("OrgNode", newNode);
+  //   });
+  // });
 
   return [newNode, true];
 };
 
 const getPrevNode = node =>
-      node.file.nodes.filtered(
-        `position < ${node.position}`
-      ).sorted('position', true)[0];
+  node.file.nodes
+    .filtered(`position < ${node.position}`)
+    .sorted("position", true)[0];
 
 const getNextNodeSameLevel = node =>
-  node.file.nodes.filtered(
-    `level = "${node.level}" AND position > ${node.position}`
-  ).sorted('position')[0];
+  node.file.nodes
+    .filtered(`level = "${node.level}" AND position > ${node.position}`)
+    .sorted("position")[0];
 
 // Enahances node with position and level if these props are undefined
 export const enhanceNodeWithPosition = (file, targetNode) =>
@@ -217,11 +224,10 @@ export const enhanceNodeWithPosition = (file, targetNode) =>
 
       const nextNodeSameLevel = getNextNodeSameLevel(targetNode);
       if (nextNodeSameLevel) {
-        const position2 = nextNodeSameLevel.position
-        const position1 = getPrevNode(nextNodeSameLevel).position
-        position = (position2 + position1) / 2
+        const position2 = nextNodeSameLevel.position;
+        const position1 = getPrevNode(nextNodeSameLevel).position;
+        position = (position2 + position1) / 2;
       }
-
     }
     return R.merge(node, { level, position });
   });
@@ -238,19 +244,20 @@ const getFiles = () => getObjects("OrgFile");
 
 const getNodes = (...filter) => getObjects("OrgNode", ...filter);
 
-const getRelatedNodes = (nodeId) => dbConn.then(realm => {
-  const result = [];
-  const node = getNodeById(realm, nodeId);
-  const fileNodes = node.file.nodes;
-  const parentNodes = getParents(node, fileNodes);
-  const descendantsNodes = getDescendants(node, fileNodes)
+const getRelatedNodes = nodeId =>
+  dbConn.then(realm => {
+    const result = [];
+    const node = getNodeById(realm, nodeId);
+    const fileNodes = node.file.nodes;
+    const parentNodes = getParents(node, fileNodes);
+    const descendantsNodes = getDescendants(node, fileNodes);
 
-  return [
-    ...mapNodesToPlainObject(parentNodes),
-    ...mapNodesToPlainObject([node]),
-    ...mapNodesToPlainObject(descendantsNodes)
-  ]
-});
+    return [
+      ...mapNodesToPlainObject(parentNodes),
+      ...mapNodesToPlainObject([node]),
+      ...mapNodesToPlainObject(descendantsNodes)
+    ];
+  });
 
 // ** Add/delete
 
@@ -277,14 +284,14 @@ export const addNodes = (nodes, insertPosition) =>
 
     realm.write(() =>
       prepareNodes(nodes, file).forEach(node => {
-        const enhancedNode = enhance(R.merge(node, { isAdded: true}));
+        const enhancedNode = enhance(R.merge(node, { isChanged: true }));
 
         let createdNode = realm.create("OrgNode", enhancedNode, true);
         results.push(createdNode);
-        file.isChanged = true
+        file.isChanged = true;
       })
     );
-    return mapNodesToPlainObject(results)
+    return mapNodesToPlainObject(results);
   });
 
 export const addFile = title =>
@@ -348,28 +355,36 @@ const flagFileAsSynced = file =>
 export const updateNodeById = (id, changes) =>
   dbConn.then(realm =>
     realm.write(() => {
-      const node = realm.objects('OrgNode').filtered(`id = '${id}'`)[0]
-      Object.assign(node, {...R.omit(['id'],changes), isChanged: true})
+      const node = realm.objects("OrgNode").filtered(`id = '${id}'`)[0];
+      Object.assign(node, { ...R.omit(["id"], changes), isChanged: true });
     })
-             );
+  );
 
 const updateNodes = (listOfNodesAndChanges, commonChanges) =>
-      dbConn.then(realm =>
-                  realm.write(() =>
-                              listOfNodesAndChanges.forEach(group => {
-                                let [node, newProps] = group;
-                                if (commonChanges) Object.assign(newProps, commonChanges);
-                                Object.assign(node, newProps);
-                              })
-                             )
-                 );
+  dbConn.then(realm =>
+    realm.write(() =>
+      listOfNodesAndChanges.forEach(group => {
+        let [node, newProps] = group;
+        if (commonChanges) Object.assign(newProps, commonChanges);
+        Object.assign(node, newProps);
+      })
+    )
+  );
 
 const updateFile = (id, changes) =>
   dbConn.then(realm =>
     realm.write(() => {
       const file = getFileById(realm, id);
       const toMerge = R.evolve({ metadata: JSON.stringify }, changes);
-      Object.assign(file, toMerge, { isChanged: true});
+      Object.assign(file, toMerge, { isChanged: true });
+    })
+  );
+
+const updateNodesAsSynced = nodes =>
+  dbConn.then(realm =>
+    realm.write(() => {
+      nodes.update("isChanged", false);
+      nodes.update("isAdded", false);
     })
   );
 
@@ -493,10 +508,10 @@ const getFileAsPlainObject = id =>
 const getAllFilesAsPlainObject = () =>
   getFiles().then(files => files.map(mapFileToPlainObject));
 const getTagsAsPlainObject = () =>
-  getObjects("OrgTag").then(tags => tags.map(tag => tag.nextNodeSameLevel));
+  getObjects("OrgTag").then(tags => tags.map(tag => tag.name));
 
-const getAgendaAsPlainObject = () => getObjects("OrgTimestamp").then(mapAgendaToPlainObject);
-
+const getAgendaAsPlainObject = () =>
+  getObjects("OrgTimestamp").then(mapAgendaToPlainObject);
 
 // ** Timestamps
 
@@ -534,6 +549,11 @@ export default {
   deleteNodes,
   deleteFileById,
   flagFileAsSynced,
+  getOrCreateNodeByHeadline: ({ fileId, headline }) =>
+    dbConn.then(
+      realm =>
+        getOrCreateNodeByHeadline(getFileById(realm, fileId), headline)[0].id
+    ),
   getAgenda,
   getAllFilesAsPlainObject,
   getFileAsPlainObject,
@@ -546,5 +566,6 @@ export default {
   search,
   updateFile,
   updateNodeById,
-  updateNodes
+  updateNodes,
+  updateNodesAsSynced
 };
