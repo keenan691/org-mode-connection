@@ -61,6 +61,8 @@ export const mapNodeToPlainObject = (n, idx, array) => {
     timestamps: Array.from(n.timestamps).map(t => ({
       type: t.type,
       warningPeriod: t.warningPeriod,
+      dateRangeWithTime: t.dateRangeWithTime,
+      dateWithTime: t.dateWithTime,
       repeater: t.repeater,
       date: t.date,
       dateRangeEnd: t.dateRangeEnd}))} }
@@ -79,6 +81,8 @@ export const mapNodeToSearchResult = (n) => ({
     type: t.type,
     warningPeriod: t.warningPeriod,
     repeater: t.repeater,
+    dateRangeWithTime: t.dateRangeWithTime,
+    dateWithTime: t.dateWithTime,
     date: t.date,
     dateRangeEnd: t.dateRangeEnd}))})
 
@@ -95,6 +99,8 @@ export const mapAgendaToPlainObject = (timestamps) => timestamps.sorted('date').
     const agendaDayItem = {
       date: ts.date,
       dateRangeEnd: ts.dateRangeEnd,
+      dateRangeWithTime: ts.dateRangeWithTime,
+      dateWithTime: ts.dateWithTime,
       repeater: ts.repeater,
       warningPeriod: ts.warningPeriod,
       type: ts.type,

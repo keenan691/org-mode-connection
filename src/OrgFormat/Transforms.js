@@ -53,11 +53,11 @@ const timePointer = (type, useWarningPeriod=false) => ({
 
     // Bulid result object
     let res = {
-      date: new Date(...datetimeArgs), type
+      date: new Date(...datetimeArgs), type,
       dateWithTime: Boolean(time)
     }
     if (!R.isEmpty(datetimeRangeEndArgs)) {res = Object.assign(res, {
-      dateRangeWithTime: Boolean(timeRangeEnd),
+      dateRangeWithTime: timeRangeEnd,
       dateRangeEnd: new Date(...datetimeRangeEndArgs)})};
 
     if (repeater) {res = Object.assign(res, { repeater })}

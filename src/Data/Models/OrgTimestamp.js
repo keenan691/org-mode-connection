@@ -3,7 +3,9 @@ export default  {
   properties: {
     node: 'OrgNode',
     date: 'date?',
+    dateWithTime: { type: 'bool', default: false },
     dateRangeEnd: 'date?',
+    dateRangeWithTime: { type: 'bool', default: false },
     repeater: 'date?',
     warningPeriod: 'date?',
     nodes: { type: 'linkingObjects', objectType: 'OrgNode', property: 'timestamps' },
