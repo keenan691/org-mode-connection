@@ -67,7 +67,7 @@ const getDescendants = (node, nodes) => {
   return R.pipe(R.takeWhile(n => n.level > node.level))(lowerNodes);
 };
 
-const getParents = (node, nodes) => {
+const getAncestors = (node, nodes) => {
   const upperNodes = nodes
     .filtered(`position < "${node.position}"`)
     .sorted("position");
@@ -249,13 +249,24 @@ const getRelatedNodes = nodeId =>
     const result = [];
     const node = getNodeById(realm, nodeId);
     const fileNodes = node.file.nodes;
-    const parentNodes = getParents(node, fileNodes);
-    const descendantsNodes = getDescendants(node, fileNodes);
+    const ancestors = getAncestors(node, fileNodes);
+    const descendants = getDescendants(node, fileNodes);
 
     return [
-      ...mapNodesToPlainObject(parentNodes),
+      ...mapNodesToPlainObject(ancestors),
       ...mapNodesToPlainObject([node]),
-      ...mapNodesToPlainObject(descendantsNodes)
+      ...mapNodesToPlainObject(descendants)
+    ];
+  });
+
+const getAncestorsAsPlainObject = nodeId =>
+  dbConn.then(realm => {
+    console.tron.log(nodeId)
+    const node = getNodeById(realm, nodeId);
+    const ancestors = getAncestors(node, node.file.nodes);
+
+    return [
+      ...mapNodesToPlainObject([...ancestors, node]),
     ];
   });
 
@@ -555,6 +566,7 @@ export default {
         getOrCreateNodeByHeadline(getFileById(realm, fileId), headline)[0].id
     ),
   getAgenda,
+  getAncestorsAsPlainObject,
   getAllFilesAsPlainObject,
   getFileAsPlainObject,
   getFiles,
