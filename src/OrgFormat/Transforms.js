@@ -57,7 +57,7 @@ const timePointer = (type, useWarningPeriod=false) => ({
       dateWithTime: Boolean(time)
     }
     if (!R.isEmpty(datetimeRangeEndArgs)) {res = Object.assign(res, {
-      dateRangeWithTime: timeRangeEnd,
+      dateRangeWithTime: Boolean(timeRangeEnd),
       dateRangeEnd: new Date(...datetimeRangeEndArgs)})};
 
     if (repeater) {res = Object.assign(res, { repeater })}
@@ -119,6 +119,8 @@ export const nodeMetadataT = {
       return {
         date: firstPartObj.date,
         dateRangeEnd: secondPartObj.date,
+        dateWithTime: firstPartObj.dateWithTime,
+        dateRangeWithTime: firstPartObj.dateRangeWithTime,
         type: "active"}}},
 
   closed: timePointer("closed"),

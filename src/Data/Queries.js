@@ -1,10 +1,12 @@
 // * Imports
 
 import R from "ramda";
+import moment from 'moment';
 
 import {
   mapAgendaToPlainObject,
   mapFileToPlainObject,
+  mapFilesToToc,
   mapNodeToPlainObject,
   mapNodeToSearchResult,
   prepareNodes,
@@ -173,7 +175,7 @@ export const enhanceNode = realmNode => {
 
 // * Helpers
 
-export const getOrCreateNodeByHeadline = (file, headline) => {
+export const getOrCreateNodeByHeadline = async (file, headline) => {
   // use headline title as headline for now
   let created = false;
 
@@ -181,22 +183,24 @@ export const getOrCreateNodeByHeadline = (file, headline) => {
   if (nodes.length > 0) return [nodes[0], false];
 
   // create new node
-  // let newNode = prepareNodes([
-  //   {
-  //     headline,
-  //     content: "",
-  //     level: 1,
-  //     position: file.nodes.length,
-  //     isAdded: true,
-  //     file
-  //   }
-  // ])[0];
+  let newNode = prepareNodes([
+    {
+      headline,
+      content: "",
+      level: 1,
+      position: file.nodes.length,
+      isAdded: true,
+      file
+    }
+  ])[0];
 
-  // newNode = dbConn().then(realm => {
-  //   realm.write(() => {
-  //     realm.create("OrgNode", newNode);
-  //   });
-  // });
+  newNode = await dbConn.then(realm => {
+    let res;
+    realm.write(() => {
+      res = realm.create("OrgNode", newNode);
+    });
+    return res;
+  });
 
   return [newNode, true];
 };
@@ -261,50 +265,50 @@ const getRelatedNodes = nodeId =>
 
 const getAncestorsAsPlainObject = nodeId =>
   dbConn.then(realm => {
-    console.tron.log(nodeId)
+    console.tron.log(nodeId);
     const node = getNodeById(realm, nodeId);
     const ancestors = getAncestors(node, node.file.nodes);
 
-    return [
-      ...mapNodesToPlainObject([...ancestors, node]),
-    ];
+    return [...mapNodesToPlainObject([...ancestors, node])];
   });
 
 // ** Add/delete
 
-export const addNodes = (nodes, insertPosition) =>
-  dbConn.then(realm => {
-    const { fileId, nodeId, headline } = insertPosition;
-    const file = getFileById(realm, fileId);
-    let enhance;
-    const results = [];
+export const addNodes = async (nodes, insertPosition) => {
+  const realm = await dbConn;
+  const { fileId, nodeId, headline } = insertPosition;
+  const file = getFileById(realm, fileId);
+  let enhance;
+  const results = [];
 
-    // Add level, position and id
-    if (nodeId) {
-      const targetNode = getNodeById(realm, nodeId);
-      enhance = enhanceNodeWithPosition(file, targetNode);
-    } else if (headline) {
-      // Append as last child of headline
-      const [targetNode, created] = getOrCreateNodeByHeadline(file, headline);
-      if (created) realm.write(() => realm.create("OrgNode", targetNode));
-      enhance = enhanceNodeWithPosition(file, targetNode);
-    } else {
-      // Append to end of file if node doasn't have defined position
-      enhance = enhanceNodeWithPosition(file);
-    }
-
-    realm.write(() =>
-      prepareNodes(nodes, file).forEach(node => {
-        const enhancedNode = enhance(R.merge(node, { isChanged: true }));
-
-        let createdNode = realm.create("OrgNode", enhancedNode, true);
-        results.push(createdNode);
-        file.isChanged = true;
-      })
+  // Add level, position and id
+  if (nodeId) {
+    const targetNode = getNodeById(realm, nodeId);
+    enhance = enhanceNodeWithPosition(file, targetNode);
+  } else if (headline) {
+    // Append as last child of headline
+    const [targetNode, created] = await getOrCreateNodeByHeadline(
+      file,
+      headline
     );
-    return mapNodesToPlainObject(results);
-  });
+    if (created) realm.write(() => realm.create("OrgNode", targetNode));
+    enhance = enhanceNodeWithPosition(file, targetNode);
+  } else {
+    // Append to end of file if node doasn't have defined position
+    enhance = enhanceNodeWithPosition(file);
+  }
 
+  realm.write(() =>
+    prepareNodes(nodes, file).forEach(node => {
+      const enhancedNode = enhance(R.merge(node, { isChanged: true }));
+
+      let createdNode = realm.create("OrgNode", enhancedNode, true);
+      results.push(createdNode);
+      file.isChanged = true;
+    })
+  );
+  return mapNodesToPlainObject(results);
+};
 export const addFile = title =>
   dbConn.then(realm =>
     realm.write(() => {
@@ -518,12 +522,22 @@ const getFileAsPlainObject = id =>
 // Return only files fields as plain object, without nodes
 const getAllFilesAsPlainObject = () =>
   getFiles().then(files => files.map(mapFileToPlainObject));
+const getTocs = () => getFiles().then(mapFilesToToc);
 const getTagsAsPlainObject = () =>
   getObjects("OrgTag").then(tags => tags.map(tag => tag.name));
 
-const getAgendaAsPlainObject = () =>
-  getObjects("OrgTimestamp").then(mapAgendaToPlainObject);
-
+const addDay = (date, num) => moment(date).add(num, 'd').format('YYYY-MM-DD')
+const getAgendaAsPlainObject = ({ start, end }) => {
+  console.tron.log(start);
+  return getObjects("OrgTimestamp")
+    .then(ts =>
+      ts
+        .sorted("date")
+          .filtered("date > $0 && date < $1", addDay(start, -1), addDay(end, 1))
+        // .filtered("date > $0", '2018-09-05')
+    )
+    .then(mapAgendaToPlainObject);
+};
 // ** Timestamps
 
 export const getTimestamp = (node, type) =>
@@ -546,8 +560,26 @@ export const addTimestamp = (node, type, timestampObj) =>
 
 // ** Agenda
 
-const getAgenda = (dateStart, dateEnd) =>
-  getObjects("OrgTimestamp", "date >= $0 && date <= $1", dateStart, dateEnd);
+const getAgenda = ({ dateStart, dateEnd }) => {
+  let res;
+  if (dateStart !== dateEnd) {
+    // res = getObjects(
+    //   "OrgTimestamp",
+    //   "date >= $0 && date <= $1",
+    //   dateStart,
+    //   dateEnd
+    // );
+    // res = getObjects("OrgTimestamp", "date === $0", dateStart);
+  } else {
+    // res = getObjects("OrgTimestamp", "date === $0", dateStart);
+  }
+
+  // res = getObjects("OrgTimestamp", "date === $0", dateStart);
+  console.tron.warn(res);
+  console.tron.log(dateStart);
+  console.tron.log(dateEnd);
+  return res;
+};
 
 // * Export
 
@@ -560,11 +592,14 @@ export default {
   deleteNodes,
   deleteFileById,
   flagFileAsSynced,
-  getOrCreateNodeByHeadline: ({ fileId, headline }) =>
-    dbConn.then(
-      realm =>
-        getOrCreateNodeByHeadline(getFileById(realm, fileId), headline)[0].id
-    ),
+  getOrCreateNodeByHeadline: async ({ fileId, headline }) => {
+    const realm = await dbConn;
+    const [node, created] = await getOrCreateNodeByHeadline(
+      getFileById(realm, fileId),
+      headline
+    );
+    return node.id;
+  },
   getAgenda,
   getAncestorsAsPlainObject,
   getAllFilesAsPlainObject,
@@ -575,6 +610,7 @@ export default {
   getRelatedNodes,
   getTagsAsPlainObject,
   getAgendaAsPlainObject,
+  getTocs,
   search,
   updateFile,
   updateNodeById,

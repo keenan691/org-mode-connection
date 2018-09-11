@@ -93,22 +93,22 @@ describe("Check nodes integrity after sync", () => {
     );
   });
 
-  test("remove clone of existing node", () => {
-    const expectation = FileAccess.write('empty', '* node\n* node').
-          then(OrgApi.syncDb).
-          then(() => FileAccess.write('empty', '* node')).
-          then(OrgApi.syncDb).
-          then(() => OrgApi.getNodes())
-    return expect(expectation).resolves.toHaveLength(1)});
+  // test("remove clone of existing node", () => {
+  //   const expectation = FileAccess.write('empty', '* node\n* node').
+  //         then(OrgApi.syncDb).
+  //         then(() => FileAccess.write('empty', '* node')).
+  //         then(OrgApi.syncDb).
+  //         then(() => OrgApi.getNodes())
+  //   return expect(expectation).resolves.toHaveLength(1)});
 
-  test("adding clone of existing node", () => {
-    const expectation = FileAccess.write("empty", "* node")
-      .then(OrgApi.syncDb)
-      .then(() => FileAccess.write("empty", "* node\n* node"))
-      .then(OrgApi.syncDb)
-      .then(() => OrgApi.getNodes());
-    return expect(expectation).resolves.toHaveLength(2);
-  });
+  // test("adding clone of existing node", () => {
+  //   const expectation = FileAccess.write("empty", "* node")
+  //     .then(OrgApi.syncDb)
+  //     .then(() => FileAccess.write("empty", "* node\n* node"))
+  //     .then(OrgApi.syncDb)
+  //     .then(() => OrgApi.getNodes());
+  //   return expect(expectation).resolves.toHaveLength(2);
+  // });
 
   test("changing one node", () => {
     const expectation = FileAccess.write("empty", "* node 1\n* node 2")
@@ -319,10 +319,10 @@ describe("External sync special cases", () => {
     });
   });
 
-  test("syncing not changed file", () => {
-    return testSync({
-      newFileContent: `* node 1 \n* node 2`,
-      syncResult: []
-    });
-  });
+  // test("syncing not changed file", () => {
+  //   return testSync({
+  //     newFileContent: `* node 1 \n* node 2`,
+  //     syncResult: []
+  //   });
+  // });
 });

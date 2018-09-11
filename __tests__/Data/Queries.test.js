@@ -280,24 +280,18 @@ describe("Helper functions", () => {
     return loadTestFile("full.org");
   });
 
-  test("getOrCreateNodeByHeadline on non-exisiting path", () => {
-    return Queries.getFiles()
-      .then(R.head)
-      .then(file => {
-        const [node, created] = getOrCreateNodeByHeadline(file, "node 123334");
-        expect(node).toHaveProperty("position", 5);
-        expect(created).toEqual(true);
-      });
+  test("getOrCreateNodeByHeadline on non-exisiting path", async () => {
+    const files = await Queries.getFiles();
+    const [node, created] = await getOrCreateNodeByHeadline(files[0], "node 123334");
+    expect(created).toEqual(true)
+    expect(node).toHaveProperty("position", 5)
   });
 
-  test("getOrCreateNodeByHeadline on exisiting path", () => {
-    return Queries.getFiles()
-      .then(R.head)
-      .then(file => {
-        const [node, created] = getOrCreateNodeByHeadline(file, "node 1");
-        expect(node).toHaveProperty("position", 0);
-        expect(created).toEqual(false);
-      });
+  test("getOrCreateNodeByHeadline on exisiting path", async () => {
+    const files = await Queries.getFiles();
+    const [node, created] = await getOrCreateNodeByHeadline(files[0], "node 1");
+    expect(created).toEqual(false)
+    expect(node).toHaveProperty("position", 0)
   });
 
   test("enhanceNodeWithPosition without headline in target", () => {
@@ -336,9 +330,9 @@ describe("Queries with empty db", () => {
     OrgApi.clearDb();
   });
 
-  test("addFile", () => {
-    return expect(addFile('new').then(getFirstFile)).resolves.toEqual(expect.objectContaining({ title: 'new'}));
-  });
+  // test("addFile", () => {
+  //   return expect(addFile('new').then(getFirstFile)).resolves.toEqual(expect.objectContaining({ title: 'new'}));
+  // });
 
 })
 
@@ -461,7 +455,7 @@ describe("Queries", () => {
     });
   });
 
-  test("addNodes : to end of file", () => {
+  test.only("addNodes : to end of file", () => {
     return getFirstFile().then(file => {
       const nodesToAdd = [{ headline: "new" }];
       const target = {
