@@ -79,7 +79,7 @@ export const mapNodeToSearchResult = n => ({
   id: n.id,
   level: n.level,
   headline: n.headline,
-  content: n.content
+  content: !R.isNil(n.content) && n.content
     .slice(0, n.content.length < 100 ? n.content.length : 100)
     .trim(),
   // content: '',

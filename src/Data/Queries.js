@@ -215,12 +215,19 @@ const getNextNodeSameLevel = node =>
     .filtered(`level = "${node.level}" AND position > ${node.position}`)
     .sorted("position")[0];
 
+const getLastNode = node =>
+      {
+        const nodes = node.file.nodes.sorted("position")
+        return nodes[nodes.length-1]
+      }
+
+
 // Enahances node with position and level if these props are undefined
 export const enhanceNodeWithPosition = (file, targetNode) =>
   R.when(R.propEq("position", undefined), node => {
     // Add to ond of file
     let level = 1;
-    let position = file.nodes.length;
+    let position = file.nodes.length +1;
 
     if (targetNode) {
       // Add as child of target node
@@ -231,6 +238,10 @@ export const enhanceNodeWithPosition = (file, targetNode) =>
         const position2 = nextNodeSameLevel.position;
         const position1 = getPrevNode(nextNodeSameLevel).position;
         position = (position2 + position1) / 2;
+      } else {
+        // Use Position after last node
+        const lastNode = getLastNode(targetNode);
+        position = lastNode.position + 1
       }
     }
     return R.merge(node, { level, position });
@@ -281,6 +292,8 @@ export const addNodes = async (nodes, insertPosition) => {
   let enhance;
   const results = [];
 
+  /* ------------- prepare node ------------- */
+
   // Add level, position and id
   if (nodeId) {
     const targetNode = getNodeById(realm, nodeId);
@@ -297,6 +310,8 @@ export const addNodes = async (nodes, insertPosition) => {
     // Append to end of file if node doasn't have defined position
     enhance = enhanceNodeWithPosition(file);
   }
+
+  /* ------------- add ------------- */
 
   realm.write(() =>
     prepareNodes(nodes, file).forEach(node => {
@@ -598,7 +613,7 @@ export default {
       getFileById(realm, fileId),
       headline
     );
-    return node.id;
+    return [mapNodeToSearchResult(node), created]
   },
   getAgenda,
   getAncestorsAsPlainObject,
