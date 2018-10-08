@@ -19,10 +19,16 @@ export const createNewNode = (rawNode) => {
      nodeMetadataT.closed.toOrg(node.closed)].join(' ').trim() +
     (node.drawers ? '\n' + Object.keys(node.drawers).map(
       key => `:${key}:\n${ node.drawers[key].length > 0 ? node.drawers[key].join('\n') + '\n' : '' }:END:`).join('\n'): '') +
-    node.content }
+    node.content  }
 
 
 // const exportNodeToOrgRepr = (node) => (node.isAdded || node.isChanged) ? createNewNode(node) : recreateOriginalNode(node)
 const exportNodeToOrgRepr = (node) =>  createNewNode(node)
+
+export const fileToOrgRepr = file => {
+  const desc = file.description;
+  const metadata = R.pipe(R.toPairs, R.map(([key, val]) => `#+${key}: ${val}\n`))(JSON.parse(file.metadata));
+  return metadata + desc + '\n'
+};
 
 export default exportNodeToOrgRepr

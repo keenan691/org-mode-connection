@@ -10,6 +10,8 @@ export default  {
     // Sync
     isChanged: { type: 'bool', default: false },
     isAdded: { type: 'bool', default: false },
+
+    // Do not delete, it is used at moment for sync purposes
     rawContent: 'string?',
     rawHeadline: 'string?',
 
@@ -17,14 +19,9 @@ export default  {
     level: 'int', // horizontal position - is not used to crc check
     position: 'double', // vertical position - is not used to crc check
 
-
-    // Tree props
-    // parent: 'OrgNode?',
-    // children: { type: 'linkingObjects', objectType: 'OrgNode', property: 'parent'},
-
     // Org data
     headline: 'string',
-    content: 'string?',
+    content: { type: 'string', default: '' },
     tags: 'OrgTag[]',
     todo: 'string?',
     timestamps: 'OrgTimestamp[]',

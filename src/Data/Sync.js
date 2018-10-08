@@ -9,7 +9,7 @@ import { log, rlog } from '../Helpers/Debug';
 import { nullWhenEmpty, promisePipe } from '../Helpers/Functions';
 import { parse, parseFileContent, parseNode } from '../OrgFormat/Parser';
 import { prepareNodes, uniqueId } from './Transforms';
-import Export from '../OrgFormat/Export';
+import Export, { fileToOrgRepr } from '../OrgFormat/Export';
 import FileAccess from '../Helpers/FileAccess';
 import Queries from './Queries';
 
@@ -183,7 +183,7 @@ export const getChanges = (file) => {
   let externalFileHeaderChanges = new Promise(r => r(null))
 
   return getNewExternalMtime(file).then(newExternalMtime => {
-    if (!newExternalMtime && !localChanges) return null
+    if (!newExternalMtime && !file.isChanged) return null
 
     if (newExternalMtime) {
       externalChanges = promisePipe(
@@ -215,8 +215,9 @@ const applyFileHeaderExternalChanges = (changes) => {
 };
 
 const applyLocalChanges = changes => {
-  const newFileContent = Array.from(changes.file.nodes.sorted('position')).map(n => Export(n)).join('\n');
-  return FileAccess.write(changes.file.path, newFileContent).then(() => ({ status: 'success' }))}
+  const nodes = Array.from(changes.file.nodes.sorted('position')).map(n => Export(n)).join('\n');
+  const header = fileToOrgRepr(changes.file);
+  return FileAccess.write(changes.file.path, header + nodes).then(() => ({ status: 'success' }))}
 
 const applyExternalChanges = changes => {
   let promises = []
@@ -232,7 +233,7 @@ const applyExternalChanges = changes => {
 
   if (externalChanges.addedNodes) {
     const nodesToAdd = externalChanges.addedNodes.map(n => parseNode(n));
-    promises.push(Queries.addNodes(nodesToAdd, { fileId: changes.file.id }))}
+    promises.push(Queries.addNodes(nodesToAdd, { fileId: changes.file.id }, true))}
 
   if (externalChanges.notChangedNodes) {
     promises.push(Queries.updateNodes(externalChanges.notChangedNodes, { isChanged: false }))}
@@ -247,14 +248,16 @@ const mergeChanges = changes => {
 // ** Sync
 
 const noChangesP = changes => changes === null
-const onlyLocalChangesP = changes => changes.localChanges && !changes.externalChanges;
+// const onlyLocalChangesP = changes => changes.localChanges && !changes.externalChanges;
+const onlyLocalChangesP = changes => changes.file.isChanged
 const onlyExternalChangesP = changes => !changes.localChanges && changes.externalChanges;
-const bothExternalAndLocalChangesP = changes => changes.localChanges && changes.externalChanges;
+// const bothExternalAndLocalChangesP = changes => changes.localChanges && changes.externalChanges;
+const bothExternalAndLocalChangesP = changes => changes.file.isChanged && changes.externalChanges;
 
 const generateReportAndUpdateStatus = changes => syncResult => syncResult.then(
   result => {
     if (result) {
-      if (result.status === 'success') Queries.flagFileAsSynced(changes.file)
+      // if (result.status === 'success')
 
       const changesToSummary = {
         file: R.prop('path'),
@@ -265,6 +268,7 @@ const generateReportAndUpdateStatus = changes => syncResult => syncResult.then(
           notChangedNodes: R.length})))};
 
       Queries.updateNodesAsSynced(changes.localChanges)
+      Queries.flagFileAsSynced(changes.file)
       return Object.assign(result, R.evolve(changesToSummary, changes))}
 
     return new Promise(r => r(null))});
@@ -284,8 +288,29 @@ const syncAllFiles = () => Queries.getFiles()
       .then(
         files => Promise.all(files.filter(file => file.path != null).map(file => syncFile(file)))).then(res => res.filter(i => i !== null))
 
+const getExternallyChangedFiles = async () => {
+  const exportedFiles = (await Queries.getFiles()).filter(f => f.path !== null)
+
+  const mTimes = await Promise.all(
+    exportedFiles.map(file => getNewExternalMtime(file)))
+
+  const res = exportedFiles
+        .map((f, idx) => ({id: f.id, mtime: mTimes[idx]}))
+        .filter(o => o.mtime)
+
+  return res
+};
+
+
 // * Exports
 
 export default {
   importFile,
-  syncDb: () => syncAllFiles()}
+  getExternallyChangedFiles,
+  syncDb: () => syncAllFiles(),
+  syncFile: async (id) => {
+    const file = (await Queries.getFiles()).filter(f => f.id === id)[0]
+    return syncFile(file);
+  }
+
+}

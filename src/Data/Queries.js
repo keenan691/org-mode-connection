@@ -94,7 +94,7 @@ const getAncestors = (node, nodes) => {
 
 const markNodeAsChanged = node => {
   node.isChanged = true;
-  node.file.isChanged = true;
+  // node.file.isChanged = true;
 };
 
 const RealmOrgNodeGetters = (function() {
@@ -198,6 +198,7 @@ export const getOrCreateNodeByHeadline = async (file, headline) => {
     let res;
     realm.write(() => {
       res = realm.create("OrgNode", newNode);
+      res.file.isChanged = true
     });
     return res;
   });
@@ -255,7 +256,9 @@ const getFileById = getObjectById("OrgFile");
 
 const getNodeById = getObjectById("OrgNode");
 
-const getFiles = () => getObjects("OrgFile");
+const getFiles = () => {
+  return getObjects("OrgFile")
+};
 
 const getNodes = (...filter) => getObjects("OrgNode", ...filter);
 
@@ -285,7 +288,7 @@ const getAncestorsAsPlainObject = nodeId =>
 
 // ** Add/delete
 
-export const addNodes = async (nodes, insertPosition) => {
+export const addNodes = async (nodes, insertPosition, externalChange=false) => {
   const realm = await dbConn;
   const { fileId, nodeId, headline } = insertPosition;
   const file = getFileById(realm, fileId);
@@ -315,11 +318,11 @@ export const addNodes = async (nodes, insertPosition) => {
 
   realm.write(() =>
     prepareNodes(nodes, file).forEach(node => {
-      const enhancedNode = enhance(R.merge(node, { isChanged: true }));
-
+      const enhancedNode = enhance(
+        externalChange ? node : R.merge(node, { isChanged: true }));
       let createdNode = realm.create("OrgNode", enhancedNode, true);
       results.push(createdNode);
-      file.isChanged = true;
+      // file.isChanged = true;
     })
   );
   return mapNodesToPlainObject(results);
@@ -340,6 +343,7 @@ export const deleteNodeById = nodeId =>
   dbConn.then(realm =>
     realm.write(() => {
       const node = getNodeById(realm, nodeId);
+      node.file.isChanged = true
       realm.delete(node.timestamps);
       realm.delete(node);
     })
@@ -375,8 +379,9 @@ const flagFileAsSynced = file =>
           size: stats.size,
           mtime: stats.mtime,
           ctime: stats.ctime,
+          lastSync: stats.mtime,
           isChanged: false,
-          isConflicted: false
+          // isConflicted: false
         })
       )
     )
@@ -387,6 +392,7 @@ export const updateNodeById = (id, changes) =>
     realm.write(() => {
       const node = realm.objects("OrgNode").filtered(`id = '${id}'`)[0];
       Object.assign(node, { ...R.omit(["id"], changes), isChanged: true });
+      node.file.isChanged = true
     })
   );
 
@@ -406,7 +412,7 @@ const updateFile = (id, changes) =>
     realm.write(() => {
       const file = getFileById(realm, id);
       const toMerge = R.evolve({ metadata: JSON.stringify }, changes);
-      Object.assign(file, toMerge, { isChanged: true });
+      Object.assign(file, toMerge);
     })
   );
 

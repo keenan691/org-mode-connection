@@ -1,4 +1,6 @@
 import R from "ramda";
+import moment from 'moment';
+
 import { dateIsCorrect, timeIsCorrect } from './Validators';
 import { log } from '../Helpers/Debug';
 
@@ -13,7 +15,7 @@ const inactivePar = date => `[${ date }]`;
 
 export const asOrgDate = (date, withVerboseDay=true) =>
   `${ date.getFullYear() }-${ asTwoDigit(date.getMonth() + 1) }-${ asTwoDigit(date.getDate()) }`+
-  (withVerboseDay ? ` ${date.toLocaleDateString('en-GB', { weekday: 'short' }).toLowerCase()}` : '') +
+  (withVerboseDay ? ` ${moment(date).format('ddd')}` : '') +
   printHour(date)
 
 const dateAsOrgActiveDate = date => `<${ asOrgDate(date) }>`;
@@ -73,7 +75,9 @@ const countHeadlineLength = node =>
       node.level + 1 + node.headline.length +
       (node.todo ? node.todo.length + 1 : 0)
 
-const tagTab = node => ' '.repeat(64 - countHeadlineLength(node));
+// const tagTab = node => ' '.repeat(64 - countHeadlineLength(node));
+// FIXME wywalało gdzieś bug, którego przyczyn nie mam czasu szukać
+const tagTab = node => 10
 
 export const headlineT = {
   tags: {
