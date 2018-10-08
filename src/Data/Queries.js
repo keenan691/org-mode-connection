@@ -1,7 +1,7 @@
 // * Imports
 
 import R from "ramda";
-import moment from 'moment';
+import moment from "moment";
 
 import {
   mapAgendaToPlainObject,
@@ -198,7 +198,7 @@ export const getOrCreateNodeByHeadline = async (file, headline) => {
     let res;
     realm.write(() => {
       res = realm.create("OrgNode", newNode);
-      res.file.isChanged = true
+      res.file.isChanged = true;
     });
     return res;
   });
@@ -216,19 +216,17 @@ const getNextNodeSameLevel = node =>
     .filtered(`level = "${node.level}" AND position > ${node.position}`)
     .sorted("position")[0];
 
-const getLastNode = node =>
-      {
-        const nodes = node.file.nodes.sorted("position")
-        return nodes[nodes.length-1]
-      }
-
+const getLastNode = node => {
+  const nodes = node.file.nodes.sorted("position");
+  return nodes[nodes.length - 1];
+};
 
 // Enahances node with position and level if these props are undefined
 export const enhanceNodeWithPosition = (file, targetNode) =>
   R.when(R.propEq("position", undefined), node => {
     // Add to ond of file
     let level = 1;
-    let position = file.nodes.length +1;
+    let position = file.nodes.length + 1;
 
     if (targetNode) {
       // Add as child of target node
@@ -242,7 +240,7 @@ export const enhanceNodeWithPosition = (file, targetNode) =>
       } else {
         // Use Position after last node
         const lastNode = getLastNode(targetNode);
-        position = lastNode.position + 1
+        position = lastNode.position + 1;
       }
     }
     return R.merge(node, { level, position });
@@ -256,8 +254,25 @@ const getFileById = getObjectById("OrgFile");
 
 const getNodeById = getObjectById("OrgNode");
 
-const getFiles = () => {
-  return getObjects("OrgFile")
+const getFiles = async () => {
+  const files = await getObjects("OrgFile");
+  const existance = await Promise.all(
+    files.map(f => (f.path === null ? null : FileAccess.exists(f.path)))
+  );
+  const phisicallyDeletedFiles = [];
+  existance.forEach((val, idx) => {
+    if (!val) phisicallyDeletedFiles.push(idx);
+  });
+  if (phisicallyDeletedFiles.length > 0) {
+    dbConn.then(realm =>
+      realm.write(() =>
+        phisicallyDeletedFiles.forEach(idx => {
+          files[idx].path = null;
+        })
+      )
+    );
+  }
+  return files;
 };
 
 const getNodes = (...filter) => getObjects("OrgNode", ...filter);
@@ -288,7 +303,11 @@ const getAncestorsAsPlainObject = nodeId =>
 
 // ** Add/delete
 
-export const addNodes = async (nodes, insertPosition, externalChange=false) => {
+export const addNodes = async (
+  nodes,
+  insertPosition,
+  externalChange = false
+) => {
   const realm = await dbConn;
   const { fileId, nodeId, headline } = insertPosition;
   const file = getFileById(realm, fileId);
@@ -319,7 +338,8 @@ export const addNodes = async (nodes, insertPosition, externalChange=false) => {
   realm.write(() =>
     prepareNodes(nodes, file).forEach(node => {
       const enhancedNode = enhance(
-        externalChange ? node : R.merge(node, { isChanged: true }));
+        externalChange ? node : R.merge(node, { isChanged: true })
+      );
       let createdNode = realm.create("OrgNode", enhancedNode, true);
       results.push(createdNode);
       // file.isChanged = true;
@@ -343,7 +363,7 @@ export const deleteNodeById = nodeId =>
   dbConn.then(realm =>
     realm.write(() => {
       const node = getNodeById(realm, nodeId);
-      node.file.isChanged = true
+      node.file.isChanged = true;
       realm.delete(node.timestamps);
       realm.delete(node);
     })
@@ -380,7 +400,7 @@ const flagFileAsSynced = file =>
           mtime: stats.mtime,
           ctime: stats.ctime,
           lastSync: stats.mtime,
-          isChanged: false,
+          isChanged: false
           // isConflicted: false
         })
       )
@@ -392,7 +412,7 @@ export const updateNodeById = (id, changes) =>
     realm.write(() => {
       const node = realm.objects("OrgNode").filtered(`id = '${id}'`)[0];
       Object.assign(node, { ...R.omit(["id"], changes), isChanged: true });
-      node.file.isChanged = true
+      node.file.isChanged = true;
     })
   );
 
@@ -547,15 +567,19 @@ const getTocs = () => getFiles().then(mapFilesToToc);
 const getTagsAsPlainObject = () =>
   getObjects("OrgTag").then(tags => tags.map(tag => tag.name));
 
-const addDay = (date, num) => moment(date).add(num, 'd').format('YYYY-MM-DD')
+const addDay = (date, num) =>
+  moment(date)
+    .add(num, "d")
+    .format("YYYY-MM-DD");
 const getAgendaAsPlainObject = ({ start, end }) => {
   console.tron.log(start);
   return getObjects("OrgTimestamp")
-    .then(ts =>
-      ts
-        .sorted("date")
+    .then(
+      ts =>
+        ts
+          .sorted("date")
           .filtered("date > $0 && date < $1", addDay(start, -1), addDay(end, 1))
-        // .filtered("date > $0", '2018-09-05')
+      // .filtered("date > $0", '2018-09-05')
     )
     .then(mapAgendaToPlainObject);
 };
@@ -619,7 +643,7 @@ export default {
       getFileById(realm, fileId),
       headline
     );
-    return [mapNodeToSearchResult(node), created]
+    return [mapNodeToSearchResult(node), created];
   },
   getAgenda,
   getAncestorsAsPlainObject,
