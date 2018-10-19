@@ -1,3 +1,5 @@
+// * Imports
+
 import R from "ramda";
 
 import {
@@ -5,9 +7,14 @@ import {
   extractPreNodeContentFromLines,
 } from '../OrgFormat/NodesExtractor';
 import { headlineT } from '../OrgFormat/Transforms';
+import { imap, nullWhenEmpty, promisePipe } from '../Helpers/Functions';
 import { log, rlog } from '../Helpers/Debug';
-import { nullWhenEmpty, promisePipe } from '../Helpers/Functions';
-import { parse, parseFileContent, parseNode } from '../OrgFormat/Parser';
+import {
+  parse,
+  parseFileContent,
+  parseNode,
+  parseNodes
+} from '../OrgFormat/Parser';
 import { prepareNodes, uniqueId } from './Transforms';
 import Export, { fileToOrgRepr } from '../OrgFormat/Export';
 import FileAccess from '../Helpers/FileAccess';
@@ -38,6 +45,24 @@ const importFile = (filepath, type='agenda') => {
       const orgNode = realm.create('OrgNode', node, true)})}));
 
   return Promise.all([getFileStats, getFileContent]).then(transform).then(addToDb)
+}
+
+const createFileFromString = (name, lines, type='agenda') => {
+  const parsedObj = parse(lines);
+  // console.tron.log(parsedObj)
+  return Queries.connectDb().then(realm => realm.write(() => {
+    // Create OrgFile object
+    const orgFile = realm.create('OrgFile', {
+      id: uniqueId(),
+      lastSync: new Date(),
+      description: parsedObj.file.description,
+      metadata: JSON.stringify({ TITLE: 'readme.org'}),
+    })
+
+    // Creating node objects
+    prepareNodes(parsedObj.nodes, orgFile).forEach(node => {
+      const orgNode = realm.create('OrgNode', node, true)})
+  }));
 }
 
 // * Description
@@ -106,6 +131,8 @@ const importFile = (filepath, type='agenda') => {
 export const getNewExternalMtime =
   file => FileAccess.stat(file.path).then(
     stat => {
+      // console.log(stat.mtime)
+      // console.log(file.mtime)
       return stat.mtime > file.mtime ? stat.mtime : false})
 
 const realmResultToArray = res => res.slice(0, Infinity);
@@ -113,10 +140,10 @@ const realmResultToArray = res => res.slice(0, Infinity);
 const getNodesFromDbAsArray = file => Queries.getNodes('file = $0', file).then(
   nodes => realmResultToArray(nodes))
 
-const getRawNodesFromFile = promisePipe(
+const getParsedNodesFromFile = promisePipe(
   R.prop('path'),
   R.curry(FileAccess.read),
-  extractNodesFromLines)
+  parseNodes)
 
 const getFileHeaderFromFile = promisePipe(
   R.prop('path'),
@@ -124,20 +151,18 @@ const getFileHeaderFromFile = promisePipe(
   parseFileContent)
 
 const externalAndLocalChangesToOneList = promisePipe(
-  R.converge((...results) => Promise.all(results), [getNodesFromDbAsArray, getRawNodesFromFile]),
+  R.converge((...results) => Promise.all(results), [getNodesFromDbAsArray, getParsedNodesFromFile]),
   R.unnest)
 
-const groupBySimilarity = R.pipe(
-  R.sortBy(R.prop('rawHeadline')),
-  R.groupWith((n1, n2) => n1.rawHeadline == n2.rawHeadline && n1.rawContent == n2.rawContent))
+const areNodesSimiliar = (n1, n2) => n1.headline == n2.headline && n1.content == n2.content;
 
-const partitionEachGroupByIdPossesion = R.map(R.partition(
+const partitionEachGroupByIdPossession = R.map(R.partition(
   node => node.id === undefined));
 
 const groupByChangedAndNotChanged = R.groupBy(
   nodesGroup => {
     if (nodesGroup[0].length === nodesGroup[1].length) {
-      return 'notChangedNodes' }
+      return 'changedNodes' }
     else if (nodesGroup[1][0] == undefined) {
       return 'addedNodes'
     } else if (nodesGroup[0][0] === undefined){
@@ -153,8 +178,8 @@ const spreadNotSymmetricalGroups = (groupedNodes) => {
       for (let i = 0; i < Math.max(newNodes.length, existingNodes.length); i++) {
 
         if (newNodes[i] && existingNodes[i]) {
-          if (!groupedNodes.notChangedNodes) groupedNodes.notChangedNodes = []
-          groupedNodes.notChangedNodes.push([[newNodes[i]], [existingNodes[i]]])}
+          if (!groupedNodes.changedNodes) groupedNodes.changedNodes = []
+          groupedNodes.changedNodes.push([[newNodes[i]], [existingNodes[i]]])}
 
         else if (newNodes[i]) {
           if (!groupedNodes.addedNodes) groupedNodes.addedNodes = []
@@ -172,27 +197,143 @@ const getLocallyAddedNodes = file => file.nodes.filtered('isAdded = true')
 const partitionToChangedGroupsAndRest = R.partition(
   group => group.length === 2 && group[0].length === group[1].length)
 
-const prepareOutput = R.evolve({
-  notChangedNodes: R.map(R.pipe(R.apply(R.zip), R.map(group => [group[1], group[0]]), R.unnest)),
-  addedNodes: R.flatten,
-  deletedNodes: R.flatten});
+const rejectNotChangedNodes = (changes) => {
+  const fileNodes = changes.fileNodes
+  if (fileNodes.length === 0) return changes
+
+  const eqPosition = (savedObj, newProps) => fileNodes[newProps.position-1].id === savedObj.id;
+  const eqTags = (savedObj, newProps) => R.equals(Array.from(savedObj.tags).map(R.prop('name')), newProps.tags.map(R.prop('name')));
+
+  const eqTimestamps = (savedObj, newProps) => {
+    if (savedObj.timestamps.length !== newProps.timestamps.length) return false
+
+    if (savedObj.drawers!== newProps.drawers) {
+      // console.log(typeof newProps.drawers)
+      // console.log(typeof savedObj.drawers)
+    }
+    for (var i = 0; i < newProps.timestamps.length; i++) {
+      const ts1 = savedObj.timestamps[i];
+      const ts2 = newProps.timestamps[i];
+      const tsHasChanged = !R.allPass([
+          R.eqProps('date'),
+          R.eqProps('dateWithTime'),
+          R.eqProps('type'),
+          R.eqProps('dateRangeEnd'),
+          R.eqProps('dateRangeEndWithTime'),
+          R.eqProps('repeater'),
+          R.eqProps('warningPeriod'),
+        ]
+
+      )(ts1, ts2)
+
+      if (tsHasChanged) return false
+    }
+    return true
+  }
+
+  return R.over(R.lensPath(['externalChanges', 'changedNodes']), R.pipe(
+    R.reject(([savedObj, newProps]) => R.allPass([
+      R.eqProps('todo'),
+      R.eqProps('level'),
+      eqPosition,
+      eqTimestamps,
+      eqTags,
+      R.eqProps('priority'),
+      R.eqProps('drawers'),
+    ])(savedObj, newProps)),
+  ), changes)
+};
+
+
+const addNewNodePositions = (changes) => {
+  let positions = changes.positions;
+  let p1, p2
+
+  const toBatch = R.groupWith((a, b)=> b.position-1===a.position)
+
+  const up = (p1, p2, nodes) => {
+    const delta = (p2-p1) / (nodes.length + 1)
+    for (var i = 0; i < nodes.length; i++) {
+      positions.splice(nodes[i].position-1, 0, p1 + delta + i*delta)
+    }
+  };
+
+  const updatePosition = nodes => {
+    // Pierwszy nod jest traktowany jako główny
+    // Następniki
+    let position
+    let node = nodes[0]
+    // console.log(positions.length)
+    // console.log(node.position)
+    switch (node.position) {
+
+    case 1:
+      p1 = 0
+      p2 = positions[0]
+      up(p1, p2, nodes)
+      break;
+
+    case positions.length+1:
+      p1 = positions[positions.length-1]
+      p2 = p1 + nodes.length+1
+      up(p1, p2, nodes)
+      break
+
+    default:
+      p1 = positions[node.position -2]
+      p2 = positions[node.position-1]
+      up(p1, p2, nodes)
+
+    }
+
+    return {
+      ...node,
+      position
+    }
+  }
+
+  R.pipe(
+    toBatch,
+    R.map(updatePosition)
+  )(changes.externalChanges.addedNodes)
+
+  return changes
+};
+
 
 export const getChanges = (file) => {
   const localChanges = nullWhenEmpty(getLocallyChangedNodes(file))
   let externalChanges = new Promise(r => r(null))
   let externalFileHeaderChanges = new Promise(r => r(null))
-
+  const fileNodes = file.nodes.sorted('position');
+  const positions = []
   return getNewExternalMtime(file).then(newExternalMtime => {
-    if (!newExternalMtime && !file.isChanged) return null
+    // if (!newExternalMtime && !file.isChanged) return changes
 
     if (newExternalMtime) {
       externalChanges = promisePipe(
         externalAndLocalChangesToOneList,
-        groupBySimilarity,
-        partitionEachGroupByIdPossesion,
+        R.sortBy(o => o.headline + o.position + o.level),
+        R.groupWith(areNodesSimiliar),
+        partitionEachGroupByIdPossession,
         groupByChangedAndNotChanged,
         spreadNotSymmetricalGroups,
-        prepareOutput)(file)
+        // R.tap(o => console.log(o.changedNodes)),
+        R.evolve({
+          addedNodes: R.pipe(
+            R.flatten,
+            R.sortBy(R.prop('position')),
+            // R.tap(console.log),
+          ),
+          deletedNodes: R.flatten,
+          changedNodes: R.pipe(
+            R.map(R.transpose),
+            R.unnest,
+            R.map(R.reverse),
+          )
+        }),
+        // R.tap(console.log),
+      )(file)
 
       externalFileHeaderChanges = getFileHeaderFromFile(file)
 
@@ -203,6 +344,7 @@ export const getChanges = (file) => {
         externalChanges,
         externalFileHeaderChanges,
         localChanges,
+        fileNodes,
         file}))})};
 
 // ** Apply changes
@@ -219,26 +361,45 @@ const applyLocalChanges = changes => {
   const header = fileToOrgRepr(changes.file);
   return FileAccess.write(changes.file.path, header + nodes).then(() => ({ status: 'success' }))}
 
-const applyExternalChanges = changes => {
-  let promises = []
+const applyExternalChanges = type => async changes => {
+  let preparedNodes
   const externalChanges = changes.externalChanges;
   const externalFileHeaderChanges = changes.externalFileHeaderChanges;
 
-  // if (externalFileHeaderChanges) {
-  //   promises.push(Queries.updateFile(changes.file.id, externalFileHeaderChanges))
-  // }
+  const updateNodePos = (node) => ({
+    ...node,
+    position: changes.positions[node.position-1]
+  })
 
-  if (externalChanges.deletedNodes) {
-    promises.push(Queries.deleteNodes(externalChanges.deletedNodes))}
+  if (type==='delete' && externalChanges.deletedNodes) {
+    await Queries.deleteNodes(externalChanges.deletedNodes)
+  } else
 
-  if (externalChanges.addedNodes) {
-    const nodesToAdd = externalChanges.addedNodes.map(n => parseNode(n));
-    promises.push(Queries.addNodes(nodesToAdd, { fileId: changes.file.id }, true))}
+  if (type==='add' && externalChanges.addedNodes) {
+    // If file is not empty
+    if (changes.fileNodes.length > 0) {
+      changes = addNewNodePositions(changes)
+      preparedNodes = externalChanges.addedNodes.map(
+        updateNodePos)
+    } else {
+      preparedNodes = externalChanges.addedNodes
+    }
+    // console.log(changes.fileNodes.length)
+    // console.log(preparedNodes)
+    await Queries.addNodes(preparedNodes, { fileId: changes.file.id }, true, false)
 
-  if (externalChanges.notChangedNodes) {
-    promises.push(Queries.updateNodes(externalChanges.notChangedNodes, { isChanged: false }))}
+  } else
 
-  return Promise.all(promises).then(() => ({ status: 'success' }))}
+  if (type==='update' && externalChanges.changedNodes) {
+    preparedNodes = externalChanges.changedNodes.map(
+      R.over(R.lensIndex(1), updateNodePos)
+    )
+    // console.log(preparedNodes)
+    await Queries.updateNodes(preparedNodes, { isChanged: false })
+  }
+
+  return changes
+}
 
 const mergeChanges = changes => {
   // At the moment only notify aboout conflict
@@ -254,34 +415,60 @@ const onlyExternalChangesP = changes => !changes.localChanges && changes.externa
 // const bothExternalAndLocalChangesP = changes => changes.localChanges && changes.externalChanges;
 const bothExternalAndLocalChangesP = changes => changes.file.isChanged && changes.externalChanges;
 
-const generateReportAndUpdateStatus = changes => syncResult => syncResult.then(
-  result => {
-    if (result) {
-      // if (result.status === 'success')
+const generateReportAndUpdateStatus = changes  => {
+  if (changes.externalChanges===null && changes.localChanges===null) return null
 
-      const changesToSummary = {
-        file: R.prop('path'),
-        localChanges: R.unless(R.isNil, R.length),
-        externalChanges: R.unless(R.isNil, R.pipe(R.evolve({
-          addedNodes: R.length,
-          deletedNodes: R.length,
-          notChangedNodes: R.length})))};
+  const changesToSummary = {
+    file: R.prop('path'),
+    localChanges: R.unless(R.isNil, R.length),
+    externalChanges: R.unless(R.isNil, R.pipe(R.evolve({
+      addedNodes: R.length,
+      deletedNodes: R.length,
+      changedNodes: R.length})))};
 
-      Queries.updateNodesAsSynced(changes.localChanges)
-      Queries.flagFileAsSynced(changes.file)
-      return Object.assign(result, R.evolve(changesToSummary, changes))}
+  if (changes.localChanges !== null)
+    Queries.updateNodesAsSynced(changes.localChanges)
 
-    return new Promise(r => r(null))});
+  Queries.flagFileAsSynced(changes.file)
+  return R.evolve(changesToSummary)(changes)
+};
 
-const syncFile = file => getChanges(file).then(changes => R.pipe(
+const addPositions = changes => {
+  const positions = [];
+  for (var n = 0; n < changes.fileNodes.length; n++) {
+    positions.push(changes.fileNodes[n].position)
+  }
+  changes.positions = positions
+  return changes
+};
+
+const fixEmptyExternalChanges = R.when(
+  R.propEq('externalChanges', { changedNodes: []}), R.assoc('externalChanges', null));
+
+const clean = R.omit(['fileNodes', 'file', 'positions'])
+
+// * syncFile
+
+const syncFile = promisePipe(
+  getChanges,
   applyFileHeaderExternalChanges,
   R.cond([
-    [noChangesP, () => new Promise(r => r(null))],
     [onlyLocalChangesP, applyLocalChanges],
-    [onlyExternalChangesP, applyExternalChanges],
-    [bothExternalAndLocalChangesP, mergeChanges]]),
-  generateReportAndUpdateStatus(changes),
-)(changes))
+    [onlyExternalChangesP, promisePipe(
+      applyExternalChanges('delete'),
+      addPositions,
+      applyExternalChanges('add'),
+      rejectNotChangedNodes,
+      // R.tap(cn=> console.log(cn.externalChanges.changedNodes)),
+      applyExternalChanges('update')
+    )],
+    [bothExternalAndLocalChangesP, mergeChanges],
+    [R.T, R.identity],
+  ]),
+  fixEmptyExternalChanges,
+  generateReportAndUpdateStatus,
+  clean,
+)
 
 const syncAllFiles = () => Queries.getFiles()
 // .then(files => files.filter(file => file.path != undefined))
@@ -307,6 +494,7 @@ const getExternallyChangedFiles = async () => {
 export default {
   importFile,
   getExternallyChangedFiles,
+  createFileFromString,
   syncDb: () => syncAllFiles(),
   syncFile: async (id) => {
     const file = (await Queries.getFiles()).filter(f => f.id === id)[0]

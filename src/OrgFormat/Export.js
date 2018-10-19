@@ -19,6 +19,7 @@ export const createNewNode = (rawNode) => {
      nodeMetadataT.closed.toOrg(node.closed)].join(' ').trim() +
     (node.drawers ? '\n' + Object.keys(node.drawers).map(
       key => `:${key}:\n${ node.drawers[key].length > 0 ? node.drawers[key].join('\n') + '\n' : '' }:END:`).join('\n'): '') +
+    // '\n' +
     node.content  }
 
 

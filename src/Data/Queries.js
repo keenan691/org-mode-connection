@@ -213,7 +213,7 @@ const getPrevNode = node =>
 
 const getNextNodeSameLevel = node =>
   node.file.nodes
-    .filtered(`level = "${node.level}" AND position > ${node.position}`)
+    .filtered(`level < "${node.level+1}" AND position > ${node.position}`)
     .sorted("position")[0];
 
 const getLastNode = node => {
@@ -306,7 +306,8 @@ const getAncestorsAsPlainObject = nodeId =>
 export const addNodes = async (
   nodes,
   insertPosition,
-  externalChange = false
+  externalChange = false,
+  returnAddedNodes = true
 ) => {
   const realm = await dbConn;
   const { fileId, nodeId, headline } = insertPosition;
@@ -345,8 +346,9 @@ export const addNodes = async (
       // file.isChanged = true;
     })
   );
-  return mapNodesToPlainObject(results);
+  return returnAddedNodes ? mapNodesToPlainObject(results) : null
 };
+
 export const addFile = title =>
   dbConn.then(realm =>
     realm.write(() => {
@@ -415,6 +417,10 @@ export const updateNodeById = (id, changes) =>
       node.file.isChanged = true;
     })
   );
+
+const df = R.evolve({
+  drawers: R.unless(R.isNil, JSON.stringify)
+});
 
 const updateNodes = (listOfNodesAndChanges, commonChanges) =>
   dbConn.then(realm =>
@@ -571,18 +577,7 @@ const addDay = (date, num) =>
   moment(date)
     .add(num, "d")
     .format("YYYY-MM-DD");
-const getAgendaAsPlainObject = ({ start, end }) => {
-  console.tron.log(start);
-  return getObjects("OrgTimestamp")
-    .then(
-      ts =>
-        ts
-          .sorted("date")
-          .filtered("date > $0 && date < $1", addDay(start, -1), addDay(end, 1))
-      // .filtered("date > $0", '2018-09-05')
-    )
-    .then(mapAgendaToPlainObject);
-};
+
 // ** Timestamps
 
 export const getTimestamp = (node, type) =>
@@ -605,25 +600,68 @@ export const addTimestamp = (node, type, timestampObj) =>
 
 // ** Agenda
 
-const getAgenda = ({ dateStart, dateEnd }) => {
-  let res;
-  if (dateStart !== dateEnd) {
-    // res = getObjects(
-    //   "OrgTimestamp",
-    //   "date >= $0 && date <= $1",
-    //   dateStart,
-    //   dateEnd
-    // );
-    // res = getObjects("OrgTimestamp", "date === $0", dateStart);
-  } else {
-    // res = getObjects("OrgTimestamp", "date === $0", dateStart);
-  }
+// *** get
 
-  // res = getObjects("OrgTimestamp", "date === $0", dateStart);
-  console.tron.warn(res);
-  console.tron.log(dateStart);
-  console.tron.log(dateEnd);
-  return res;
+const getAgendaAsPlainObject = async ({ start, end }, defaultWarningPeriod=14) => {
+
+// **** initialize
+
+  const timestamps = await getObjects("OrgTimestamp");
+
+  let nodes = [];
+  let agendaItems;
+  let dayAgendaItems;
+
+// **** TODO agenda
+
+  agendaItems = mapAgendaToPlainObject(timestamps
+        .sorted("date")
+        .filtered("date > $0 && date < $1", addDay(start, -1), addDay(end, 1)));
+
+// **** TODO scheduled for today and before today and undone
+
+  // const getTodayAgenda = () => null;
+
+  // // console.tron.log(timestamps)
+  const dayAgenda = {
+    closed: timestamps.filtered('date > $0 && date < $1 && type="closed"',
+                                    moment().hour(0).minutes(0).seconds(0).millisecond(0).toDate(),
+                                    moment().add(1, 'd').hour(0).minutes(0).seconds(0).millisecond(0).toDate()) ,
+    deadlines : timestamps.filtered('type = "deadline" && date => $0 && nodes.todo != "DONE"',
+                                    moment().add(-defaultWarningPeriod, 'd').format('YYYY-MM-DD')),
+    scheduled : timestamps.filtered('date < $0 && nodes.todo != "DONE" && type="scheduled"',
+                                    // moment().format('YYYY-MM-DD') +
+                                    moment().add(1, 'd').hour(0).minutes(0).seconds(0).millisecond(0).toDate())
+  }
+  // console.tron.log(R.map(R.length, dayAgenda))
+
+  dayAgendaItems = Object.values(dayAgenda).reduce((acc, item) => {
+    const { nodes, timestamps } = mapAgendaToPlainObject(item);
+    return R.evolve({
+      nodes: R.concat(nodes),
+      timestamps: R.concat(timestamps)
+    }, acc)
+  }, {
+    nodes: [],
+    timestamps: [],
+  })
+  // console.tron.warn(dayAgendaItems)
+
+// **** results
+
+  nodes = R.unionWith(R.eqBy(R.prop('id')), agendaItems.nodes, dayAgendaItems.nodes);
+  // console.tron.warn(nodes)
+  // nodes = []
+
+  const res = {
+    nodes,
+    agendaItems: agendaItems.timestamps,
+    dayAgendaItems: dayAgendaItems.timestamps,
+  };
+
+  return res
+// **** end
+
 };
 
 // * Export
@@ -645,7 +683,6 @@ export default {
     );
     return [mapNodeToSearchResult(node), created];
   },
-  getAgenda,
   getAncestorsAsPlainObject,
   getAllFilesAsPlainObject,
   getFileAsPlainObject,

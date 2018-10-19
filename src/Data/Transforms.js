@@ -29,7 +29,7 @@ export const prepareNodes = (parsedNodes, file) =>
         file
       }),
       R.evolve({
-        drawers: JSON.stringify
+        drawers: R.unless(R.isNil, JSON.stringify)
       })
     )(node)
   );

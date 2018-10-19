@@ -23,7 +23,7 @@ export const getNodesLineRanges = (lines) => R.pipe(
 const mapRangesToContent = (lines, ranges) => ranges.map(
   (range, position) => R.merge(
     preParseHeadline(lines[range[0]]),
-    { position,
+    { position: (position + 1),
       rawContent: lines.slice(range[0]+1, range[1]).join("\n"),
       range: range }));
 

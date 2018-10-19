@@ -12,7 +12,7 @@ const inactiveTimestamp = mr(/\[/, datetimeR, /\]/);
 
 export const headlineR = {
   priority: /\[#[ABC]\]/,
-  todo: /(^TODO\s+|DONE\s+|NEXT\s+|PROJECT\s+|WAITING\s+|REVIEW\s+|IDEA\s+|BRAINSTORM\s+|SOMEDAY\s+|FIXME\s+)/,
+  todo: /(^TODO\s+|DONE\s+|NEXT\s+|PROJECT\s+|WAITING\s+|REVIEW\s+|IDEA\s+|BRAINSTORM\s+|SOMEDAY\s+|FIXME\s+|MAYBE\s+)/,
   tags: /\s*:[^\s]+:(\s*|$)/,
   head: /^\*+\s+/};
 

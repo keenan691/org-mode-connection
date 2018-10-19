@@ -20,6 +20,9 @@ export default (function (){
         }
         return resolve(true)})},
 
+    exists() {
+      return true
+    },
     read ()  { return new Promise(
       (resolve, reject) => resolve(__mockFile.content.split('\n')))},
 
