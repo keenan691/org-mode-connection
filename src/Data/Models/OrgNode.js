@@ -12,8 +12,8 @@ export default  {
     isAdded: { type: 'bool', default: false },
 
     // Do not delete, it is used at moment for sync purposes
-    rawContent: 'string?',
-    rawHeadline: 'string?',
+    // rawContent: 'string?',
+    // rawHeadline: 'string?',
 
     // Position
     level: 'int', // horizontal position - is not used to crc check

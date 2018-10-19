@@ -25,8 +25,8 @@ export const parseNode = R.converge(
            deepMerge),
 
     R.pick(["range",
-            "rawHeadline",
-            "rawContent",
+            // "rawHeadline",
+            // "rawContent",
             "level",
             "position"])])
 
@@ -45,9 +45,21 @@ export const parseFileContent = R.pipe(
     description: R.pipe(R.last,
                         R.join('\n')),}))
 
-const parseNodes = R.pipe(
+const mergeNodeDefaults = R.merge({
+  todo: null,
+  priority: null,
+  drawers: null,
+  tags: [],
+  timestamps: []
+});
+
+export const parseNodes = R.pipe(
   extractNodesFromLines,
-  R.map(parseNode));
+  R.map(R.pipe(parseNode,
+               R.evolve({
+                 drawers: JSON.stringify
+               }),
+               mergeNodeDefaults)));
 
 export const parse = R.applySpec({
   nodes: parseNodes,

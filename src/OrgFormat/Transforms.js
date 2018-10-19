@@ -6,26 +6,31 @@ import { log } from '../Helpers/Debug';
 
 // * Helper Objects
 
-const asTwoDigit = digit => ('0' + digit).slice(-2);
-const printHour = date => {
-  const hour = asTwoDigit(date.getHours()) + ':' + asTwoDigit(date.getMinutes())
-  return hour !== '00:00' ? ' ' +hour : ''};
+export const asOrgDate = (ts, withVerboseDay=true) => {
+  const { date, dateWithTime, repeater } = ts
+  const mDate = moment(date);
 
-const inactivePar = date => `[${ date }]`;
+  return mDate.format('YYYY-MM-DD') +
+        (withVerboseDay ? ` ${mDate.format('ddd')}` : '') +
+        (dateWithTime ? ` ${mDate.format('HH:mm')}` : '') +
+    (repeater ? ` ${repeater}` : '')
+}
 
-export const asOrgDate = (date, withVerboseDay=true) =>
-  `${ date.getFullYear() }-${ asTwoDigit(date.getMonth() + 1) }-${ asTwoDigit(date.getDate()) }`+
-  (withVerboseDay ? ` ${moment(date).format('ddd')}` : '') +
-  printHour(date)
-
-const dateAsOrgActiveDate = date => `<${ asOrgDate(date) }>`;
-const dateAsOrgInactiveDate = date => `[${ asOrgDate(date) }]`;
+const dateAsOrgActiveDate = ts => `<${ asOrgDate(ts) }>`;
+const dateAsOrgInactiveDate = ts => `[${ asOrgDate(ts) }]`;
 const timePointerDateToOrg = {scheduled: dateAsOrgActiveDate,
                               deadline: dateAsOrgActiveDate,
                               closed: dateAsOrgInactiveDate};
 
+const mergeWithEmptyTimestamp = R.merge({
+  dateRangeEnd: null,
+  dateRangeWithTime: false,
+  repeater: null,
+  warningPeriod: null,
+});
+
 const timePointer = (type, useWarningPeriod=false) => ({
-  toOrg: obj => obj ? `${ obj.type.toUpperCase() }: ${ timePointerDateToOrg[obj.type](obj.date) }` : '',
+  toOrg: obj => obj ? `${ obj.type.toUpperCase() }: ${ timePointerDateToOrg[obj.type](obj) }` : '',
   fromOrg: (parsedItem, year, month, day, time, timeRangeEnd, repeater, warningPeriod) => {
     let dateArgs = [];
     let datetimeArgs = [];
@@ -65,7 +70,8 @@ const timePointer = (type, useWarningPeriod=false) => ({
     if (repeater) {res = Object.assign(res, { repeater })}
     if (useWarningPeriod && warningPeriod) {res = Object.assign(res, { warningPeriod })}
 
-    return res}});
+    return mergeWithEmptyTimestamp(res)
+  }});
 
 // * Node Headline Trasformations
 
@@ -77,7 +83,7 @@ const countHeadlineLength = node =>
 
 // const tagTab = node => ' '.repeat(64 - countHeadlineLength(node));
 // FIXME wywalało gdzieś bug, którego przyczyn nie mam czasu szukać
-const tagTab = node => 10
+const tagTab = node => '         '
 
 export const headlineT = {
   tags: {

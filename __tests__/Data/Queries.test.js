@@ -1,3 +1,5 @@
+// * Imports
+
 import R from "ramda";
 
 import { getFirstFile, getFirstFileAsPlainObject } from '../funcs';
@@ -18,7 +20,6 @@ import Queries, {
 } from '../../src/Data/Queries';
 
 var Realm = require("realm");
-
 
 // * Prepare
 
