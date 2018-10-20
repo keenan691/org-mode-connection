@@ -24,13 +24,6 @@ const indexesOf = (string, regex) => {
     indexes.push(match.index)}
   return indexes}
 
-const measure = (text='perf: ', fun) => (...args) => {
-  const start = Date.now();
-  const res = fun(...args)
-  const end = Date.now();
-  console.log(text, end-start)
-  return res}
-
 export const createCreatorsFromRegex = (regexes) => {
   const addValue = (val, propName='value') => R.merge({ [propName]: val });
   const isCheckedCheckbox = R.propEq('type', 'checkedCheckboxLine');

@@ -5,30 +5,35 @@ import { extractNodesFromLines } from '../OrgFormat/NodesExtractor';
 import { extractPreNodeContentFromLines } from './NodesExtractor';
 import { fileMetadataR } from './Regex';
 import { nodeMetadataParser } from './AtomicParsers/NodeMetadataParser';
-import { parseContent } from './AtomicParsers/NodeContentParser';
 import { parseHeadline } from './AtomicParsers/HeadlineParser';
 import { rlog } from '../Helpers/Debug';
 
 const useRestAsContentAndRemoveInput = (input) => R.append(
   { content: input[1].join('\n') }, input[0]);
 
-export const parseNode = R.converge(
+export const parseRawNode = R.converge(
   (...args) => R.mergeAll(args), [
 
     R.pipe(R.prop("rawHeadline"),
            parseHeadline),
 
-    R.pipe(R.prop("rawContent"),
-           R.split('\n'),
-           nodeMetadataParser,
-           useRestAsContentAndRemoveInput,
-           deepMerge),
+    R.pick([
+      "level",
+      "rawContent",
+      "position"])])
 
-    R.pick(["range",
-            // "rawHeadline",
-            // "rawContent",
-            "level",
-            "position"])])
+export const parseContentMetadata = R.converge(R.merge, [
+  R.omit('rawContent'),
+  R.pipe(R.prop("rawContent"),
+         R.split('\n'),
+         (lines) => [[], lines],
+         nodeMetadataParser,
+         useRestAsContentAndRemoveInput,
+         deepMerge)
+]
+)
+
+export const parseNode = R.pipe(parseRawNode, parseContentMetadata);
 
 const mapMetadataLinesToObject = R.pipe(
   R.map(R.pipe(
@@ -53,13 +58,24 @@ const mergeNodeDefaults = R.merge({
   timestamps: []
 });
 
-export const parseNodes = R.pipe(
+export const preParseNodes = R.pipe(
   extractNodesFromLines,
-  R.map(R.pipe(parseNode,
-               R.evolve({
-                 drawers: JSON.stringify
-               }),
-               mergeNodeDefaults)));
+  R.map(R.pipe(parseRawNode, mergeNodeDefaults))
+)
+
+export const finishParsing = R.pipe(
+  parseContentMetadata,
+  R.evolve({
+    drawers: JSON.stringify
+  }),
+  R.omit(['rawContent'])
+  )
+
+
+export const parseNodes = R.pipe(
+  preParseNodes,
+  R.map(finishParsing)
+);
 
 export const parse = R.applySpec({
   nodes: parseNodes,

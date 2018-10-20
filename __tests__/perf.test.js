@@ -37,6 +37,8 @@ test.only("Import file", async () => {
   const res = await OrgApi.syncFile(testFileId)
   const content = await OrgApi.getFileAsPlainObject(testFileId);
   console.log(res)
+  console.log(content)
+  console.log(content.nodesList[0].tags)
   // console.log(content.nodesList.map(n=>`${n.position} ${'*'.repeat(n.level)} ${n.headline}`))
   // expect().toBe(expectation)
 });

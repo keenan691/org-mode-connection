@@ -26,3 +26,16 @@ export const selfChangingRegexMatch = (regexList) => {
     const res = R.match(regex, lineToMatch)
     if (!R.isEmpty(res)) { cycle() }
     return res}}
+
+export const measure = (fun, text='perf: ') => (...args) => {
+  console.time(text)
+  const res = fun(...args)
+  console.timeEnd(text)
+  return res}
+
+export function measurePromise(fun) {
+  let onPromiseDone = () => console.timeEnd('text')
+
+  let start = console.time('text')
+  return fun().then(onPromiseDone, onPromiseDone);
+}

@@ -32,9 +32,7 @@ const activeTimestampRangeParser = hungryLineParser(
   nodeMetadataT.activeTimestampRange.fromOrg,
   "timestamps");
 
-export const nodeMetadataParser = (lines) => {
-  const innerRepr = [[], lines];
-  return R.pipe(
+export const nodeMetadataParser = R.pipe(
     scheduledParser,
     deadlineParser,
     closedDateParser,
@@ -43,4 +41,4 @@ export const nodeMetadataParser = (lines) => {
     activeTimestampParser,
     // TODO odpowiednio zmergować te objekty bo się nadpisują
     // TODO coś przy tworzeniu timestamów nie wychodzi i agendy się wypieprzają
-  )(innerRepr)};
+  );

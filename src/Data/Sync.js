@@ -6,15 +6,23 @@ import {
   extractNodesFromLines,
   extractPreNodeContentFromLines,
 } from '../OrgFormat/NodesExtractor';
-import { headlineT } from '../OrgFormat/Transforms';
-import { imap, nullWhenEmpty, promisePipe } from '../Helpers/Functions';
-import { log, rlog } from '../Helpers/Debug';
 import {
+  finishParsing,
   parse,
   parseFileContent,
   parseNode,
-  parseNodes
+  parseNodes,
+  preParseNodes
 } from '../OrgFormat/Parser';
+import { headlineT } from '../OrgFormat/Transforms';
+import {
+  imap,
+  measure,
+  measurePromise,
+  nullWhenEmpty,
+  promisePipe
+} from '../Helpers/Functions';
+import { log, rlog } from '../Helpers/Debug';
 import { prepareNodes, uniqueId } from './Transforms';
 import Export, { fileToOrgRepr } from '../OrgFormat/Export';
 import FileAccess from '../Helpers/FileAccess';
@@ -143,18 +151,18 @@ const getNodesFromDbAsArray = file => Queries.getNodes('file = $0', file).then(
 const getParsedNodesFromFile = promisePipe(
   R.prop('path'),
   R.curry(FileAccess.read),
-  parseNodes)
+  // parseNodes,
+  preParseNodes,
+// R.tap(console.log),
+)
 
 const getFileHeaderFromFile = promisePipe(
   R.prop('path'),
   R.curry(FileAccess.read),
   parseFileContent)
 
-const externalAndLocalChangesToOneList = promisePipe(
-  R.converge((...results) => Promise.all(results), [getNodesFromDbAsArray, getParsedNodesFromFile]),
-  R.unnest)
 
-const areNodesSimiliar = (n1, n2) => n1.headline == n2.headline && n1.content == n2.content;
+const areNodesSimiliar = (n1, n2) => n1.headline == n2.headline //&& n1.content == n2.content;
 
 const partitionEachGroupByIdPossession = R.map(R.partition(
   node => node.id === undefined));
@@ -207,10 +215,6 @@ const rejectNotChangedNodes = (changes) => {
   const eqTimestamps = (savedObj, newProps) => {
     if (savedObj.timestamps.length !== newProps.timestamps.length) return false
 
-    if (savedObj.drawers!== newProps.drawers) {
-      // console.log(typeof newProps.drawers)
-      // console.log(typeof savedObj.drawers)
-    }
     for (var i = 0; i < newProps.timestamps.length; i++) {
       const ts1 = savedObj.timestamps[i];
       const ts2 = newProps.timestamps[i];
@@ -231,15 +235,20 @@ const rejectNotChangedNodes = (changes) => {
     return true
   }
 
+  // return changes.externalChanges.changedNodes
+  // console.log(changes.externalChanges.changedNodes)
   return R.over(R.lensPath(['externalChanges', 'changedNodes']), R.pipe(
     R.reject(([savedObj, newProps]) => R.allPass([
       R.eqProps('todo'),
+      // (a,b)=> { console.log(a.todo); console.log(b.todo) },
+      R.T,
       R.eqProps('level'),
+      // R.eqProps('rawContent'),
       eqPosition,
-      eqTimestamps,
+      // eqTimestamps,
       eqTags,
       R.eqProps('priority'),
-      R.eqProps('drawers'),
+      // R.eqProps('drawers'),
     ])(savedObj, newProps)),
   ), changes)
 };
@@ -301,51 +310,50 @@ const addNewNodePositions = (changes) => {
 };
 
 
-export const getChanges = (file) => {
-  const localChanges = nullWhenEmpty(getLocallyChangedNodes(file))
-  let externalChanges = new Promise(r => r(null))
-  let externalFileHeaderChanges = new Promise(r => r(null))
+export const getChanges = async (file) => {
   const fileNodes = file.nodes.sorted('position');
   const positions = []
-  return getNewExternalMtime(file).then(newExternalMtime => {
-    // if (!newExternalMtime && !file.isChanged) return changes
+  const newExternalMtime = await getNewExternalMtime(file);
+  const dbNodes = await getNodesFromDbAsArray(file);
+  // console.time()
+  const parsedNodes = await getParsedNodesFromFile(file);
+  // console.timeEnd()
+  const data = R.unnest([...dbNodes, ...parsedNodes])
+  const results = {
+    file,
+    fileNodes,
+    localChanges: nullWhenEmpty(getLocallyChangedNodes(file)),
+    externalChanges: null,
+    externalFileHeaderChanges: null
+  };
+  // return results
 
-    if (newExternalMtime) {
-      externalChanges = promisePipe(
-        externalAndLocalChangesToOneList,
-        R.sortBy(o => o.headline + o.position + o.level),
-        R.groupWith(areNodesSimiliar),
-        partitionEachGroupByIdPossession,
-        groupByChangedAndNotChanged,
-        spreadNotSymmetricalGroups,
-        // R.tap(o => console.log(o.changedNodes)),
-        R.evolve({
-          addedNodes: R.pipe(
-            R.flatten,
-            R.sortBy(R.prop('position')),
-            // R.tap(console.log),
-          ),
-          deletedNodes: R.flatten,
-          changedNodes: R.pipe(
-            R.map(R.transpose),
-            R.unnest,
-            R.map(R.reverse),
-          )
-        }),
-        // R.tap(console.log),
-      )(file)
+  if (!newExternalMtime) return results
 
-      externalFileHeaderChanges = getFileHeaderFromFile(file)
+  results.externalChanges = R.pipe(
+      R.sortBy(o => o.headline + o.position + o.level),
+      R.groupWith(areNodesSimiliar),
+      partitionEachGroupByIdPossession,
+      groupByChangedAndNotChanged,
+      spreadNotSymmetricalGroups,
+      R.evolve({
+        addedNodes: R.pipe(
+          R.flatten,
+          R.sortBy(R.prop('position')),
+        ),
+        deletedNodes: R.flatten,
+        changedNodes: R.pipe(
+          R.map(R.transpose),
+          R.unnest,
+          R.map(R.reverse),
+        )
+      }),
+    )(data)
 
-    }
+    results.externalFileHeaderChanges = await getFileHeaderFromFile(file)
 
-    return Promise.all([externalChanges, externalFileHeaderChanges]).then(
-      ([externalChanges, externalFileHeaderChanges]) => ({
-        externalChanges,
-        externalFileHeaderChanges,
-        localChanges,
-        fileNodes,
-        file}))})};
+  return results
+};
 
 // ** Apply changes
 
@@ -380,9 +388,10 @@ const applyExternalChanges = type => async changes => {
     if (changes.fileNodes.length > 0) {
       changes = addNewNodePositions(changes)
       preparedNodes = externalChanges.addedNodes.map(
-        updateNodePos)
+        R.pipe(updateNodePos,
+              finishParsing))
     } else {
-      preparedNodes = externalChanges.addedNodes
+      preparedNodes = externalChanges.addedNodes.map(finishParsing)
     }
     // console.log(changes.fileNodes.length)
     // console.log(preparedNodes)
@@ -392,7 +401,10 @@ const applyExternalChanges = type => async changes => {
 
   if (type==='update' && externalChanges.changedNodes) {
     preparedNodes = externalChanges.changedNodes.map(
-      R.over(R.lensIndex(1), updateNodePos)
+      R.over(R.lensIndex(1), R.pipe(updateNodePos,
+                                    finishParsing,
+                                    // R.tap(console.log),
+                                   ))
     )
     // console.log(preparedNodes)
     await Queries.updateNodes(preparedNodes, { isChanged: false })
@@ -455,11 +467,11 @@ const syncFile = promisePipe(
   R.cond([
     [onlyLocalChangesP, applyLocalChanges],
     [onlyExternalChangesP, promisePipe(
+      // R.tap(cn=> console.log(cn.externalChanges.deletedNodes)),
       applyExternalChanges('delete'),
       addPositions,
       applyExternalChanges('add'),
       rejectNotChangedNodes,
-      // R.tap(cn=> console.log(cn.externalChanges.changedNodes)),
       applyExternalChanges('update')
     )],
     [bothExternalAndLocalChangesP, mergeChanges],
