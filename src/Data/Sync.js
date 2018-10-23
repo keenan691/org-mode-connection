@@ -441,7 +441,7 @@ const generateReportAndUpdateStatus = changes  => {
   if (changes.localChanges !== null)
     Queries.updateNodesAsSynced(changes.localChanges)
 
-  Queries.flagFileAsSynced(changes.file)
+  // Queries.flagFileAsSynced(changes.file)
   return R.evolve(changesToSummary)(changes)
 };
 

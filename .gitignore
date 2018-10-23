@@ -23,7 +23,6 @@ tmp/
 flow-typed/
 *.pdf
 *.png
-*.html
 org/
 project.org_archive
 .#project.org_archive
