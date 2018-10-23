@@ -241,14 +241,13 @@ const rejectNotChangedNodes = (changes) => {
     R.reject(([savedObj, newProps]) => R.allPass([
       R.eqProps('todo'),
       // (a,b)=> { console.log(a.todo); console.log(b.todo) },
-      R.T,
+      // R.T,
       R.eqProps('level'),
-      // R.eqProps('rawContent'),
       eqPosition,
-      // eqTimestamps,
       eqTags,
       R.eqProps('priority'),
-      // R.eqProps('drawers'),
+      R.eqProps('drawers'),
+      R.eqProps('rawContent'),
     ])(savedObj, newProps)),
   ), changes)
 };
@@ -364,10 +363,13 @@ const applyFileHeaderExternalChanges = (changes) => {
   return changes
 };
 
-const applyLocalChanges = changes => {
+const applyLocalChanges = async changes => {
   const nodes = Array.from(changes.file.nodes.sorted('position')).map(n => Export(n)).join('\n');
   const header = fileToOrgRepr(changes.file);
-  return FileAccess.write(changes.file.path, header + nodes).then(() => ({ status: 'success' }))}
+  // console.log(nodes)
+  await FileAccess.write(changes.file.path, header + nodes)
+  return changes
+}
 
 const applyExternalChanges = type => async changes => {
   let preparedNodes
@@ -441,7 +443,7 @@ const generateReportAndUpdateStatus = changes  => {
   if (changes.localChanges !== null)
     Queries.updateNodesAsSynced(changes.localChanges)
 
-  // Queries.flagFileAsSynced(changes.file)
+  Queries.flagFileAsSynced(changes.file)
   return R.evolve(changesToSummary)(changes)
 };
 

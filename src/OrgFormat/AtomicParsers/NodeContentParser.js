@@ -66,7 +66,7 @@ const orgTextFaces = {
   codeText: '~',
   underlineText: '_',
   verbatimText: '=',
-  // italicText: '/'
+  italicText: '/'
 }
 
 const isTextFaceStart = R.curry(
@@ -81,8 +81,9 @@ const createOrgTextFaceParser = (type, specialChar) => ([objects, line]) => {
   const findSpecialCharsIndexes = (line) => indexesOf(line, new RegExp("\\"+specialChar, 'g'));
 
   const getCharType = R.cond([
-    [isTextFaceStart(line), R.always('s')],
-    [isTextFaceEnd(line), R.always('e')]]);
+    [isTextFaceStart(line), R.always('s')],      // is section start
+    [isTextFaceEnd(line), R.always('e')       // is section end
+    ]]);
 
   const mapToObjects = R.map(([indexStart, indexEnd]) => ({
     type,
@@ -90,13 +91,23 @@ const createOrgTextFaceParser = (type, specialChar) => ([objects, line]) => {
     indexEnd: indexEnd + 1,
     content: line.slice(indexStart+1, indexEnd)}))
 
+// console.log(specialChar)
   const parsedObjects = R.pipe(
     findSpecialCharsIndexes,
     R.map(idx => [idx, getCharType(idx)]),
     R.reject(R.pipe(R.last, R.equals(undefined))),
+    R.reduce((acc, val) => {
+      const currentType = val[1];
+      const lastType = R.last(acc);
+      if (lastType !== currentType) acc.push(val)
+      return acc
+    }, []),
+    R.when(lst => lst.length > 0 && R.head(lst)[1] === 'e', R.drop(1)),
+    R.when(lst => lst.length > 0 && R.last(lst)[1] === 's', R.dropLast(1)),
     R.map(R.head),
     R.splitEvery(2),
-    mapToObjects
+    mapToObjects,
+    // R.tap(console.log),
   )(line)
 
   if (parsedObjects.length > 0) objects = R.concat(objects, parsedObjects)
@@ -156,14 +167,16 @@ const regularTextParser = ([objects, line]) => {
     indexEnd}))
 
   const newObjects = R.pipe(
+    R.sortBy(R.prop('indexStart')),
     R.chain(obj => [obj.indexStart, obj.indexEnd]),
     addLastIndex,
     R.ifElse(beginsBySpecialBlock, R.pipe(R.drop(1)), safeAddFirstIndex),
     R.when(R.pipe(R.length, R.equals(1)), R.drop(1)),
     R.splitEvery(2),
     mapGroupsToObjects,
+    R.tap(console.log),
     R.concat(objects),
-    R.sortBy(R.prop('indexStart'))
+    R.sortBy(R.prop('indexStart')),
   )(objects)
 
   return newObjects

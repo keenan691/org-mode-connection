@@ -101,7 +101,7 @@ export const headlineT = {
             isContextTag: tag.startsWith('@') ? true : false })))(val)}}},
 
   priority: {
-    toOrg(node) {return addSpaceBefore(node.priority ? `[#${node.priority}] ` : undefined)},
+    toOrg(node) {return node.priority ? `[#${node.priority}] ` : ''},
     fromOrg(val) {return {priority: val[2]}}},
 
   todo: {
