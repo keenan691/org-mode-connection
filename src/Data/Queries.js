@@ -46,11 +46,11 @@ export const queryRealm = (model, filter) =>
 export const deleteRealmObject = (obj, alsoDelete = []) =>
   dbConn.then(realm => realm.write(() => realm.delete(obj)));
 
-export const getObjectByIdAndEnhance = (objSchema, enhanceFunction) => id =>
-  dbConn.then(realm => {
-    const res = realm.objects(objSchema).filtered("id = $0", id);
-    return res.length === 1 ? enhanceFunction(res[0]) : null;
-  });
+// export const getObjectById = (model, id) =>
+//   dbConn.then(realm => {
+//     const res = realm.objects(model).filtered("id = $0", id);
+//     return res[0]
+//   });
 
 export const getObjects = (model, ...filterArgs) =>
   dbConn.then(

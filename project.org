@@ -1,0 +1,13 @@
+*
+
+* Content parser tests
+
+#+BEGIN_SRC js :cmd "babel-node --presets es2015 --plugins transform-object-rest-spread"
+var testNodeContentParser = require('/home/keenan/devSpace/github/org-mode-connection/perf')
+console.log(testNodeContentParser(1))
+#+END_SRC
+
+#+RESULTS:
+: dupa
+: 2
+: undefined

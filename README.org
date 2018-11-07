@@ -1,1 +1,95 @@
-* OrgModeConnection
+#+TITLE: org-mode-connection
+
+This package allows to read, write and sync emacs's org-mode files.
+
+It was developed as foundation for [[https://github.com/bnankiewicz/organic][organic]] - mobile org-mode client written in React Native.
+
+It is designed to work both in mobile and server/desktop environments.
+
+* Installation
+#+BEGIN_SRC sh
+yarn add org-mode-connection
+#+END_SRC
+
+#+BEGIN_SRC sh
+npm install org-mode-connection
+#+END_SRC
+
+* Configuration
+
+** with React Native
+#+BEGIN_SRC javascript
+import OrgApi from 'org-mode-connection';
+import RNFS from 'react-native-fs';
+import Realm from 'realm';
+
+// Configure
+OrgApi.configureFileAccess(RNFS);
+OrgApi.configureDb(Realm);
+OrgApi.connectDb();
+#+END_SRC
+
+** with Node.js
+
+#+BEGIN_SRC javascript
+const Realm = require('realm')
+const promisify = require("promisify-node");
+const fsInterface = promisify("fs")
+
+// Configure
+OrgApi.configureFileAccess(fsInterface);
+OrgApi.configureDb(Realm);
+OrgApi.connectDb();
+#+END_SRC
+* API
+** Configuration
+** Realm Queries
+*** addNodes
+*** addFile
+*** clearDb
+*** connectDb
+*** deleteNodeById
+*** deleteNodes
+*** deleteFileById
+*** flagFileAsSynced
+*** getOrCreateNodeByHeadline
+*** getAncestorsAsPlainObject
+*** getAllFilesAsPlainObject
+*** getFileAsPlainObject
+*** getFiles
+*** getNodeById
+*** getNodes
+*** getRelatedNodes
+*** getTagsAsPlainObject
+*** getAgendaAsPlainObject
+*** getTocs
+*** search
+*** updateFile
+*** updateNodeById
+*** updateNodes
+*** updateNodesAsSynced
+** Plain text queries
+** Sync
+*** importFile,
+*** getExternallyChangedFiles,
+*** createFileFromString,
+*** syncDb,
+*** syncFile,
+* Tools
+** get content as reactjs objects
+* Pull requests
+Welcome
+* License
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.

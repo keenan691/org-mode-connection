@@ -1,4 +1,4 @@
-/** @flow */
+// * Imports
 
 import R from "ramda";
 
@@ -6,27 +6,40 @@ import {
   nodeMetadataParser,
 } from '../../../src/OrgFormat/AtomicParsers/NodeMetadataParser';
 
-describe("not parses", () => {
+// * Tools
+
+const runNodeMetadataParser = (input) => nodeMetadataParser([[], input]);
+const emptyTimestamp = {
+  date: null,
+  dateRangeEnd: null,
+  dateRangeWithTime: false,
+  dateWithTime: false,
+  repeater: null,
+  warningPeriod:null
+};
+
+// * Tests
+
+describe("should not parse", () => {
   it("scheduled parses", () => {
-    expect(nodeMetadataParser(["SCHEDULED: <2018-02-22 08/10/18>"]))
-      .toEqual([[{timestamps: [{
-        type: "scheduled",
-        dateWithTime: false,
-        date: new Date(2018, 1, 22)}]}], [""]])});
+    expect(runNodeMetadataParser(["SCHEDULED: <2018-02-22 08/10/18>"]))
+      .toEqual([[], ["SCHEDULED: <2018-02-22 08/10/18>"]])});
 
 })
 
 describe("scheduled and deadline metadata parses", () => {
   it("scheduled parses", () => {
-    expect(nodeMetadataParser(["SCHEDULED: <2018-02-22 czw>"]))
+    expect(runNodeMetadataParser(["SCHEDULED: <2018-02-22 czw>"]))
       .toEqual([[{timestamps: [{
+        ...emptyTimestamp,
         type: "scheduled",
         dateWithTime: false,
         date: new Date(2018, 1, 22)}]}], [""]])});
 
   it("deadline parses", () => {
-    expect(nodeMetadataParser(["DEADLINE: <2018-02-22 czw>"]))
+    expect(runNodeMetadataParser(["DEADLINE: <2018-02-22 czw>"]))
       .toEqual([[{timestamps: [{
+        ...emptyTimestamp,
         type: "deadline",
         dateWithTime: false,
         date: new Date(2018, 1, 22)}]}], [""]])})});
@@ -34,8 +47,9 @@ describe("scheduled and deadline metadata parses", () => {
 describe("scheduled metadata with repeater", () => {
   it("with hourly repeater parses", () => {
     expect(
-      nodeMetadataParser(["SCHEDULED: <2018-02-22 czw +4h>"]))
+      runNodeMetadataParser(["SCHEDULED: <2018-02-22 czw +4h>"]))
       .toEqual([[{timestamps: [{
+        ...emptyTimestamp,
         type: "scheduled",
         date: new Date(2018, 1, 22),
         dateWithTime: false,
@@ -43,8 +57,9 @@ describe("scheduled metadata with repeater", () => {
 
   it("with daily repeater parses", () => {
     expect(
-      nodeMetadataParser(["SCHEDULED: <2018-02-22 czw +4d>"]))
+      runNodeMetadataParser(["SCHEDULED: <2018-02-22 czw +4d>"]))
       .toEqual([[{timestamps: [{
+        ...emptyTimestamp,
         type: "scheduled",
         date: new Date(2018, 1, 22),
         dateWithTime: false,
@@ -52,8 +67,9 @@ describe("scheduled metadata with repeater", () => {
 
   it("with weekly repeater parses", () => {
     expect(
-      nodeMetadataParser(["SCHEDULED: <2018-02-22 czw +4w>"]))
+      runNodeMetadataParser(["SCHEDULED: <2018-02-22 czw +4w>"]))
       .toEqual([[{timestamps: [{
+        ...emptyTimestamp,
         type: "scheduled",
         date: new Date(2018, 1, 22),
         dateWithTime: false,
@@ -61,8 +77,9 @@ describe("scheduled metadata with repeater", () => {
 
   it("with monthly repeater parses", () => {
     expect(
-      nodeMetadataParser(["SCHEDULED: <2018-02-22 czw +4m>"]))
+      runNodeMetadataParser(["SCHEDULED: <2018-02-22 czw +4m>"]))
       .toEqual([[{timestamps: [{
+        ...emptyTimestamp,
         type: "scheduled",
         date: new Date(2018, 1, 22),
         dateWithTime: false,
@@ -70,8 +87,9 @@ describe("scheduled metadata with repeater", () => {
 
   it("with yearly repeater parses", () => {
     expect(
-      nodeMetadataParser(["SCHEDULED: <2018-02-22 czw +4y>"]))
+      runNodeMetadataParser(["SCHEDULED: <2018-02-22 czw +4y>"]))
       .toEqual([[{timestamps: [{
+        ...emptyTimestamp,
         type: "scheduled",
         date: new Date(2018, 1, 22),
         dateWithTime: false,
@@ -79,8 +97,9 @@ describe("scheduled metadata with repeater", () => {
 
   it("with shifting ++ repeater parses", () => {
     expect(
-      nodeMetadataParser(["SCHEDULED: <2018-02-22 czw ++4y>"]))
+      runNodeMetadataParser(["SCHEDULED: <2018-02-22 czw ++4y>"]))
       .toEqual([[{timestamps: [{
+        ...emptyTimestamp,
         type: "scheduled",
         date: new Date(2018, 1, 22),
         dateWithTime: false,
@@ -88,8 +107,9 @@ describe("scheduled metadata with repeater", () => {
 
   it("with shifting .+ repeater parses", () => {
     expect(
-      nodeMetadataParser(["SCHEDULED: <2018-02-22 czw .+4y>"]))
+      runNodeMetadataParser(["SCHEDULED: <2018-02-22 czw .+4y>"]))
       .toEqual([[{timestamps: [{
+        ...emptyTimestamp,
         type: "scheduled",
         date: new Date(2018, 1, 22),
         dateWithTime: false,
@@ -98,24 +118,27 @@ describe("scheduled metadata with repeater", () => {
 describe("scheduled metadata with warning period parses", () => {
   it("with hourly warning period parses", () => {
     expect(
-      nodeMetadataParser(["SCHEDULED: <2018-02-22 czw -3h>"]))
+      runNodeMetadataParser(["SCHEDULED: <2018-02-22 czw -3h>"]))
       .toEqual([[{timestamps: [{
+        ...emptyTimestamp,
         type: "scheduled",
         dateWithTime: false,
         date: new Date(2018, 1, 22),}]}], [""]])});
 
   it("with daily warning period parses", () => {
     expect(
-      nodeMetadataParser(["SCHEDULED: <2018-02-22 czw -3d>"]))
+      runNodeMetadataParser(["SCHEDULED: <2018-02-22 czw -3d>"]))
       .toEqual([[{timestamps: [{
+        ...emptyTimestamp,
         type: "scheduled",
         dateWithTime: false,
         date: new Date(2018, 1, 22),}]}], [""]])});
 
   it("with monthly warning period parses", () => {
     expect(
-      nodeMetadataParser(["SCHEDULED: <2018-02-22 czw -3m>"]))
+      runNodeMetadataParser(["SCHEDULED: <2018-02-22 czw -3m>"]))
       .toEqual([[{timestamps: [{
+        ...emptyTimestamp,
         type: "scheduled",
         dateWithTime: false,
         date: new Date(2018, 1, 22),}]}], [""]])})});
@@ -123,8 +146,9 @@ describe("scheduled metadata with warning period parses", () => {
 describe("scheduled metadata with repeater and warning period parses", () => {
   it("with hourly warning period parses", () => {
     expect(
-      nodeMetadataParser(["SCHEDULED: <2018-02-22 czw +4d -3h>"]))
+      runNodeMetadataParser(["SCHEDULED: <2018-02-22 czw +4d -3h>"]))
       .toEqual([[{timestamps: [{
+        ...emptyTimestamp,
         type: "scheduled",
         date: new Date(2018, 1, 22),
         dateWithTime: false,
@@ -133,8 +157,9 @@ describe("scheduled metadata with repeater and warning period parses", () => {
 describe("deadline with repeater and warning period parses", () => {
   it("deadline parses", () => {
     expect(
-      nodeMetadataParser(["DEADLINE: <2018-02-22 czw +3d -1d>"]))
+      runNodeMetadataParser(["DEADLINE: <2018-02-22 czw +3d -1d>"]))
       .toEqual([[{timestamps: [{
+        ...emptyTimestamp,
         type: "deadline",
         date: new Date(2018, 1, 22),
         dateWithTime: false,
@@ -145,17 +170,17 @@ describe("deadline with repeater and warning period parses", () => {
 describe("must not parse", () => {
   it("wrong date", () => {
     expect(
-      nodeMetadataParser(["SCHEDULED: <2018-02-57 czw +3d -1d>"]))
+      runNodeMetadataParser(["SCHEDULED: <2018-02-57 czw +3d -1d>"]))
       .toEqual([[],["SCHEDULED: <2018-02-57 czw +3d -1d>"]])});
 
   it("wrong repeater", () => {
     expect(
-      nodeMetadataParser(["DEADLINE: <2018-02-17 czw +3j -1d>"]))
+      runNodeMetadataParser(["DEADLINE: <2018-02-17 czw +3j -1d>"]))
       .toEqual([[], ["DEADLINE: <2018-02-17 czw +3j -1d>"]])});
 
   it("wrong warning period", () => {
     expect(
-      nodeMetadataParser(["DEADLINE: <2018-02-17 czw> +3d -1j"]))
+      runNodeMetadataParser(["DEADLINE: <2018-02-17 czw> +3d -1j"]))
       .not.toEqual([[{timestamps: [{
         warningPeriod: expect.anything()}]}], [""]])});
 
@@ -163,13 +188,13 @@ describe("must not parse", () => {
     // TODO Check if this works in org mode, parsers parses it as warning perion even when they are switchedw
     // Maybe in org mode order isn't important
     expect(
-      nodeMetadataParser(["SCHEDULED: <2018-02-17 czw -3d +2d>"]))
+      runNodeMetadataParser(["SCHEDULED: <2018-02-17 czw -3d +2d>"]))
       .toEqual([[], ["SCHEDULED: <2018-02-17 czw -3d +2d>"]])})});
 
 describe("Drawers", () => {
   it("Drawer is parsed", () => {
     expect(
-      nodeMetadataParser([
+      runNodeMetadataParser([
         ':LOGBOOK:',
         'CLOCK: [2017-11-07 wto 20:45]--[2017-11-07 wto 21:14] =>  0:29',
         ':END:']))
@@ -180,8 +205,9 @@ describe("Drawers", () => {
 
 test("Closed date is closed", () => {
   expect(
-    nodeMetadataParser(["    CLOSED: [2018-02-02 pią 21:16]"]))
+    runNodeMetadataParser(["    CLOSED: [2018-02-02 pią 21:16]"]))
     .toEqual([[{timestamps: [{
+      ...emptyTimestamp,
       type: "closed",
       dateWithTime: true,
       date: new Date(2018, 1, 2, 21, 16)}]}],
@@ -191,9 +217,10 @@ describe("Timestaps parses", () => {
 
   it("Active plain timestamp parses", () => {
     expect(
-      nodeMetadataParser(["<2003-09-16 Tue>"]))
+      runNodeMetadataParser(["<2003-09-16 Tue>"]))
       .toEqual([[{
         timestamps: [{
+          ...emptyTimestamp,
           date: new Date(2003, 8, 16),
           type: "active",
           dateWithTime: false,
@@ -201,9 +228,10 @@ describe("Timestaps parses", () => {
 
   it("Active plain timestamp with time parses", () => {
     expect(
-      nodeMetadataParser(["<2003-09-16 Tue 09:35>"]))
+      runNodeMetadataParser(["<2003-09-16 Tue 09:35>"]))
       .toEqual([[{
         timestamps: [{
+          ...emptyTimestamp,
           date: new Date(2003, 8, 16, 9, 35),
           type: "active",
           dateWithTime: true,
@@ -211,9 +239,10 @@ describe("Timestaps parses", () => {
 
   it("Active plain timestamp with time range parses", () => {
     expect(
-      nodeMetadataParser(["<2003-09-16 Tue 20:00-22:00>"]))
+      runNodeMetadataParser(["<2003-09-16 Tue 20:00-22:00>"]))
       .toEqual([[{
         timestamps: [{
+          ...emptyTimestamp,
           date: new Date(2003, 8, 16, 20),
           type: "active",
           dateWithTime: true,
@@ -222,9 +251,10 @@ describe("Timestaps parses", () => {
 
   it("Active timestamps with repeater interval parses", () => {
     expect(
-      nodeMetadataParser(["<2003-09-16 Tue +1w>"]))
+      runNodeMetadataParser(["<2003-09-16 Tue +1w>"]))
       .toEqual([[{
         timestamps: [{
+          ...emptyTimestamp,
           date: new Date(2003, 8, 16),
           type: "active",
           dateWithTime: false,
@@ -233,18 +263,19 @@ describe("Timestaps parses", () => {
 
   it("Active timestamps with date range parses", () => {
     expect(
-      nodeMetadataParser(["<2003-09-16 Tue>--<2003-09-23 Tue>"]))
+      runNodeMetadataParser(["<2003-09-16 Tue>--<2003-09-23 Tue>"]))
       .toEqual([[{
         timestamps: [{
           date: new Date(2003, 8, 16),
           dateRangeEnd: new Date(2003, 8, 23),
+          dateRangeWithTime: false,
           dateWithTime: false,
           type: "active"
         }] }], ["<2003-09-16 Tue>--<2003-09-23 Tue>"]])});
 
   it("Multiple Active plain timestamps parses", () => {
     expect(
-      nodeMetadataParser(["<2003-09-16 Tue>",
+      runNodeMetadataParser(["<2003-09-16 Tue>",
                           "<2003-09-17 Tue> <2003-09-18 Tue>"]))
       .toEqual([[{
         timestamps: [
@@ -255,7 +286,7 @@ describe("Timestaps parses", () => {
 
   it("Multiple Active plain timestamps duplicates don't parses", () => {
     expect(
-      nodeMetadataParser(["<2003-09-16 Tue>",
+      runNodeMetadataParser(["<2003-09-16 Tue>",
                           "<2003-09-17 Tue> <2003-09-17 Tue>"]))
       .toEqual([[{
         timestamps: [

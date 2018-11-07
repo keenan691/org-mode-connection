@@ -2,7 +2,7 @@
 
 import R from "ramda";
 
-import { getFirstFile, getFirstFileAsPlainObject } from '../funcs';
+import { getFirstFile, getFirstFileAsPlainObject } from '../../testTools';
 import { getOrgFileContent } from "../../src/Helpers/Fixtures";
 import Db from "../../src/Data/Db/Db";
 import DbHelper from "../../src/Data/Db/DbHelper";
@@ -292,19 +292,7 @@ describe("Helper functions", () => {
     const files = await Queries.getFiles();
     const [node, created] = await getOrCreateNodeByHeadline(files[0], "node 1");
     expect(created).toEqual(false)
-    expect(node).toHaveProperty("position", 0)
-  });
-
-  test("enhanceNodeWithPosition without headline in target", () => {
-    Queries.getFiles()
-      .then(R.head)
-      .then(file => {
-        const expectation = {
-          position: file.nodes.length,
-          level: 1
-        };
-        expect(enhanceNodeWithPosition(file)({})).toEqual(expectation);
-      });
+    expect(node).toHaveProperty("position", 1)
   });
 
   // test("enhanceNodeWithPosition with headline in target", () => {
@@ -391,12 +379,12 @@ describe("Queries", () => {
     ]
 
     const expectation = [
-      ["node 1", 0, 1],
-      ["new", 0.5, 2],
-      ["node 2", 1, 1],
-      ["subnode 2-1", 2, 2],
-      ["subnode 3-1", 3, 3],
-      ["subnode 2-2", 4, 2]
+      ["node 1", 1, 1],
+      ["new", 1.5, 2],
+      ["node 2", 2, 1],
+      ["subnode 2-1", 3, 2],
+      ["subnode 3-1", 4, 3],
+      ["subnode 2-2", 5, 2]
     ];
 
     return getFirstFile().then(file => {
@@ -420,12 +408,12 @@ describe("Queries", () => {
         headline: file.nodes[0].headline
       };
       const expectation = [
-        ["node 1", 0, 1],
-        ["new", 0.5, 2],
-        ["node 2", 1, 1],
-        ["subnode 2-1", 2, 2],
-        ["subnode 3-1", 3, 3],
-        ["subnode 2-2", 4, 2]
+        ["node 1", 1, 1],
+        ["new", 1.5, 2],
+        ["node 2", 2, 1],
+        ["subnode 2-1", 3, 2],
+        ["subnode 3-1", 4, 3],
+        ["subnode 2-2", 5, 2]
       ];
       return expect(
         addNodes(nodesToAdd, target)
@@ -447,7 +435,7 @@ describe("Queries", () => {
       };
       const expectation = [
         expect.objectContaining({
-          position: file.nodes.length,
+          position: file.nodes.length+1,
           level: file.nodes[1].level + 1,
           id: expect.any(String)
         })
@@ -456,7 +444,7 @@ describe("Queries", () => {
     });
   });
 
-  test.only("addNodes : to end of file", () => {
+  test("addNodes : to end of file", () => {
     return getFirstFile().then(file => {
       const nodesToAdd = [{ headline: "new" }];
       const target = {
@@ -464,7 +452,7 @@ describe("Queries", () => {
       };
       const expectation = [
         expect.objectContaining({
-          position: file.nodes.length,
+          position: file.nodes.length+1,
           id: expect.any(String)
         })
       ];
@@ -499,36 +487,36 @@ describe("Queries", () => {
     });
   });
 
-  test("getAgenda", () => {
-    expect.assertions(1);
-    const agenda = Queries.getAgenda(
-      new Date(2018, 2, 12),
-      new Date(2018, 2, 15)
-    );
-    return expect(agenda).resolves.toHaveLength(5);
-  });
+  // test("getAgenda", () => {
+  //   expect.assertions(1);
+  //   const agenda = Queries.getAgenda(
+  //     new Date(2018, 2, 12),
+  //     new Date(2018, 2, 15)
+  //   );
+  //   return expect(agenda).resolves.toHaveLength(5);
+  // });
 
-  test("getAgenda", () => {
-    expect.assertions(3);
-    const agenda = Queries.getAgenda(
-      new Date(2018, 2, 12),
-      new Date(2018, 2, 15)
-    );
-    return agenda.then(result => {
-      expect(result[0].nodes).toHaveLength(1);
-      expect(result[1].nodes).toHaveLength(1);
-      expect(result[2].nodes).toHaveLength(1);
-    });
-  });
+  // test("getAgenda", () => {
+  //   expect.assertions(3);
+  //   const agenda = Queries.getAgenda(
+  //     new Date(2018, 2, 12),
+  //     new Date(2018, 2, 15)
+  //   );
+  //   return agenda.then(result => {
+  //     expect(result[0].nodes).toHaveLength(1);
+  //     expect(result[1].nodes).toHaveLength(1);
+  //     expect(result[2].nodes).toHaveLength(1);
+  //   });
+  // });
 
-  test("getAgenda", () => {
-    expect.assertions(1);
-    const agenda = Queries.getAgenda(
-      new Date(2018, 2, 12),
-      new Date(2018, 2, 12)
-    );
-    return expect(agenda).resolves.toHaveLength(2);
-  });
+  // test("getAgenda", () => {
+  //   expect.assertions(1);
+  //   const agenda = Queries.getAgenda(
+  //     new Date(2018, 2, 12),
+  //     new Date(2018, 2, 12)
+  //   );
+  //   return expect(agenda).resolves.toHaveLength(2);
+  // });
 
   test("setDeadline to null", () => {
     expect.assertions(1);

@@ -17,50 +17,62 @@ const expectedNodes = [
   {
     content: "\nNunc eleifend leo vitae magna.\n",
     headline: "node 1",
-    rawContent: "\nNunc eleifend leo vitae magna.\n",
-    rawHeadline: "node 1",
     level: 1,
-    position: 0,
-    range: [6, 10]
+    position: 1,
+    drawers: "null",
+    priority: null,
+    tags: [],
+    timestamps: [],
+    todo: null
   },
 
   {
     content: "\nNunc porta vulputate tellus.\n",
     headline: "node 2",
-    rawContent: "\nNunc porta vulputate tellus.\n",
-    rawHeadline: "node 2",
     level: 1,
-    position: 1,
-    range: [10, 14]
+    position: 2,
+    drawers: "null",
+    priority: null,
+    tags: [],
+    timestamps: [],
+    todo: null
   },
 
   {
     content: "",
     headline: "subnode 2-1",
-    rawContent: "",
-    rawHeadline: "subnode 2-1",
     level: 2,
-    position: 2,
-    range: [14, 16] },
+    position: 3,
+    drawers: "null",
+    priority: null,
+    tags: [],
+    timestamps: [],
+    todo: null
+  },
 
   {
     content: "\nDonec posuere augue in quam.\n",
     headline: "subnode 3-1",
-    rawContent: "\nDonec posuere augue in quam.\n",
-    rawHeadline: "subnode 3-1",
     level: 3,
-    position: 3,
-    range: [16, 20]
+    position: 4,
+    drawers: "null",
+    priority: null,
+    tags: [],
+    timestamps: [],
+    todo: null
   },
 
   {
     content: "",
     headline: "subnode 2-2",
-    rawContent: "",
-    rawHeadline: "subnode 2-2",
     level: 2,
-    position: 4,
-    range: [20, 22] }
+    position: 5,
+    drawers: "null",
+    priority: null,
+    tags: [],
+    timestamps: [],
+    todo: null
+  }
 ];
 
 // * Tests

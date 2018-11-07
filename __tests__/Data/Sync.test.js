@@ -5,7 +5,7 @@
 import R from "ramda";
 
 import { getChanges, getNewExternalMtime } from "../../src/Data/Sync";
-import { getFirstFileAsPlainObject, setNodeTodo } from "../funcs";
+import { getFirstFileAsPlainObject} from "../../testTools";
 import Db from "../../src/Data/Db/Db";
 import DbHelper from "../../src/Data/Db/DbHelper";
 import FileAccess from "../../src/Helpers/FileAccess";
@@ -110,17 +110,8 @@ describe("Check nodes integrity after sync", () => {
   //   return expect(expectation).resolves.toHaveLength(2);
   // });
 
-  test("changing one node", () => {
-    const expectation = FileAccess.write("empty", "* node 1\n* node 2")
-      .then(OrgApi.syncDb)
-      .then(() => FileAccess.write("empty", "* node 1\n* node 3"))
-      .then(OrgApi.syncDb)
-      .then(() => OrgApi.getNodes());
-    return expect(expectation).resolves.toHaveLength(2);
-  });
-
-  test("syncing with now changes", () => {
-    return expect(OrgApi.syncDb()).resolves.toEqual([]);
+  test("syncing with no changes", () => {
+    return expect(OrgApi.syncDb()).resolves.toEqual([{}]);
   });
 });
 
@@ -245,15 +236,13 @@ describe("sync", () => {
             externalChanges: {
               addedNodes: 1,
               deletedNodes: 2,
-              notChangedNodes: 2
+              changedNodes: 2
             },
             externalFileHeaderChanges: {
               description: "",
               metadata: {}
             },
-            file: "externalChanges1",
             localChanges: 1,
-            status: "conflict"
           }
         ])
       );
@@ -261,7 +250,7 @@ describe("sync", () => {
 
   test("not calling sync when nothing is changed", () => {
     expect.assertions(1);
-    return expect(OrgApi.syncDb()).resolves.toHaveLength(0);
+    return expect(OrgApi.syncDb()).resolves.toEqual([{}]);
   });
 
   test("local changes sync returning status", () => {
@@ -271,8 +260,6 @@ describe("sync", () => {
       .then(() =>
         expect(OrgApi.syncDb()).resolves.toEqual([
           {
-            file: "externalChanges1",
-            status: "success",
             localChanges: 1,
             externalFileHeaderChanges: null,
             externalChanges: null
@@ -294,35 +281,4 @@ const createSyncResult = externalChanges => ({
   },
 
   externalChanges
-});
-
-const testSync = testData =>
-  expect(
-    FileAccess.write("empty", testData.newFileContent).then(() =>
-      OrgApi.syncDb()
-    )
-  ).resolves.toEqual(testData.syncResult);
-
-describe("External sync special cases", () => {
-  beforeAll(() => {
-    return createAndAddFileToCleanDb("empty");
-  });
-
-  test("adding nodes to empty file", () => {
-    return testSync({
-      newFileContent: `* node 1 \n* node 2`,
-      syncResult: [
-        createSyncResult({
-          addedNodes: 2
-        })
-      ]
-    });
-  });
-
-  // test("syncing not changed file", () => {
-  //   return testSync({
-  //     newFileContent: `* node 1 \n* node 2`,
-  //     syncResult: []
-  //   });
-  // });
 });

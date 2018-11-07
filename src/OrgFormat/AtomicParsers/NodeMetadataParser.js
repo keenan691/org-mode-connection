@@ -39,6 +39,4 @@ export const nodeMetadataParser = R.pipe(
     drawersParser,
     activeTimestampRangeParser,
     activeTimestampParser,
-    // TODO odpowiednio zmergować te objekty bo się nadpisują
-    // TODO coś przy tworzeniu timestamów nie wychodzi i agendy się wypieprzają
   );
