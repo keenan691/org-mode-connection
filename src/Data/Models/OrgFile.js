@@ -5,7 +5,7 @@ export default {
     id: 'string',
 
     // Related objects
-    nodes: { type: 'linkingObjects', objectType: 'OrgNode', property: 'file'},
+    nodes: { type: 'linkingObjects', objectType: 'OrgNode', property: 'file' },
 
     // File
     path: 'string?',
@@ -17,8 +17,8 @@ export default {
     // Sync
     type: 'string?', // agenda, referenece
     lastSync: 'date?',
-    isChanged: { type: 'bool', default: false},
-    isConflicted: { type: 'bool', default: false},
+    isChanged: { type: 'bool', default: false },
+    isConflicted: { type: 'bool', default: false },
 
     // Org
     metadata: 'string?',
@@ -28,6 +28,5 @@ export default {
     category: 'string?',
     title: 'string?',
     // tags: 'tags',
-
-  }
+  },
 };

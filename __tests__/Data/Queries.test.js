@@ -1,6 +1,6 @@
 // * Imports
 
-import R from "ramda";
+import R from 'ramda';
 
 import {
   addFile,
@@ -10,25 +10,25 @@ import {
   deleteNodeById,
   enhanceNodeWithPosition,
   getOrCreateNodeByHeadline,
-  getTimestamp
+  getTimestamp,
 } from '../../src/Data/Queries/UpdateQueries';
 import { getFirstFile, getFirstFileAsPlainObject } from '../../testTools';
 import { getObjects } from '../../src/Data/Queries/Helpers';
-import { getOrgFileContent } from "../../src/Helpers/Fixtures";
+import { getOrgFileContent } from '../../src/Helpers/Fixtures';
 import Db, { connectDb, dbConn } from '../../src/Data/Db/Db';
-import DbHelper from "../../src/Data/Db/DbHelper";
-import FileAccess from "../../src/Helpers/FileAccess";
-import OrgApi from "../../src/OrgApi";
+import DbHelper from '../../src/Data/Db/DbHelper';
+import FileAccess from '../../src/Helpers/FileAccess';
+import OrgApi from '../../src/OrgApi';
 import OrgNode from '../../src/Data/Models/OrgNode';
-import Queries from "../../src/Data/Queries"
+import Queries from '../../src/Data/Queries';
 
-var Realm = require("realm");
+var Realm = require('realm');
 
 // * Old
 
 const RealmOrgNodeGetters = (function() {
   const nodeProps = Object.getOwnPropertyNames(OrgNode.properties);
-  const timeStampProps = ["closed", "scheduled", "deadline"];
+  const timeStampProps = ['closed', 'scheduled', 'deadline'];
   const obj = {};
 
   nodeProps.forEach(
@@ -36,7 +36,7 @@ const RealmOrgNodeGetters = (function() {
       (obj[prop] = {
         get: function() {
           return this._node[prop];
-        }
+        },
       })
   );
 
@@ -45,29 +45,28 @@ const RealmOrgNodeGetters = (function() {
       (obj[prop] = {
         get: function() {
           return getTimestamp(this._node, prop);
-        }
+        },
       })
   );
 
-  obj["drawers"] = {
+  obj['drawers'] = {
     get: function() {
-      return this._node.drawers ? JSON.parse(this._node.drawers) : "";
-    }
+      return this._node.drawers ? JSON.parse(this._node.drawers) : '';
+    },
   };
 
   return obj;
 })();
 
-
 const OrgNodeMethods = Object.create(null);
 OrgNodeMethods.prototype = {
   setNodeProperty(nextNodeSameLevel, value) {
     return dbConn.then(realm =>
-                       realm.write(() => {
-                         markNodeAsChanged(this._node);
-                         return (this._node[nextNodeSameLevel] = value);
-                       })
-                      );
+      realm.write(() => {
+        markNodeAsChanged(this._node);
+        return (this._node[nextNodeSameLevel] = value);
+      })
+    );
   },
 
   delete() {
@@ -77,14 +76,14 @@ OrgNodeMethods.prototype = {
     return exportNodeToOrgRepr(node);
   },
   schedule(timestampObj) {
-    return addTimestamp(this._node, "scheduled", timestampObj);
+    return addTimestamp(this._node, 'scheduled', timestampObj);
   },
   setDeadline(timestampObj) {
-    return addTimestamp(this._node, "deadline", timestampObj);
+    return addTimestamp(this._node, 'deadline', timestampObj);
   },
   setTodo(val) {
-    return this.setNodeProperty("todo", val);
-  }
+    return this.setNodeProperty('todo', val);
+  },
 };
 
 export const enhanceNode = realmNode => {
@@ -104,12 +103,12 @@ export const enhanceNode = realmNode => {
 };
 // * Prepare
 
-jest.mock("../../src/Helpers/FileAccess");
+jest.mock('../../src/Helpers/FileAccess');
 
 const loadTestFile = fileName =>
-  FileAccess.write("file", getOrgFileContent(fileName).join("\n")).then(() =>
-                                                                        OrgApi.importFile(fileName)
-                                                                       );
+  FileAccess.write('file', getOrgFileContent(fileName).join('\n')).then(() =>
+    OrgApi.importFile(fileName)
+  );
 
 beforeAll(() => {
   OrgApi.configureDb(Realm);
@@ -125,228 +124,228 @@ const blankSearchQuery = {
   priority: {
     A: 0,
     B: 0,
-    C: 0
+    C: 0,
   },
   isScheduled: false,
   hasDeadline: false,
-  searchTerm: ""
+  searchTerm: '',
 };
 
 const createSearchQuery = obj => R.merge(blankSearchQuery, obj);
 
 // ** Tests
 
-describe("Search", () => {
+describe('Search', () => {
   beforeAll(() => {
     OrgApi.clearDb();
-    return loadTestFile("searching-test.org");
+    return loadTestFile('searching-test.org');
   });
 
   const searchTest = (testData, expectation) =>
     expect(OrgApi.search(testData)).resolves.toHaveLength(expectation);
 
-  test("Not performing search when passed query is blank", () => {
+  test('Not performing search when passed query is blank', () => {
     return searchTest(blankSearchQuery, 0);
   });
 
-  describe("Scheduled and Deadline", () => {
-    test("Searching for scheduled items", () => {
+  describe('Scheduled and Deadline', () => {
+    test('Searching for scheduled items', () => {
       const searchQuery = createSearchQuery({
-        isScheduled: true
+        isScheduled: true,
       });
       const nodesFound = 3;
       return searchTest(searchQuery, nodesFound);
     });
 
-    test("Searching for items with deadline", () => {
+    test('Searching for items with deadline', () => {
       const searchQuery = createSearchQuery({
-        hasDeadline: true
+        hasDeadline: true,
       });
       const nodesFound = 2;
       return searchTest(searchQuery, nodesFound);
     });
 
-    test("Searching for scheduled items with deadline", () => {
+    test('Searching for scheduled items with deadline', () => {
       const searchQuery = createSearchQuery({
         isScheduled: true,
-        hasDeadline: true
+        hasDeadline: true,
       });
       const nodesFound = 1;
       return searchTest(searchQuery, nodesFound);
     });
   });
 
-  describe("Priority", () => {
-    test("Searching nodes with A priority", () => {
+  describe('Priority', () => {
+    test('Searching nodes with A priority', () => {
       const searchQuery = createSearchQuery({
         priority: {
-          A: 1
-        }
+          A: 1,
+        },
       });
       const nodesFound = 2;
       return searchTest(searchQuery, nodesFound);
     });
 
-    test("Searching nodes with A and B priority", () => {
+    test('Searching nodes with A and B priority', () => {
       const searchQuery = createSearchQuery({
         priority: {
           A: 1,
-          B: 1
-        }
+          B: 1,
+        },
       });
       const nodesFound = 3;
       return searchTest(searchQuery, nodesFound);
     });
 
-    test("Searching nodes without B priority", () => {
+    test('Searching nodes without B priority', () => {
       const searchQuery = createSearchQuery({
         priority: {
-          B: -1
-        }
+          B: -1,
+        },
       });
       const nodesFound = 4;
       return searchTest(searchQuery, nodesFound);
     });
   });
 
-  describe("Tags", () => {
-    test("Searching all drill tags", () => {
+  describe('Tags', () => {
+    test('Searching all drill tags', () => {
       const searchQuery = createSearchQuery({
         tags: {
-          drill: 1
-        }
+          drill: 1,
+        },
       });
       const nodesFound = 3;
       return searchTest(searchQuery, nodesFound);
     });
 
-    test("Searching all javascript tags", () => {
+    test('Searching all javascript tags', () => {
       const searchQuery = createSearchQuery({
         tags: {
-          javascript: 1
-        }
+          javascript: 1,
+        },
       });
       const nodesFound = 1;
       return searchTest(searchQuery, nodesFound);
     });
 
-    test("Searching both javascript and drill tags", () => {
+    test('Searching both javascript and drill tags', () => {
       const searchQuery = createSearchQuery({
         tags: {
           javascript: 1,
-          drill: 1
-        }
+          drill: 1,
+        },
       });
       const nodesFound = 3;
       return searchTest(searchQuery, nodesFound);
     });
 
-    test("Searching javascript without drill tags", () => {
+    test('Searching javascript without drill tags', () => {
       const searchQuery = createSearchQuery({
         tags: {
           javascript: 1,
-          drill: -1
-        }
+          drill: -1,
+        },
       });
       const nodesFound = 0;
       return searchTest(searchQuery, nodesFound);
     });
 
-    test("Searching drill and without javascript tags", () => {
+    test('Searching drill and without javascript tags', () => {
       const searchQuery = createSearchQuery({
         tags: {
           javascript: -1,
-          drill: 1
-        }
+          drill: 1,
+        },
       });
       const nodesFound = 2;
       return searchTest(searchQuery, nodesFound);
     });
 
-    test("Searching all tagged items without javascript and drill tags", () => {
+    test('Searching all tagged items without javascript and drill tags', () => {
       const searchQuery = createSearchQuery({
         tags: {
           javascript: -1,
-          drill: -1
-        }
+          drill: -1,
+        },
       });
       const nodesFound = 1;
       return searchTest(searchQuery, nodesFound);
     });
   });
 
-  describe("Todo", () => {
-    test("Searching all TODO items", () => {
+  describe('Todo', () => {
+    test('Searching all TODO items', () => {
       const searchQuery = createSearchQuery({
         todos: {
-          TODO: 1
-        }
+          TODO: 1,
+        },
       });
       const nodesFound = 3;
       return searchTest(searchQuery, nodesFound);
     });
 
-    test("Searching all DONE items", () => {
+    test('Searching all DONE items', () => {
       const searchQuery = createSearchQuery({
         todos: {
-          DONE: 1
-        }
+          DONE: 1,
+        },
       });
       const nodesFound = 2;
       return searchTest(searchQuery, nodesFound);
     });
 
-    test("Searching all DONE and TODO items", () => {
+    test('Searching all DONE and TODO items', () => {
       const searchQuery = createSearchQuery({
         todos: {
           DONE: 1,
-          TODO: 1
-        }
+          TODO: 1,
+        },
       });
       const nodesFound = 5;
       return searchTest(searchQuery, nodesFound);
     });
 
-    test("Searching all tasks with state not equal DONE items", () => {
+    test('Searching all tasks with state not equal DONE items', () => {
       const searchQuery = createSearchQuery({
         todos: {
-          DONE: -1
-        }
+          DONE: -1,
+        },
       });
       const nodesFound = 3;
       return searchTest(searchQuery, nodesFound);
     });
 
-    test("Using only positive query when given both", () => {
+    test('Using only positive query when given both', () => {
       const searchQuery = createSearchQuery({
         todos: {
           DONE: -1,
-          TODO: 1
-        }
+          TODO: 1,
+        },
       });
       const nodesFound = 3;
       return searchTest(searchQuery, nodesFound);
     });
   });
 
-  describe("Mixed filters", () => {
-    test("Searching todos with deadline", () => {
+  describe('Mixed filters', () => {
+    test('Searching todos with deadline', () => {
       const searchQuery = createSearchQuery({
         todos: {
-          TODO: 1
+          TODO: 1,
         },
-        hasDeadline: true
+        hasDeadline: true,
       });
       const nodesFound = 1;
       return searchTest(searchQuery, nodesFound);
     });
 
-    test("Searching scheduled items tagged with drill", () => {
+    test('Searching scheduled items tagged with drill', () => {
       const searchQuery = createSearchQuery({
         tags: {
-          drill: 1
+          drill: 1,
         },
-        isScheduled: true
+        isScheduled: true,
       });
       const nodesFound = 2;
       return searchTest(searchQuery, nodesFound);
@@ -356,24 +355,27 @@ describe("Search", () => {
 
 // * Helper functions test
 
-describe("Helper functions", () => {
+describe('Helper functions', () => {
   beforeAll(() => {
     OrgApi.clearDb();
-    return loadTestFile("full.org");
+    return loadTestFile('full.org');
   });
 
-  test("getOrCreateNodeByHeadline on non-exisiting path", async () => {
+  test('getOrCreateNodeByHeadline on non-exisiting path', async () => {
     const files = await Queries.getFiles();
-    const [node, created] = await getOrCreateNodeByHeadline(files[0], "node 123334");
-    expect(created).toEqual(true)
-    expect(node).toHaveProperty("position", 5)
+    const [node, created] = await getOrCreateNodeByHeadline(
+      files[0],
+      'node 123334'
+    );
+    expect(created).toEqual(true);
+    expect(node).toHaveProperty('position', 5);
   });
 
-  test("getOrCreateNodeByHeadline on exisiting path", async () => {
+  test('getOrCreateNodeByHeadline on exisiting path', async () => {
     const files = await Queries.getFiles();
-    const [node, created] = await getOrCreateNodeByHeadline(files[0], "node 1");
-    expect(created).toEqual(false)
-    expect(node).toHaveProperty("position", 1)
+    const [node, created] = await getOrCreateNodeByHeadline(files[0], 'node 1');
+    expect(created).toEqual(false);
+    expect(node).toHaveProperty('position', 1);
   });
 
   // test("enhanceNodeWithPosition with headline in target", () => {
@@ -390,12 +392,11 @@ describe("Helper functions", () => {
   //       );
   //     });
   // })
-  ;
 });
 
 // * Queries tests
 
-describe("Queries with empty db", () => {
+describe('Queries with empty db', () => {
   beforeEach(() => {
     OrgApi.clearDb();
   });
@@ -403,40 +404,39 @@ describe("Queries with empty db", () => {
   // test("addFile", () => {
   //   return expect(addFile('new').then(getFirstFile)).resolves.toEqual(expect.objectContaining({ title: 'new'}));
   // });
+});
 
-})
-
-describe("Queries", () => {
+describe('Queries', () => {
   beforeEach(() => {
     OrgApi.clearDb();
-    return loadTestFile("full.org");
+    return loadTestFile('full.org');
   });
 
-  test("deleteFileById : timestamps are deleted", () => {
+  test('deleteFileById : timestamps are deleted', () => {
     return getFirstFile().then(file => {
       return deleteFileById(file.id).then(() => {
-        return expect(getObjects('OrgTimestamp')).resolves.toHaveLength(0)
-      })
+        return expect(getObjects('OrgTimestamp')).resolves.toHaveLength(0);
+      });
     });
   });
 
-  test("deleteFileById : nodes are deleted", () => {
+  test('deleteFileById : nodes are deleted', () => {
     return getFirstFile().then(file => {
       return deleteFileById(file.id).then(() => {
-        return expect(getObjects('OrgNode')).resolves.toHaveLength(0)
-      })
+        return expect(getObjects('OrgNode')).resolves.toHaveLength(0);
+      });
     });
   });
 
-  test("deleteFileById : file is deleted", () => {
+  test('deleteFileById : file is deleted', () => {
     return getFirstFile().then(file => {
       return deleteFileById(file.id).then(() => {
-        return expect(getObjects('OrgFile')).resolves.toHaveLength(0)
-      })
+        return expect(getObjects('OrgFile')).resolves.toHaveLength(0);
+      });
     });
   });
 
-  test("deleteNodeById : timestamps deleted", () => {
+  test('deleteNodeById : timestamps deleted', () => {
     return getFirstFile().then(file => {
       return expect(
         deleteNodeById(file.nodes[0].id).then(() => getObjects('OrgTimestamp'))
@@ -444,7 +444,7 @@ describe("Queries", () => {
     });
   });
 
-  test("deleteNodeById : node deleted", () => {
+  test('deleteNodeById : node deleted', () => {
     return getFirstFile().then(file => {
       return expect(
         deleteNodeById(file.nodes[0].id).then(() => file.nodes)
@@ -452,110 +452,108 @@ describe("Queries", () => {
     });
   });
 
-  test("addNodes : add in the middle of file by id", () => {
-    const toExpectation = node => [
-      node.headline,
-      node.position,
-      node.level
-    ]
+  test('addNodes : add in the middle of file by id', () => {
+    const toExpectation = node => [node.headline, node.position, node.level];
 
     const expectation = [
-      ["node 1", 1, 1],
-      ["new", 1.5, 2],
-      ["node 2", 2, 1],
-      ["subnode 2-1", 3, 2],
-      ["subnode 3-1", 4, 3],
-      ["subnode 2-2", 5, 2]
+      ['node 1', 1, 1],
+      ['new', 1.5, 2],
+      ['node 2', 2, 1],
+      ['subnode 2-1', 3, 2],
+      ['subnode 3-1', 4, 3],
+      ['subnode 2-2', 5, 2],
     ];
 
     return getFirstFile().then(file => {
-      const nodesToAdd = [{ headline: "new" }];
+      const nodesToAdd = [{ headline: 'new' }];
       const target = {
         fileId: file.id,
-        nodeId: file.nodes[0].id
+        nodeId: file.nodes[0].id,
       };
       return expect(
-        addNodes(nodesToAdd, target)
-          .then(() => Array.from(file.nodes.sorted("position")).map(toExpectation))
+        addNodes(nodesToAdd, target).then(() =>
+          Array.from(file.nodes.sorted('position')).map(toExpectation)
+        )
       ).resolves.toEqual(expectation);
     });
   });
 
-  test("addNodes : add in the middle of file", () => {
+  test('addNodes : add in the middle of file', () => {
     return getFirstFile().then(file => {
-      const nodesToAdd = [{ headline: "new" }];
+      const nodesToAdd = [{ headline: 'new' }];
       const target = {
         fileId: file.id,
-        headline: file.nodes[0].headline
+        headline: file.nodes[0].headline,
       };
       const expectation = [
-        ["node 1", 1, 1],
-        ["new", 1.5, 2],
-        ["node 2", 2, 1],
-        ["subnode 2-1", 3, 2],
-        ["subnode 3-1", 4, 3],
-        ["subnode 2-2", 5, 2]
+        ['node 1', 1, 1],
+        ['new', 1.5, 2],
+        ['node 2', 2, 1],
+        ['subnode 2-1', 3, 2],
+        ['subnode 3-1', 4, 3],
+        ['subnode 2-2', 5, 2],
       ];
       return expect(
-        addNodes(nodesToAdd, target)
-          .then(() => Array.from(file.nodes.sorted("position")).map(node => [
+        addNodes(nodesToAdd, target).then(() =>
+          Array.from(file.nodes.sorted('position')).map(node => [
             node.headline,
             node.position,
-            node.level
-          ]))
+            node.level,
+          ])
+        )
       ).resolves.toEqual(expectation);
     });
   });
 
-  test("addNodes : add as child to last node by headline name", () => {
+  test('addNodes : add as child to last node by headline name', () => {
     return getFirstFile().then(file => {
-      const nodesToAdd = [{ headline: "new" }];
+      const nodesToAdd = [{ headline: 'new' }];
       const target = {
         fileId: file.id,
-        headline: file.nodes[1].headline
+        headline: file.nodes[1].headline,
       };
       const expectation = [
         expect.objectContaining({
-          position: file.nodes.length+1,
+          position: file.nodes.length + 1,
           level: file.nodes[1].level + 1,
-          id: expect.any(String)
-        })
+          id: expect.any(String),
+        }),
       ];
       return expect(addNodes(nodesToAdd, target)).resolves.toEqual(expectation);
     });
   });
 
-  test("addNodes : to end of file", () => {
+  test('addNodes : to end of file', () => {
     return getFirstFile().then(file => {
-      const nodesToAdd = [{ headline: "new" }];
+      const nodesToAdd = [{ headline: 'new' }];
       const target = {
-        fileId: file.id
+        fileId: file.id,
       };
       const expectation = [
         expect.objectContaining({
-          position: file.nodes.length+1,
-          id: expect.any(String)
-        })
+          position: file.nodes.length + 1,
+          id: expect.any(String),
+        }),
       ];
       return expect(addNodes(nodesToAdd, target)).resolves.toEqual(expectation);
     });
   });
 
-  test("getFileAsPlainObject", () => {
+  test('getFileAsPlainObject', () => {
     expect.assertions(1);
-    const obj = getFirstFileAsPlainObject()
+    const obj = getFirstFileAsPlainObject();
     const expectation = expect.objectContaining({
-      nodesList: expect.any(Array)
+      nodesList: expect.any(Array),
     });
     return expect(obj).resolves.toEqual(expectation);
   });
 
-  test("importFile", () => {
+  test('importFile', () => {
     expect.assertions(1);
     return expect(Queries.getFiles()).resolves.toHaveLength(1);
   });
 
-  test("getNodes", () => {
+  test('getNodes', () => {
     expect.assertions(6);
     const nodes = Queries.getNodes();
     return nodes.then(results => {
@@ -600,41 +598,41 @@ describe("Queries", () => {
   //   return expect(agenda).resolves.toHaveLength(2);
   // });
 
-  test("setDeadline to null", () => {
+  test('setDeadline to null', () => {
     expect.assertions(1);
     return Queries.getNodes()
       .then(nodes => enhanceNode(nodes[0]))
       .then(node =>
-            node
-            .setDeadline(null)
-            .then(() => expect(node).toHaveProperty("deadline", undefined))
-           );
+        node
+          .setDeadline(null)
+          .then(() => expect(node).toHaveProperty('deadline', undefined))
+      );
   });
 
-  test("setDeadline", () => {
+  test('setDeadline', () => {
     expect.assertions(1);
     return Queries.getNodes()
       .then(nodes => enhanceNode(nodes[0]))
       .then(node =>
-            node
-            .setDeadline({ date: new Date(2000, 1, 1) })
-            .then(() =>
-                  expect(node).toHaveProperty("deadline.date", new Date(2000, 1, 1))
-                 )
-           );
+        node
+          .setDeadline({ date: new Date(2000, 1, 1) })
+          .then(() =>
+            expect(node).toHaveProperty('deadline.date', new Date(2000, 1, 1))
+          )
+      );
   });
 
-  test("schedule", () => {
+  test('schedule', () => {
     expect.assertions(1);
     return Queries.getNodes()
       .then(nodes => enhanceNode(nodes[0]))
       .then(node =>
-            node
-            .schedule({ date: new Date(2000, 1, 1) })
-            .then(() =>
-                  expect(node).toHaveProperty("scheduled.date", new Date(2000, 1, 1))
-                 )
-           );
+        node
+          .schedule({ date: new Date(2000, 1, 1) })
+          .then(() =>
+            expect(node).toHaveProperty('scheduled.date', new Date(2000, 1, 1))
+          )
+      );
   });
 
   // test("isChanged", () => {

@@ -1,4 +1,4 @@
-import R from "ramda";
+import R from 'ramda';
 
 import parseOrgNodeContent, {
   regexLineCreators,
@@ -10,57 +10,64 @@ import parseOrgNodeContent, {
 // ** Test
 
 const testLines = (mappingResults, mappedProp, extractPath) =>
-      Object.keys(mappingResults).forEach(
-        (key) => {
-          const node = createNode({ [mappedProp]: mappingResults[key][0] });
-          const result = parseOrgNodeContent(node.content);
-          const expectation = mappingResults[key][1];
-          expect(result).toMatchObject(expectation)})
+  Object.keys(mappingResults).forEach(key => {
+    const node = createNode({ [mappedProp]: mappingResults[key][0] });
+    const result = parseOrgNodeContent(node.content);
+    const expectation = mappingResults[key][1];
+    expect(result).toMatchObject(expectation);
+  });
 
 // ** Node
 
-const createNode = (props) => ({
+const createNode = props => ({
   headline: 'This is headline ',
   content: '',
-  ...props
-})
+  ...props,
+});
 
 // ** Inline elements
 
 const createLink = (type, url, urlTitle) => ({
   type: `${type}Link`,
-  url
+  url,
 });
 
-const regularText = (t) => ({
+const regularText = t => ({
   type: 'regularText',
   indexStart: expect.any(Number),
   indexEnd: expect.any(Number),
-  content: t});
+  content: t,
+});
 
-const codeText = (t) => ({
+const codeText = t => ({
   type: 'codeText',
-  content: t});
+  content: t,
+});
 
-const strikeThroughText = (t) => ({
+const strikeThroughText = t => ({
   type: 'strikeThroughText',
-  content: t});
+  content: t,
+});
 
-const underlineTextCreator = (t) => ({
+const underlineTextCreator = t => ({
   type: 'underlineText',
-  content: t});
+  content: t,
+});
 
-const verbatimTextCreator = (t) => ({
+const verbatimTextCreator = t => ({
   type: 'verbatimText',
-  content: t});
+  content: t,
+});
 
-const boldTextCreator = (t) => ({
+const boldTextCreator = t => ({
   type: 'boldText',
-  content: t});
+  content: t,
+});
 
-const italicTextCreator = (t) => ({
+const italicTextCreator = t => ({
   type: 'italicText',
-  content: t});
+  content: t,
+});
 
 // ** Line containers
 
@@ -69,155 +76,197 @@ const italicTextCreator = (t) => ({
 // ** Line types
 
 const contentLinesTests = {
-
-  emptyLine: [
-    '\n',
-    [regularLineCreator(
-      []),
-     regularLineCreator(
-       [])]],
+  emptyLine: ['\n', [regularLineCreator([]), regularLineCreator([])]],
 
   regularLine: [
     'Suspendisse potenti.  ',
-    [regularLineCreator(
-      [regularText('Suspendisse potenti.  ')])]],
+    [regularLineCreator([regularText('Suspendisse potenti.  ')])],
+  ],
 
   twoLines: [
     'one\ntwo',
-    [regularLineCreator([regularText('one')]),
-     regularLineCreator([regularText('two')])]],
+    [
+      regularLineCreator([regularText('one')]),
+      regularLineCreator([regularText('two')]),
+    ],
+  ],
 
   listLine: [
     '- Lorem ipsum dolor sit amet, consectetuer adipiscing elit.',
-    [regexLineCreators.listLine(
-      [regularText('- Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')])]],
+    [
+      regexLineCreators.listLine([
+        regularText(
+          '- Lorem ipsum dolor sit amet, consectetuer adipiscing elit.'
+        ),
+      ]),
+    ],
+  ],
 
   checkboxLine: [
     '- [ ] Lorem ipsum dolor sit amet, consectetuer adipiscing elit.',
-    [regexLineCreators.checkboxLine(
-      [regularText('- [ ] Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')])]],
+    [
+      regexLineCreators.checkboxLine([
+        regularText(
+          '- [ ] Lorem ipsum dolor sit amet, consectetuer adipiscing elit.'
+        ),
+      ]),
+    ],
+  ],
 
   checkboxLineWithBold: [
     '- [ ] df(*Lorem* ipsum dolor sit amet, consectetuer adipiscing elit.',
-    [regexLineCreators.checkboxLine(
-      [regularText('- [ ] df('),
-       boldTextCreator('Lorem'),
-       regularText(' ipsum dolor sit amet, consectetuer adipiscing elit.')],
-      false)]],
+    [
+      regexLineCreators.checkboxLine(
+        [
+          regularText('- [ ] df('),
+          boldTextCreator('Lorem'),
+          regularText(' ipsum dolor sit amet, consectetuer adipiscing elit.'),
+        ],
+        false
+      ),
+    ],
+  ],
 
   numericListLine: [
     '1. Lorem ipsum dolor sit amet, consectetuer adipiscing elit.',
-    [regexLineCreators.numericListLine(
-      [regularText('1. Lorem ipsum dolor sit amet, consectetuer adipiscing elit.')])]],
-
+    [
+      regexLineCreators.numericListLine([
+        regularText(
+          '1. Lorem ipsum dolor sit amet, consectetuer adipiscing elit.'
+        ),
+      ]),
+    ],
+  ],
 };
 
 // ** Links
 
-const createLinkTest = (type, url, title) => ([
+const createLinkTest = (type, url, title) => [
   `Suspendisse potenti. [[${url}][${title}]].`,
-  [regularLineCreator([
-    regularText('Suspendisse potenti. '),
-    createLink(type, url, title),
-    regularText('.')
-  ])]
-])
+  [
+    regularLineCreator([
+      regularText('Suspendisse potenti. '),
+      createLink(type, url, title),
+      regularText('.'),
+    ]),
+  ],
+];
 
-const createPlainLinkTest = (url) => ([
+const createPlainLinkTest = url => [
   `${url} .`,
-  [regularLineCreator([
-    // regularText('Suspendisse potenti.'),
-    createLink('plain', url),
-    regularText('.')
-  ])]
-])
+  [
+    regularLineCreator([
+      // regularText('Suspendisse potenti.'),
+      createLink('plain', url),
+      regularText('.'),
+    ]),
+  ],
+];
 
 // [[elisp:(org-projectile-open-project%20"orgAssistant")][orgAssistant
 // [[https://stackoverflow.com/questions/35914712/es6-conditional-dynamic-import-statements][javascript - ES6: Conditional & Dynamic Import Statements - Stack Overflow
 const linesWithLinksTests = {
-  plainLink: createPlainLinkTest(
-    'http://www.agnisoma.eu/transgresja/'),
+  plainLink: createPlainLinkTest('http://www.agnisoma.eu/transgresja/'),
 
   plainLink: createPlainLinkTest(
-    'http://www.racjonalista.pl/forum.php/s,687033'),
+    'http://www.racjonalista.pl/forum.php/s,687033'
+  ),
 
   simpleWebLink: createLinkTest(
     'web',
     'http://stackoverflow.com/questions/35914712/es6-conditional-dynamic-import-statements/',
-    'javascript - ES6: Conditional & Dynamic Import Statements - Stack Overflow'),
+    'javascript - ES6: Conditional & Dynamic Import Statements - Stack Overflow'
+  ),
 
   simpleWebLink: createLinkTest(
     'web',
     'https://stackoverflow.com/questions/35914712/es6-conditional-dynamic-import-statements',
-    'javascript - ES6: Conditional & Dynamic Import Statements - Stack Overflow '),
+    'javascript - ES6: Conditional & Dynamic Import Statements - Stack Overflow '
+  ),
 
   elispLink: createLinkTest(
     'web',
-    'elisp:(org-projectile-open-project%20"orgAssistant")' ,
-    'orgAssistant'),
+    'elisp:(org-projectile-open-project%20"orgAssistant")',
+    'orgAssistant'
+  ),
 };
 
 // ** Faces
 
 const regularLinesWithFacesTests = {
-
   verbatimLine: [
     '=Integer=with spaces and= and =second= d=d',
-    [regularLineCreator(
-      [
+    [
+      regularLineCreator([
         verbatimTextCreator('Integer=with spaces and'),
         regularText(' and '),
         verbatimTextCreator('second'),
         regularText(' d=d'),
-      ])]],
+      ]),
+    ],
+  ],
 
   strikeThroughLine: [
     'proin quam nisl, +tincidunt+ et, mattis eget, +convallis+ nec, purus.  ',
-    [regularLineCreator(
-      [regularText('proin quam nisl, '),
-       strikeThroughText('tincidunt'),
-       regularText(' et, mattis eget, '),
-       strikeThroughText('convallis'),
-       regularText(' nec, purus.  ')])]],
+    [
+      regularLineCreator([
+        regularText('proin quam nisl, '),
+        strikeThroughText('tincidunt'),
+        regularText(' et, mattis eget, '),
+        strikeThroughText('convallis'),
+        regularText(' nec, purus.  '),
+      ]),
+    ],
+  ],
 
   underlineLine: [
     'Nunc aliquet, augue _nec_ adipiscing interdum, lacus tellus malesuada massa, quis varius mi purus non odio.  ',
-    [regularLineCreator(
-      [regularText('Nunc aliquet, augue ') ,
-       underlineTextCreator('nec') ,
-       regularText(' adipiscing interdum, lacus tellus malesuada massa, quis varius mi purus non odio.  ')])]],
+    [
+      regularLineCreator([
+        regularText('Nunc aliquet, augue '),
+        underlineTextCreator('nec'),
+        regularText(
+          ' adipiscing interdum, lacus tellus malesuada massa, quis varius mi purus non odio.  '
+        ),
+      ]),
+    ],
+  ],
 
   boldLine: [
     'Fusce sagittis, libero non molestie mollis, *magna* orci ultrices dolor, at *vulputate* neque nulla *lacinia* eros.  ',
-    [regularLineCreator(
-      [regularText('Fusce sagittis, libero non molestie mollis, ') ,
-       boldTextCreator('magna') ,
-       regularText(' orci ultrices dolor, at ') ,
-       boldTextCreator('vulputate') ,
-       regularText(' neque nulla ') ,
-       boldTextCreator('lacinia') ,
-       regularText(' eros.  ')])]],
+    [
+      regularLineCreator([
+        regularText('Fusce sagittis, libero non molestie mollis, '),
+        boldTextCreator('magna'),
+        regularText(' orci ultrices dolor, at '),
+        boldTextCreator('vulputate'),
+        regularText(' neque nulla '),
+        boldTextCreator('lacinia'),
+        regularText(' eros.  '),
+      ]),
+    ],
+  ],
 
-  codeLine: [
-    '~convallis~',
-    [regularLineCreator(
-      [codeText('convallis')])]],
+  codeLine: ['~convallis~', [regularLineCreator([codeText('convallis')])]],
 
   italicLine: [
     '/bibendum/',
-    [regularLineCreator(
-      [italicTextCreator('bibendum')])]]}
+    [regularLineCreator([italicTextCreator('bibendum')])],
+  ],
+};
 
 // * Tests
 
-describe("mapsNodeContentToObject", () => {
+describe('mapsNodeContentToObject', () => {
+  test.only('mapping lines with links to text objects', () => {
+    testLines(linesWithLinksTests, 'content', ['objectContent']);
+  });
 
-  test.only("mapping lines with links to text objects", () => {
-    testLines(linesWithLinksTests, 'content', ['objectContent'])});
+  test('mapping lines to text objects', () => {
+    testLines(regularLinesWithFacesTests, 'content', ['objectContent']);
+  });
 
-  test("mapping lines to text objects", () => {
-    testLines(regularLinesWithFacesTests, 'content', ['objectContent'])});
-
-  test("maping content lines to line objects", () => {
-    testLines(contentLinesTests, 'content', ['objectContent'])});
-})
+  test('maping content lines to line objects', () => {
+    testLines(contentLinesTests, 'content', ['objectContent']);
+  });
+});

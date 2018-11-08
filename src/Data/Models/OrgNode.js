@@ -1,8 +1,7 @@
-export default  {
+export default {
   name: 'OrgNode',
   primaryKey: 'id',
   properties: {
-
     // Internal
     id: 'string',
     file: 'OrgFile',
@@ -27,6 +26,6 @@ export default  {
     timestamps: 'OrgTimestamp[]',
     closed: 'date?',
     priority: 'string?',
-    drawers: 'string?' // json string
-  }
-}
+    drawers: 'string?', // json string
+  },
+};

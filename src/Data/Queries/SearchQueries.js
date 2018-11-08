@@ -1,7 +1,7 @@
 // * SearchQueries
 // ** Imports
 
-import R from "ramda";
+import R from 'ramda';
 
 import { getObjects } from './Helpers';
 import { mapNodeToSearchResult } from '../Transforms';
@@ -9,7 +9,7 @@ import { mapNodeToSearchResult } from '../Transforms';
 // ** Funcs
 
 const mapNodesToSearchResults = nodes =>
-      Array.from(nodes).map(mapNodeToSearchResult);
+  Array.from(nodes).map(mapNodeToSearchResult);
 
 const removeNeutralFilters = R.reject(R.equals(0));
 const prepareSearchQueries = (fieldName, filter) =>
@@ -20,15 +20,15 @@ const prepareSearchQueries = (fieldName, filter) =>
         R.head,
         R.keys,
         R.map(value => `${fieldName} = "${value}"`),
-        R.join(" || ")
+        R.join(' || ')
       ),
       R.pipe(
         R.last,
         R.keys,
         R.map(value => `${fieldName} = "${value}"`),
-        R.join(" || "),
+        R.join(' || '),
         R.when(R.complement(R.isEmpty), x => `NOT (${x})`)
-      )
+      ),
     ])
   )(filter);
 
@@ -40,9 +40,9 @@ const search = ({
   tags,
   priority,
   isScheduled,
-  hasDeadline
+  hasDeadline,
 }) =>
-  getObjects("OrgNode").then(nodes => {
+  getObjects('OrgNode').then(nodes => {
     let filteredNodes = nodes;
     priority = removeNeutralFilters(priority);
     todos = removeNeutralFilters(todos);
@@ -50,7 +50,7 @@ const search = ({
 
     if (searchTerm) {
       filteredNodes = filteredNodes.filtered(
-        "headline CONTAINS[c] $0 || content CONTAINS[c] $0",
+        'headline CONTAINS[c] $0 || content CONTAINS[c] $0',
         searchTerm
       );
     }
@@ -65,37 +65,37 @@ const search = ({
 
     if (!R.isEmpty(todos)) {
       const [positiveQuery, negativeQuery] = prepareSearchQueries(
-        "todo",
+        'todo',
         todos
       );
       const query = positiveQuery || negativeQuery;
-      filteredNodes = filteredNodes.filtered("todo != null");
+      filteredNodes = filteredNodes.filtered('todo != null');
       filteredNodes = filteredNodes.filtered(query);
     }
 
     if (!R.isEmpty(priority)) {
       const [positiveQuery, negativeQuery] = prepareSearchQueries(
-        "priority",
+        'priority',
         priority
       );
       const query = positiveQuery || negativeQuery;
-      filteredNodes = filteredNodes.filtered("priority != null");
+      filteredNodes = filteredNodes.filtered('priority != null');
       filteredNodes = filteredNodes.filtered(query);
     }
 
     if (!R.isEmpty(tags)) {
       const [positiveQuery, negativeQuery] = prepareSearchQueries(
-        "tags.name",
+        'tags.name',
         tags
       );
 
       if (!positiveQuery && R.isEmpty(todos)) {
-        filteredNodes = filteredNodes.filtered("tags.@size > 0");
+        filteredNodes = filteredNodes.filtered('tags.@size > 0');
       }
 
-      const query = R.pipe(R.reject(R.isEmpty), R.join(" AND "))([
+      const query = R.pipe(R.reject(R.isEmpty), R.join(' AND '))([
         positiveQuery,
-        negativeQuery
+        negativeQuery,
       ]);
       filteredNodes = filteredNodes.filtered(query);
     }
@@ -105,11 +105,11 @@ const search = ({
       return [];
     }
 
-    return mapNodesToSearchResults(filteredNodes.sorted("file.id"));
+    return mapNodesToSearchResults(filteredNodes.sorted('file.id'));
   });
 
 // ** Exports
 
 export default {
-  search
-}
+  search,
+};

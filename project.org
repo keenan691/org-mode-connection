@@ -1,3 +1,63 @@
+* prettier
+#+BEGIN_SRC sh :results output
+cd test
+prettier --write "**/*.js"
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+__tests__/Data/Queries.test.js 244ms
+__tests__/Data/Sync.test.js 67ms
+__tests__/Helpers/FileAccess.test.js 7ms
+__tests__/Helpers/Fixtures.test.js 3ms
+__tests__/OrgFormat/AtomicParsers/HeadlineParser.test.js 17ms
+__tests__/OrgFormat/AtomicParsers/NodeContentParser.test.js 46ms
+__tests__/OrgFormat/AtomicParsers/NodeMetadataParser.test.js 65ms
+__tests__/OrgFormat/Parser.test.js 14ms
+__tests__/OrgFormat/Validators.test.js 13ms
+__tests__/perf.test.js 9ms
+.importjs.js 2ms
+coverage/lcov-report/block-navigation.js 13ms
+coverage/lcov-report/prettify.js 205ms
+coverage/lcov-report/sorter.js 35ms
+perf.js 3ms
+src/Data/Db/Db.js 9ms
+src/Data/Db/DbHelper.js 4ms
+src/Data/Models/OrgFile.js 4ms
+src/Data/Models/OrgNode.js 5ms
+src/Data/Models/OrgTag.js 2ms
+src/Data/Models/OrgTimestamp.js 4ms
+src/Data/Queries/Helpers.js 12ms
+src/Data/Queries/index.js 6ms
+src/Data/Queries/PlainObjectQueries.js 36ms
+src/Data/Queries/RealmQueries.js 26ms
+src/Data/Queries/SearchQueries.js 22ms
+src/Data/Queries/UpdateQueries.js 56ms
+src/Data/Sync.js 102ms
+src/Data/Transforms.js 41ms
+src/Helpers/__mocks__/FileAccess.js 6ms
+src/Helpers/Debug.js 4ms
+src/Helpers/FileAccess.js 6ms
+src/Helpers/Fixtures.js 4ms
+src/Helpers/Functions.js 11ms
+src/OrgApi.js 4ms
+src/OrgFormat/AtomicParsers/HeadlineParser.js 7ms
+src/OrgFormat/AtomicParsers/NodeContentParser.js 43ms
+src/OrgFormat/AtomicParsers/NodeMetadataParser.js 9ms
+src/OrgFormat/Export.js 12ms
+src/OrgFormat/GenericParsers/Common.js 10ms
+src/OrgFormat/GenericParsers/HungryLineParser.js 4ms
+src/OrgFormat/GenericParsers/LazyInLineParser.js 6ms
+src/OrgFormat/GenericParsers/LazyLineParser.js 8ms
+src/OrgFormat/GenericParsers/LinesRangeParser.js 10ms
+src/OrgFormat/NodesExtractor.js 10ms
+src/OrgFormat/Parser.js 19ms
+src/OrgFormat/Regex.js 8ms
+src/OrgFormat/Transforms.js 46ms
+src/OrgFormat/Validators.js 4ms
+testTools.js 5ms
+#+end_example
+
 * Transforms
 ** dir tree to org mode
 
@@ -45,7 +105,7 @@ pwd
 #+END_SRC
 
 #+RESULTS: cwd
-: /home/keenan/devSpace/github/org-mode-connection
+: /home/keenan/devSpace/github/org-mode-connection/src
 ** raw tree
 
 #+BEGIN_SRC sh :results output

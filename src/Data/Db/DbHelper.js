@@ -9,24 +9,19 @@ import OrgTimestamp from '../Models/OrgTimestamp';
 const DbHelper = {
   realm: null,
 
-  modelSchema: [
-    OrgFile,
-    OrgNode,
-    OrgTag,
-    OrgTimestamp
-  ],
+  modelSchema: [OrgFile, OrgNode, OrgTag, OrgTimestamp],
 
-  init () {
-    this.realm = openRealm(this.modelSchema)
+  init() {
+    this.realm = openRealm(this.modelSchema);
   },
 
   getInstance() {
     let instance = this.realm;
-    if(!instance) {
+    if (!instance) {
       throw new Error('DbHelper.js :: Active Instance Not Set!');
     }
     return instance;
-  }
-}
+  },
+};
 
-export default DbHelper
+export default DbHelper;

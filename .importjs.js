@@ -5,4 +5,4 @@ module.exports = {
   // aliases: {
   //   react_native: "./node_modules/rea"
   // }
-}
+};

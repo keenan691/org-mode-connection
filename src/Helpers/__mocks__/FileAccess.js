@@ -1,30 +1,40 @@
 /** @flow */
 
-import R from "ramda";
+import R from 'ramda';
 
-export default (function (){
+export default (function() {
   let __mockFile = {
-    content: "",
+    content: '',
     stat: {
       mtime: new Date(),
       ctime: new Date(),
-      name: "some name",
-      size: 234}}
+      name: 'some name',
+      size: 234,
+    },
+  };
 
   return {
-    write (path, content) {
+    write(path, content) {
       return new Promise((resolve, reject) => {
         if (__mockFile.content != content) {
-          __mockFile.content = content
-          __mockFile.stat.mtime = new Date()
+          __mockFile.content = content;
+          __mockFile.stat.mtime = new Date();
         }
-        return resolve(true)})},
+        return resolve(true);
+      });
+    },
 
     exists() {
-      return true
+      return true;
     },
-    read ()  { return new Promise(
-      (resolve, reject) => resolve(__mockFile.content.split('\n')))},
+    read() {
+      return new Promise((resolve, reject) =>
+        resolve(__mockFile.content.split('\n'))
+      );
+    },
 
-    stat ()  { return new Promise(
-      (resolve, reject) => resolve(__mockFile.stat))}}})()
+    stat() {
+      return new Promise((resolve, reject) => resolve(__mockFile.stat));
+    },
+  };
+})();

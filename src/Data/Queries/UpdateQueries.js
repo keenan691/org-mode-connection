@@ -49,7 +49,7 @@ export const addTimestamp = (node, type, timestampObj) =>
       if (timestampObj && timestampObj.hasOwnProperty('date')) {
         node.timestamps.push(R.merge(timestampObj, { type }));
       }
-    }),
+    })
   );
 
 const RealmOrgNodeGetters = (function() {
@@ -63,7 +63,7 @@ const RealmOrgNodeGetters = (function() {
         get: function() {
           return this._node[prop];
         },
-      }),
+      })
   );
 
   timeStampProps.forEach(
@@ -72,7 +72,7 @@ const RealmOrgNodeGetters = (function() {
         get: function() {
           return getTimestamp(this._node, prop);
         },
-      }),
+      })
   );
 
   obj['drawers'] = {
@@ -91,7 +91,7 @@ OrgNodeMethods.prototype = {
       realm.write(() => {
         markNodeAsChanged(this._node);
         return (this._node[nextNodeSameLevel] = value);
-      }),
+      })
     );
   },
 
@@ -161,7 +161,7 @@ export const addNodes = async (
   nodes,
   insertPosition,
   externalChange = false,
-  returnAddedNodes = true,
+  returnAddedNodes = true
 ) => {
   const realm = await dbConn;
   const { fileId, nodeId, headline } = insertPosition;
@@ -179,7 +179,7 @@ export const addNodes = async (
     // Append as last child of headline
     const [targetNode, created] = await getOrCreateNodeByHeadline(
       file,
-      headline,
+      headline
     );
     if (created) realm.write(() => realm.create('OrgNode', targetNode));
     enhance = enhanceNodeWithPosition(file, targetNode);
@@ -193,12 +193,12 @@ export const addNodes = async (
   realm.write(() =>
     prepareNodes(nodes, file).forEach(node => {
       const enhancedNode = enhance(
-        externalChange ? node : R.merge(node, { isChanged: true }),
+        externalChange ? node : R.merge(node, { isChanged: true })
       );
       let createdNode = realm.create('OrgNode', enhancedNode, true);
       results.push(createdNode);
       // file.isChanged = true;
-    }),
+    })
   );
   return returnAddedNodes ? mapNodesToPlainObject(results) : null;
 };
@@ -212,7 +212,7 @@ export const addFile = title =>
           TITLE: title,
         }),
       });
-    }),
+    })
   );
 
 export const deleteNodeById = nodeId =>
@@ -222,7 +222,7 @@ export const deleteNodeById = nodeId =>
       node.file.isChanged = true;
       realm.delete(node.timestamps);
       realm.delete(node);
-    }),
+    })
   );
 
 export const deleteFileById = fileId =>
@@ -236,12 +236,12 @@ export const deleteFileById = fileId =>
 
       realm.delete(file.nodes);
       realm.delete(file);
-    }),
+    })
   );
 
 export const deleteNodes = nodes =>
   dbConn.then(realm =>
-    realm.write(() => nodes.forEach(node => realm.delete(node))),
+    realm.write(() => nodes.forEach(node => realm.delete(node)))
   );
 
 // ** Update
@@ -288,9 +288,9 @@ export const flagFileAsSynced = file =>
           lastSync: stats.mtime,
           isChanged: false,
           // isConflicted: false
-        }),
-      ),
-    ),
+        })
+      )
+    )
   );
 
 export const updateFile = (id, changes) =>
@@ -299,7 +299,7 @@ export const updateFile = (id, changes) =>
       const file = getFileById(realm, id);
       const toMerge = R.evolve({ metadata: JSON.stringify }, changes);
       Object.assign(file, toMerge);
-    }),
+    })
   );
 
 export const updateNodeById = (id, changes) =>
@@ -308,7 +308,7 @@ export const updateNodeById = (id, changes) =>
       const node = realm.objects('OrgNode').filtered(`id = '${id}'`)[0];
       Object.assign(node, { ...R.omit(['id'], changes), isChanged: true });
       node.file.isChanged = true;
-    }),
+    })
   );
 
 const updateNodes = (listOfNodesAndChanges, commonChanges) =>
@@ -318,8 +318,8 @@ const updateNodes = (listOfNodesAndChanges, commonChanges) =>
         let [node, newProps] = group;
         if (commonChanges) Object.assign(newProps, commonChanges);
         Object.assign(node, newProps);
-      }),
-    ),
+      })
+    )
   );
 
 export const updateNodesAsSynced = nodes =>
@@ -327,7 +327,7 @@ export const updateNodesAsSynced = nodes =>
     realm.write(() => {
       nodes.update('isChanged', false);
       nodes.update('isAdded', false);
-    }),
+    })
   );
 
 // ** Exports

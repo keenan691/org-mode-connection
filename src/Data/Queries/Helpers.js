@@ -26,5 +26,5 @@ export const getObjects = (model, ...filterArgs) =>
     realm =>
       filterArgs.length > 0
         ? realm.objects(model).filtered(...filterArgs)
-        : realm.objects(model),
+        : realm.objects(model)
   );

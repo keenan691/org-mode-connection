@@ -1,4 +1,4 @@
-export default  {
+export default {
   name: 'OrgTimestamp',
   properties: {
     node: 'OrgNode',
@@ -8,7 +8,11 @@ export default  {
     dateRangeWithTime: { type: 'bool', default: false },
     repeater: 'string?',
     warningPeriod: 'string?',
-    nodes: { type: 'linkingObjects', objectType: 'OrgNode', property: 'timestamps' },
-    type: 'string' // active, inActive, scheduled, deadline
-  }
-}
+    nodes: {
+      type: 'linkingObjects',
+      objectType: 'OrgNode',
+      property: 'timestamps',
+    },
+    type: 'string', // active, inActive, scheduled, deadline
+  },
+};

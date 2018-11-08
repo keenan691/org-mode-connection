@@ -14,7 +14,7 @@ export const getObjects = (model, ...filterArgs) =>
     realm =>
       filterArgs.length > 0
         ? realm.objects(model).filtered(...filterArgs)
-        : realm.objects(model),
+        : realm.objects(model)
   );
 
 const getObjectById = R.curry((model, realm, id) => {
@@ -41,7 +41,7 @@ export const getNodes = (...filter) => getObjects('OrgNode', ...filter);
 export const getFiles = async () => {
   const files = await getObjects('OrgFile');
   const existance = await Promise.all(
-    files.map(f => (f.path === null ? null : FileAccess.exists(f.path))),
+    files.map(f => (f.path === null ? null : FileAccess.exists(f.path)))
   );
   const phisicallyDeletedFiles = [];
   existance.forEach((val, idx) => {
@@ -52,8 +52,8 @@ export const getFiles = async () => {
       realm.write(() =>
         phisicallyDeletedFiles.forEach(idx => {
           files[idx].path = null;
-        }),
-      ),
+        })
+      )
     );
   }
   return files;

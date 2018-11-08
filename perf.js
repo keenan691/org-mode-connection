@@ -1,6 +1,6 @@
-import R from "ramda";
+import R from 'ramda';
 
-var Realm = require('realm')
+var Realm = require('realm');
 
 // import { configureFileAccess } from './src/Helpers/FileAccess';
 import OrgApi from './src/OrgApi';
@@ -12,9 +12,9 @@ import OrgApi from './src/OrgApi';
 // OrgApi.clearDb()
 // configureFileAccess(fsInterface)
 
-module.exports = (testNum) => {
+module.exports = testNum => {
   const start = Date.now();
   // OrgApi.importFile('~/Org/projects.org')
   const end = Date.now();
-  return end-start
-}
+  return end - start;
+};
