@@ -1,12 +1,10 @@
 import { asOrgDate } from './OrgFormat/Transforms';
 import { configureFileAccess } from './Helpers/FileAccess';
 import { headlineR } from './OrgApi';
-import Db, { configureDb } from './Data/Db/Db';
+import Db, { configureDb, connectDb } from './Data/Db/Db';
 import NodeContentParser from './OrgFormat/AtomicParsers/NodeContentParser';
-import Queries, { connectDb } from './Data/Queries';
+import Queries  from './Data/Queries';
 import Sync from './Data/Sync';
-
-// export asOrgDate
 
 const Configure = {
   configureFileAccess,

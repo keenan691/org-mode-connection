@@ -20,9 +20,8 @@ const loadTestFile = async (fileName) => FileAccess.
 
 beforeAll(() => {
   OrgApi.configureDb(Realm)
-   OrgApi.connectDb()
+  OrgApi.connectDb()
   return OrgApi.clearDb()
-
 })
 
 // * Sync

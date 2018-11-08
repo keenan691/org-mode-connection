@@ -3,7 +3,6 @@ import R from "ramda";
 import { parser } from './Common';
 import { selfChangingRegexMatch } from '../../Helpers/Functions';
 
-// Slices area delimited by two regex expressions
 
 const isOdd = R.pipe(R.length, R.modulo(R.__, 2))
 const dropRetardedDrawersAndGroupByTwo = R.pipe(

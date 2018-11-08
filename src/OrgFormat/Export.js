@@ -1,6 +1,6 @@
 import R from "ramda";
 
-import { enhanceNode } from '../Data/Queries';
+import { enhanceNode } from '../Data/Queries/UpdateQueries';
 import { headlineT, nodeMetadataT } from './Transforms';
 
 export const nodeToOrg = (rawNode) => {

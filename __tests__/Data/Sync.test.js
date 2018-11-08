@@ -1,12 +1,11 @@
-/** @flow */
-
 // * Imports
 
-import R from "ramda";
+import R from 'ramda';
 
 import { getChanges, getNewExternalMtime } from "../../src/Data/Sync";
 import { getFirstFileAsPlainObject} from "../../testTools";
-import Db from "../../src/Data/Db/Db";
+import { updateNodeById } from '../../src/Data/Queries/UpdateQueries';
+import Db, { connectDb } from '../../src/Data/Db/Db';
 import DbHelper from "../../src/Data/Db/DbHelper";
 import FileAccess from "../../src/Helpers/FileAccess";
 import OrgApi from "../../src/OrgApi";
@@ -69,7 +68,7 @@ afterAll(() => {
 
 beforeAll(() => {
   OrgApi.configureDb(Realm);
-  return OrgApi.connectDb();
+  return connectDb();
 });
 
 // * Tests
@@ -193,7 +192,7 @@ describe("sync", () => {
     expect.assertions(1);
     return getFirstNode()
       .then(R.prop("id"))
-      .then(id => OrgApi.updateNodeById(id, { todo: "NEXT" }))
+      .then(id => updateNodeById(id, { todo: "NEXT" }))
       .then(OrgApi.syncDb)
       .then(() =>
         expect(FileAccess.read("externalChanges1")).resolves.toEqual(

@@ -2,25 +2,106 @@
 
 import R from "ramda";
 
+import {
+  addFile,
+  addNodes,
+  addTimestamp,
+  deleteFileById,
+  deleteNodeById,
+  enhanceNodeWithPosition,
+  getOrCreateNodeByHeadline,
+  getTimestamp
+} from '../../src/Data/Queries/UpdateQueries';
 import { getFirstFile, getFirstFileAsPlainObject } from '../../testTools';
+import { getObjects } from '../../src/Data/Queries/Helpers';
 import { getOrgFileContent } from "../../src/Helpers/Fixtures";
-import Db from "../../src/Data/Db/Db";
+import Db, { connectDb, dbConn } from '../../src/Data/Db/Db';
 import DbHelper from "../../src/Data/Db/DbHelper";
 import FileAccess from "../../src/Helpers/FileAccess";
 import OrgApi from "../../src/OrgApi";
-import Queries, {
-  addFile,
-  addNodes,
-  deleteFileById,
-  deleteNodeById,
-  enhanceNode,
-  enhanceNodeWithPosition,
-  getObjects,
-  getOrCreateNodeByHeadline,
-} from '../../src/Data/Queries';
+import OrgNode from '../../src/Data/Models/OrgNode';
+import Queries from "../../src/Data/Queries"
 
 var Realm = require("realm");
 
+// * Old
+
+const RealmOrgNodeGetters = (function() {
+  const nodeProps = Object.getOwnPropertyNames(OrgNode.properties);
+  const timeStampProps = ["closed", "scheduled", "deadline"];
+  const obj = {};
+
+  nodeProps.forEach(
+    prop =>
+      (obj[prop] = {
+        get: function() {
+          return this._node[prop];
+        }
+      })
+  );
+
+  timeStampProps.forEach(
+    prop =>
+      (obj[prop] = {
+        get: function() {
+          return getTimestamp(this._node, prop);
+        }
+      })
+  );
+
+  obj["drawers"] = {
+    get: function() {
+      return this._node.drawers ? JSON.parse(this._node.drawers) : "";
+    }
+  };
+
+  return obj;
+})();
+
+
+const OrgNodeMethods = Object.create(null);
+OrgNodeMethods.prototype = {
+  setNodeProperty(nextNodeSameLevel, value) {
+    return dbConn.then(realm =>
+                       realm.write(() => {
+                         markNodeAsChanged(this._node);
+                         return (this._node[nextNodeSameLevel] = value);
+                       })
+                      );
+  },
+
+  delete() {
+    return deleteRealmObject(this._node);
+  },
+  toOrgRepr() {
+    return exportNodeToOrgRepr(node);
+  },
+  schedule(timestampObj) {
+    return addTimestamp(this._node, "scheduled", timestampObj);
+  },
+  setDeadline(timestampObj) {
+    return addTimestamp(this._node, "deadline", timestampObj);
+  },
+  setTodo(val) {
+    return this.setNodeProperty("todo", val);
+  }
+};
+
+export const enhanceNode = realmNode => {
+  // let enhancedNode = {
+  //   get isChanged(){ return realmNode.isChanged },
+  //   get todo(){ return realmNode.todo },
+  //   set todo(val){ setNodeProperty(realmNode, 'todo', val) }
+  // }
+
+  let obj = Object.create(OrgNodeMethods.prototype, RealmOrgNodeGetters);
+  Object.assign(obj, { _node: realmNode });
+
+  return obj;
+  // // Generic
+
+  return node;
+};
 // * Prepare
 
 jest.mock("../../src/Helpers/FileAccess");
@@ -32,7 +113,7 @@ const loadTestFile = fileName =>
 
 beforeAll(() => {
   OrgApi.configureDb(Realm);
-  OrgApi.connectDb();
+  connectDb();
 });
 
 // * Searching tests
@@ -489,11 +570,12 @@ describe("Queries", () => {
 
   // test("getAgenda", () => {
   //   expect.assertions(1);
-  //   const agenda = Queries.getAgenda(
-  //     new Date(2018, 2, 12),
-  //     new Date(2018, 2, 15)
+  //   const agenda = Queries.getAgendaAsPlainObject(
+  //     {
+  //       start: new Date(2018, 2, 12),
+  //       end: new Date(2018, 2, 15)
+  //     }
   //   );
-  //   return expect(agenda).resolves.toHaveLength(5);
   // });
 
   // test("getAgenda", () => {

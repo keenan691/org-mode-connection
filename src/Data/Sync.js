@@ -2,27 +2,20 @@
 
 import R from "ramda";
 
+import { connectDb } from './Db/Db';
 import {
-  extractNodesFromLines,
-  extractPreNodeContentFromLines,
-} from '../OrgFormat/NodesExtractor';
+  deleteNodes,
+  flagFileAsSynced,
+  updateFile,
+  updateNodesAsSynced
+} from './Queries/UpdateQueries';
 import {
   finishParsing,
   parse,
   parseFileContent,
-  parseNode,
-  parseNodes,
   preParseNodes
 } from '../OrgFormat/Parser';
-import { headlineT } from '../OrgFormat/Transforms';
-import {
-  imap,
-  measure,
-  measurePromise,
-  nullWhenEmpty,
-  promisePipe
-} from '../Helpers/Functions';
-import { log, rlog } from '../Helpers/Debug';
+import { nullWhenEmpty, promisePipe } from '../Helpers/Functions';
 import { prepareNodes, uniqueId } from './Transforms';
 import Export, { fileToOrgRepr } from '../OrgFormat/Export';
 import FileAccess from '../Helpers/FileAccess';
@@ -34,7 +27,7 @@ const importFile = (filepath, type='agenda') => {
   const getFileContent = FileAccess.read(filepath);
   const getFileStats = FileAccess.stat(filepath);
   const transform = ([fileStat, fileContent]) => [fileStat, parse(fileContent)];
-  const addToDb = ([fileStat, parsedObj]) => Queries.connectDb().then(realm => realm.write(() => {
+  const addToDb = ([fileStat, parsedObj]) => connectDb().then(realm => realm.write(() => {
 
     // Create OrgFile object
     const orgFile = realm.create('OrgFile', {
@@ -359,7 +352,7 @@ export const getChanges = async (file) => {
 const applyFileHeaderExternalChanges = (changes) => {
   if (!changes) return changes
   const fileChanges = changes.externalFileHeaderChanges;
-  if (fileChanges) Queries.updateFile(changes.file.id, fileChanges)
+  if (fileChanges) updateFile(changes.file.id, fileChanges)
   return changes
 };
 
@@ -382,7 +375,7 @@ const applyExternalChanges = type => async changes => {
   })
 
   if (type==='delete' && externalChanges.deletedNodes) {
-    await Queries.deleteNodes(externalChanges.deletedNodes)
+    await deleteNodes(externalChanges.deletedNodes)
   } else
 
   if (type==='add' && externalChanges.addedNodes) {
@@ -441,9 +434,9 @@ const generateReportAndUpdateStatus = changes  => {
       changedNodes: R.length})))};
 
   if (changes.localChanges !== null)
-    Queries.updateNodesAsSynced(changes.localChanges)
+    updateNodesAsSynced(changes.localChanges)
 
-  Queries.flagFileAsSynced(changes.file)
+  flagFileAsSynced(changes.file)
   return R.evolve(changesToSummary)(changes)
 };
 
@@ -469,7 +462,6 @@ const syncFile = promisePipe(
   R.cond([
     [onlyLocalChangesP, applyLocalChanges],
     [onlyExternalChangesP, promisePipe(
-      // R.tap(cn=> console.log(cn.externalChanges.deletedNodes)),
       applyExternalChanges('delete'),
       addPositions,
       applyExternalChanges('add'),

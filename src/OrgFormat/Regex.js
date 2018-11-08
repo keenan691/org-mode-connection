@@ -48,12 +48,3 @@ export const nodeContentLinksR = {
   web: /\[\[(.*?)\]\[(.*?)\]\]/g,
   plain: /( |^)(www|http:|https:)+[^\s]+[\w](\/| |$)/g
 }
-
-// export const nodeContentInlineElementsR = {
-//   strikeThroughText: createInlineR(/\+/),
-//   boldText: createInlineR(/\*/),
-//   codeText: createInlineR(/\~/),
-//   underlineText: createInlineR(/\_/),
-//   verbatimText: createInlineR(/\=/),
-//   // italicText: createInlineR(/\//),
-// }

@@ -1,13 +1,157 @@
-*
+* Transforms
+** dir tree to org mode
 
-* Content parser tests
+#+NAME: to_org
+#+BEGIN_SRC js :results output raw :var data=0 dir=0
+let [input, report] = JSON.parse(data)
+let res = ''
 
-#+BEGIN_SRC js :cmd "babel-node --presets es2015 --plugins transform-object-rest-spread"
-var testNodeContentParser = require('/home/keenan/devSpace/github/org-mode-connection/perf')
-console.log(testNodeContentParser(1))
+const isDir = (obj) => obj.type === 'directory'
+
+const parse = (obj, path=[]) => {
+    const { type, name } = obj
+    return {
+        name: isDir(obj) ? `/${name}/` : name,
+        type,
+        level: path.length ,
+        path: [ ...path, name ].join('/')
+}}
+
+const printAsOrg = o => console.log(`**${'*'.repeat(o.level)} ${o.name}    [[file:/${o.path}][link]]`)
+
+
+const flat = (path) => (rootObj, ignore=false) => {
+    let children = []
+    if (isDir(rootObj)) {
+        const childrenFlat = flat([...path, rootObj.name])
+        children = rootObj.contents.map(childrenFlat)
+    }
+    // if (ignore) return [].concat(...children) // TODO zapamięć
+    return [parse(rootObj, path)].concat(...children)
+    //return children.unshift(parse(rootObj, path))
+}
+
+flat([dir])(input).forEach(printAsOrg)
+#+END_SRC
+
+#+RESULTS: to_org
+
+* dirs
+** cwd
+#+NAME: cwd
+#+BEGIN_SRC sh
+cd src
+pwd
+#+END_SRC
+
+#+RESULTS: cwd
+: /home/keenan/devSpace/github/org-mode-connection
+** raw tree
+
+#+BEGIN_SRC sh :results output
+cd src
+tree -J
 #+END_SRC
 
 #+RESULTS:
-: dupa
-: 2
-: undefined
+#+begin_example
+[{"type":"directory","name": ".","contents":[
+    {"type":"directory","name":"Data","contents":[
+      {"type":"directory","name":"Db","contents":[
+        {"type":"file","name":"DbHelper.js"},
+        {"type":"file","name":"Db.js"}
+      ]},
+      {"type":"directory","name":"Models","contents":[
+        {"type":"file","name":"OrgFile.js"},
+        {"type":"file","name":"OrgNode.js"},
+        {"type":"file","name":"OrgTag.js"},
+        {"type":"file","name":"OrgTimestamp.js"}
+      ]},
+      {"type":"file","name":"Queries.js"},
+      {"type":"file","name":"Sync.js"},
+      {"type":"file","name":"Transforms.js"}
+    ]},
+    {"type":"directory","name":"Helpers","contents":[
+      {"type":"file","name":"Crc.js"},
+      {"type":"file","name":"Debug.js"},
+      {"type":"file","name":"FileAccess.js"},
+      {"type":"file","name":"Fixtures.js"},
+      {"type":"file","name":"Functions.js"},
+      {"type":"directory","name":"__mocks__","contents":[
+        {"type":"file","name":"FileAccess.js"}
+      ]}
+    ]},
+    {"type":"file","name":"OrgApi.js"},
+    {"type":"directory","name":"OrgFormat","contents":[
+      {"type":"directory","name":"AtomicParsers","contents":[
+        {"type":"file","name":"HeadlineParser.js"},
+        {"type":"file","name":"NodeContentParser.js"},
+        {"type":"file","name":"NodeMetadataParser.js"}
+      ]},
+      {"type":"file","name":"Export.js"},
+      {"type":"directory","name":"GenericParsers","contents":[
+        {"type":"file","name":"Common.js"},
+        {"type":"file","name":"HungryLineParser.js"},
+        {"type":"file","name":"LazyInLineParser.js"},
+        {"type":"file","name":"LazyLineParser.js"},
+        {"type":"file","name":"LinesRangeParser.js"}
+      ]},
+      {"type":"file","name":"NodesExtractor.js"},
+      {"type":"file","name":"Parser.js"},
+      {"type":"file","name":"Regex.js"},
+      {"type":"file","name":"Transforms.js"},
+      {"type":"file","name":"Validators.js"}
+    ]}
+  ]},
+  {"type":"report","directories":8,"files":30}
+]
+#+end_example
+
+** src
+#+BEGIN_SRC sh :results output raw replace :post to_org(data=*this*, dir=cwd)
+cd src
+tree -J
+#+END_SRC
+
+* [/] Add Docs and refactor
+#+RESULTS:
+*** [0/5] /Data/    [[file://home/keenan/devSpace/github/org-mode-connection/src/./Data][link]]
+**** TODO /Db/    [[file://home/keenan/devSpace/github/org-mode-connection/src/./Data/Db][link]]
+***** DbHelper.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./Data/Db/DbHelper.js][link]]
+***** Db.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./Data/Db/Db.js][link]]
+**** TODO /Models/    [[file://home/keenan/devSpace/github/org-mode-connection/src/./Data/Models][link]]
+***** OrgFile.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./Data/Models/OrgFile.js][link]]
+***** OrgNode.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./Data/Models/OrgNode.js][link]]
+***** OrgTag.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./Data/Models/OrgTag.js][link]]
+***** OrgTimestamp.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./Data/Models/OrgTimestamp.js][link]]
+**** TODO Queries    [[file://home/keenan/devSpace/github/org-mode-connection/src/./Data/Queries.js][link]]
+***** Files
+**** TODO Sync.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./Data/Sync.js][link]]
+**** TODO Transforms.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./Data/Transforms.js][link]]
+*** [0/5] /Helpers/    [[file://home/keenan/devSpace/github/org-mode-connection/src/./Helpers][link]]
+**** TODO Crc.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./Helpers/Crc.js][link]]
+**** TODO Debug.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./Helpers/Debug.js][link]]
+**** TODO FileAccess.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./Helpers/FileAccess.js][link]]
+**** TODO Fixtures.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./Helpers/Fixtures.js][link]]
+**** TODO Functions.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./Helpers/Functions.js][link]]
+**** /__mocks__/    [[file://home/keenan/devSpace/github/org-mode-connection/src/./Helpers/__mocks__][link]]
+***** FileAccess.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./Helpers/__mocks__/FileAccess.js][link]]
+*** TODO OrgApi.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./OrgApi.js][link]]
+*** [0/8] /OrgFormat/    [[file://home/keenan/devSpace/github/org-mode-connection/src/./OrgFormat][link]]
+**** TODO /AtomicParsers/    [[file://home/keenan/devSpace/github/org-mode-connection/src/./OrgFormat/AtomicParsers][link]]
+***** HeadlineParser.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./OrgFormat/AtomicParsers/HeadlineParser.js][link]]
+***** NodeContentParser.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./OrgFormat/AtomicParsers/NodeContentParser.js][link]]
+***** NodeMetadataParser.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./OrgFormat/AtomicParsers/NodeMetadataParser.js][link]]
+**** TODO Export.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./OrgFormat/Export.js][link]]
+**** TODO /GenericParsers/    [[file://home/keenan/devSpace/github/org-mode-connection/src/./OrgFormat/GenericParsers][link]]
+***** Common.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./OrgFormat/GenericParsers/Common.js][link]]
+***** HungryLineParser.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./OrgFormat/GenericParsers/HungryLineParser.js][link]]
+***** LazyInLineParser.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./OrgFormat/GenericParsers/LazyInLineParser.js][link]]
+***** LazyLineParser.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./OrgFormat/GenericParsers/LazyLineParser.js][link]]
+***** LinesRangeParser.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./OrgFormat/GenericParsers/LinesRangeParser.js][link]]
+**** TODO NodesExtractor.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./OrgFormat/NodesExtractor.js][link]]
+**** TODO Parser.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./OrgFormat/Parser.js][link]]
+**** TODO Regex.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./OrgFormat/Regex.js][link]]
+**** TODO Transforms.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./OrgFormat/Transforms.js][link]]
+**** TODO Validators.js    [[file://home/keenan/devSpace/github/org-mode-connection/src/./OrgFormat/Validators.js][link]]
+nil

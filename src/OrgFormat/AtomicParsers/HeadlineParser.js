@@ -1,5 +1,3 @@
-/** @flow */
-
 import R from "ramda";
 import { rlog } from '../../Helpers/Debug';
 import { headlineR } from '../Regex';
