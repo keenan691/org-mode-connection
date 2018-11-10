@@ -1,11 +1,10 @@
 // * Playground
 // * Imports
-import R from 'ramda';
 
 import { getOrgFileContent } from '../src/Helpers/Fixtures';
 import FileAccess from '../src/Helpers/FileAccess';
 import NodeContentParser from '../src/OrgFormat/AtomicParsers/NodeContentParser';
-import OrgApi from '../src/OrgApi';
+import OrgApi from '../src';
 
 var Realm = require('realm');
 

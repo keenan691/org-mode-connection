@@ -8,7 +8,7 @@ import { updateNodeById } from '../../src/Data/Queries/UpdateQueries';
 import Db, { connectDb } from '../../src/Data/Db/Db';
 import DbHelper from '../../src/Data/Db/DbHelper';
 import FileAccess from '../../src/Helpers/FileAccess';
-import OrgApi from '../../src/OrgApi';
+import OrgApi from '../../src';
 import Queries, { mapNodesToPlainObject } from '../../src/Data/Queries';
 
 var Realm = require('realm');

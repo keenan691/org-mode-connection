@@ -18,7 +18,7 @@ import { getOrgFileContent } from '../../src/Helpers/Fixtures';
 import Db, { connectDb, dbConn } from '../../src/Data/Db/Db';
 import DbHelper from '../../src/Data/Db/DbHelper';
 import FileAccess from '../../src/Helpers/FileAccess';
-import OrgApi from '../../src/OrgApi';
+import OrgApi from '../../src';
 import OrgNode from '../../src/Data/Models/OrgNode';
 import Queries from '../../src/Data/Queries';
 

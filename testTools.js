@@ -1,5 +1,5 @@
 import { getObjects } from './src/Data/Queries/RealmQueries';
-import OrgApi from './src/OrgApi';
+import OrgApi from './src';
 
 export const getFirstFileAsPlainObject = async () => {
   const files = await OrgApi.getAllFilesAsPlainObject();

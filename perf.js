@@ -3,7 +3,7 @@ import R from 'ramda';
 var Realm = require('realm');
 
 // import { configureFileAccess } from './src/Helpers/FileAccess';
-import OrgApi from './src/OrgApi';
+import OrgApi from './src';
 
 // var promisify = require("promisify-node");
 // const fsInterface = promisify("fs")
