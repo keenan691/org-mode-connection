@@ -12,8 +12,7 @@ const Configure = {
   connectDb,
 };
 
-const Api = Object.assign({}, Queries, Db, Sync, Configure);
-
+const Api = { ...Queries, ...Db, ...Sync, ...Configure };
 export default Api;
 
 export { NodeContentParser, asOrgDate, headlineR };

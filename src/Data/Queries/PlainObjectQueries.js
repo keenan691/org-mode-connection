@@ -22,11 +22,15 @@ import {
 
 // ** Funcs
 
+const addDay = (date, num) =>
+      moment(date)
+      .add(num, 'd')
+      .format('YYYY-MM-DD');
+
 export const mapNodesToPlainObject = nodes =>
   Array.from(nodes).map(mapNodeToPlainObject);
 // Returns whole file content including nodes as plain object
 
-// ** Queries
 
 const getDescendants = (node, nodes) => {
   const lowerNodes = nodes
@@ -57,6 +61,8 @@ const getAncestors = (node, nodes) => {
     R.reverse
   )(upperNodes);
 };
+
+// ** Queries
 
 const getRelatedNodes = nodeId =>
   dbConn.then(realm => {
@@ -96,13 +102,9 @@ const getAllFilesAsPlainObject = () =>
   getFiles().then(files => files.map(mapFileToPlainObject));
 
 const getTocs = () => getFiles().then(mapFilesToToc);
+
 const getTagsAsPlainObject = () =>
   getObjects('OrgTag').then(tags => tags.map(tag => tag.name));
-
-const addDay = (date, num) =>
-  moment(date)
-    .add(num, 'd')
-    .format('YYYY-MM-DD');
 
 const getOrCreateNodeByHeadlineAsPlainObject = async ({ fileId, headline }) => {
   const realm = await dbConn;
@@ -112,13 +114,11 @@ const getOrCreateNodeByHeadlineAsPlainObject = async ({ fileId, headline }) => {
   );
   return [mapNodeToSearchResult(node), created];
 };
-// ** Exports
 
 const getAgendaAsPlainObject = async (
   { start, end },
   defaultWarningPeriod = 14
 ) => {
-  // **** initialize
 
   const timestamps = await getObjects('OrgTimestamp');
 
@@ -126,7 +126,6 @@ const getAgendaAsPlainObject = async (
   let agendaItems;
   let dayAgendaItems;
 
-  // **** TODO agenda
 
   agendaItems = mapAgendaToPlainObject(
     timestamps
@@ -134,11 +133,6 @@ const getAgendaAsPlainObject = async (
       .filtered('date > $0 && date < $1', addDay(start, -1), addDay(end, 1))
   );
 
-  // **** TODO scheduled for today and before today and undone
-
-  // const getTodayAgenda = () => null;
-
-  // // console.tron.log(timestamps)
   const dayAgenda = {
     closed: timestamps.filtered(
       'date > $0 && date < $1 && type="closed"',
@@ -174,7 +168,6 @@ const getAgendaAsPlainObject = async (
         .toDate()
     ),
   };
-  // console.tron.log(R.map(R.length, dayAgenda))
 
   dayAgendaItems = Object.values(dayAgenda).reduce(
     (acc, item) => {
@@ -192,17 +185,12 @@ const getAgendaAsPlainObject = async (
       timestamps: [],
     }
   );
-  // console.tron.warn(dayAgendaItems)
-
-  // **** results
 
   nodes = R.unionWith(
     R.eqBy(R.prop('id')),
     agendaItems.nodes,
     dayAgendaItems.nodes
   );
-  // console.tron.warn(nodes)
-  // nodes = []
 
   const res = {
     nodes,
@@ -211,16 +199,15 @@ const getAgendaAsPlainObject = async (
   };
 
   return res;
-  // **** end
 };
 
 export default {
   getAgendaAsPlainObject,
-  getRelatedNodes,
-  getTocs,
-  getTagsAsPlainObject,
   getAllFilesAsPlainObject,
-  getFileAsPlainObject,
   getAncestorsAsPlainObject,
+  getFileAsPlainObject,
   getOrCreateNodeByHeadline: getOrCreateNodeByHeadlineAsPlainObject,
+  getRelatedNodes,
+  getTagsAsPlainObject,
+  getTocs,
 };

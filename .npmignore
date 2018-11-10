@@ -1,0 +1,32 @@
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log
+
+# Dependencies
+node_modules/
+
+# Coverage
+coverage/
+
+# VS Code
+.vscode
+jsconfig.json
+
+# Misc
+.DS_Store
+tmp/
+
+flow-typed/
+*.pdf
+*.png
+org/
+project.org_archive
+.#project.org_archive
+default.realm
+default.realm.note
+default.realm.lock
+PRIVACY_POLICY.html
+PRIVACY_POLICY.org
+project.org
+perf.js
