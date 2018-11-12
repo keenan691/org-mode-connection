@@ -41,6 +41,19 @@ OrgApi.connectDb();
 #+END_SRC
 
 * Usage
+
+** Example
+
+#+BEGIN_SRC js :results output :noweb yes
+const query =  async() => {
+    await OrgApi.clearDb()
+    await OrgApi.addFile('~/org/organizer.org')
+    const res = await OrgApi.getAllFilesAsPlainObject()
+    console.log(res)
+}
+query()
+#+END_SRC
+
 #+BEGIN_SRC js :results output :noweb yes
 const query =  async() => {
     await OrgApi.clearDb()
@@ -51,6 +64,45 @@ const query =  async() => {
 }
 query()
 #+END_SRC
+
+** Parsing node content
+#+name: parse-example-content
+#+BEGIN_SRC js :results output code :noweb yes
+//import { NodeContentParser } from "org-mode-connection";
+const NodeContentParser = require('org-mode-connection').NodeContentParser
+const res = NodeContentParser(" *this is bold* and this /italic/\nnext line");
+console.log("// Parsed lines:\n", res, "\n")
+console.log("// Content of the first line:\n", res[0].content)
+#+END_SRC
+
+#+RESULTS: parse-example-content
+#+BEGIN_SRC js
+// Parsed lines:
+ [ { type: 'regularLine',
+    content: [ [Object], [Object], [Object], [Object], [Object] ] },
+  { type: 'regularLine', content: [ [Object] ] } ]
+
+// Content of the first line:
+ [ { content: ' ', type: 'regularText', indexStart: 0, indexEnd: 1 },
+  { type: 'boldText',
+    indexStart: 1,
+    indexEnd: 15,
+    content: 'this is bold' },
+  { content: ' and this ',
+    type: 'regularText',
+    indexStart: 15,
+    indexEnd: 25 },
+  { type: 'italicText',
+    indexStart: 25,
+    indexEnd: 33,
+    content: 'italic' },
+  { content: '',
+    type: 'regularText',
+    indexStart: 33,
+    indexEnd: undefined } ]
+#+END_SRC
+
+
 * Api
 ** addFile(/title/)
 Creates empty file in database.

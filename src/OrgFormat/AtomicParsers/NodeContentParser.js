@@ -186,7 +186,6 @@ const regularTextParser = ([objects, line]) => {
     R.when(R.pipe(R.length, R.equals(1)), R.drop(1)),
     R.splitEvery(2),
     mapGroupsToObjects,
-    R.tap(console.log),
     R.concat(objects),
     R.sortBy(R.prop('indexStart'))
   )(objects);
