@@ -9,7 +9,6 @@ It is designed to work both in mobile and server/desktop environments.
 * Installation
 
 #+BEGIN_SRC sh
-cd /tmp
 yarn add realm promisify-node org-mode-connection
 #+END_SRC
 
@@ -23,6 +22,8 @@ var OrgApi = require('org-mode-connection').OrgApi
 const realm = require('realm')
 const promisify = require("promisify-node");
 const fsInterface = promisify("fs")
+
+// Configure
 OrgApi.configureFileAccess(fsInterface);
 OrgApi.configureDb(realm);
 OrgApi.connectDb();
@@ -43,23 +44,236 @@ OrgApi.connectDb();
 
 * Usage
 #+BEGIN_SRC js :results output :noweb yes
-<<setup>>
 const query =  async() => {
-    // Configure
-    // await OrgApi.clearDb()
-    // await OrgApi.addFile('/home/keenan/Chaos/js.org')
-    // await OrgApi.syncDb()
-    const x = await OrgApi.getAllFilesAsPlainObject()
-    console.log(x)
-    // OrgApi.clearDb()
-    process.exit()
+    await OrgApi.clearDb()
+    await OrgApi.addFile('/home/keenan/Chaos/js.org')
+    await OrgApi.syncDb()
+    const res = await OrgApi.getAllFilesAsPlainObject()
+    console.log(res)
 }
 query()
 #+END_SRC
+* Api
+** addFile(/title/)
+Creates empty file in database.
 
+=Arguments=:
+- *title*: /string/ - New file title
+
+=Results=:
+Promise< /void/ >
+
+** addNodes(/nodes/, /insertPosition/, /externalChange/, /returnAddedNodes/)
+Add nodes to the tree of nodes
+
+=Arguments=:
+- *nodes*: [[PlainOrgNode][PlainOrgNode]][]
+- *insertPosition*: [[InsertPosition][InsertPosition]]
+- *externalChange*: /boolean/
+- *returnAddedNodes*: /boolean/
+
+=Results=:
+Promise< [[PlainOrgNode][PlainOrgNode]][] >
+
+** clearDb(undefined)
+Clears Database.
+
+=Results=:
+Promise< /void/ >
+
+** configureDb(/realm/)
+Configure database.
+
+=Arguments=:
+- *realm*: [[Realm][Realm]] - Realm object
+
+=Results=:
+/void/
+
+** configureFileAccess(/fsIterface/)
+=Arguments=:
+- *fsIterface*: [[FsInterface][FsInterface]] - Promisified file access interface
+
+=Results=:
+/void/
+
+** connectDb(undefined)
+Connect database
+
+=Results=:
+Promise< /void/ >
+
+** createFileFromString(/name/, /lines/)
+Create file from array of strings.
+
+=Arguments=:
+- *name*: /string/ - The name of new file
+- *lines*: /string/[] - List of string raw lines
+
+=Results=:
+Promise< /void/ >
+
+** deleteFileById(/fileId/)
+Delete file from database.
+
+=Arguments=:
+- *fileId*: /string/ - File id
+
+=Results=:
+Promise< /void/ >
+
+** deleteNodeById(/nodeId/)
+Deletes node.
+
+=Arguments=:
+- *nodeId*: /string/
+
+=Results=:
+Promise< /void/ >
+
+** getAgendaAsPlainObject(/timeRange/, /defaultWarningPeriod/)
+Returns agenda as plain object
+
+=Arguments=:
+- *timeRange*: [[TimeRange][TimeRange]]
+- *defaultWarningPeriod*: /number/
+
+=Results=:
+Promise< [[PlainAgenda][PlainAgenda]] >
+
+** getAllFilesAsPlainObject(undefined)
+Returns all OrgFiles as plain objects
+
+=Results=:
+[[PlainOrgFile][PlainOrgFile]][]
+
+** getAncestorsAsPlainObject(/nodeId/)
+Returns all ancestors of node.
+
+=Arguments=:
+- *nodeId*: /string/
+
+=Results=:
+Promise< [[PlainOrgNode][PlainOrgNode]][] >
+
+** getExternallyChangedFiles(undefined)
+Returns ids of externally changed files
+
+=Results=:
+Promise< [[ExternalFileChange][ExternalFileChange]][] >
+
+** getFileAsPlainObject(/id/)
+Returns file and its nodes data as plain object.
+
+=Arguments=:
+- *id*: /string/ - File id
+
+=Results=:
+Promise< [[PlainOrgFile][PlainOrgFile]] >
+
+** getObjects(/model/, /filter/)
+Return raw RealmResults object
+
+=Arguments=:
+- *model*: undefined - Realm model
+- *filter*: /string/ - Realm filter string
+
+=Results=:
+Promise< [[RealmResults][RealmResults]] >
+
+** getOrCreateNodeByHeadline(/targedNode/)
+Gets node by headline. If node doasnt exists it is created.
+
+=Arguments=:
+- *targedNode*: { fileId: /string/, headline: /string/ }
+
+=Results=:
+Promise< [[PlainOrgNode][PlainOrgNode]] >
+
+** getRelatedNodes(/nodeId/)
+Returns ancestors and descendants
+
+=Arguments=:
+- *nodeId*: /string/
+
+=Results=:
+Promise< [[PlainOrgNode][PlainOrgNode]][] >
+
+** getTagsAsPlainObject(undefined)
+Returns list of all tags
+
+=Results=:
+Promise< /string/[] >
+
+** getTocs(undefined)
+Returns all files with their child nodes
+
+=Results=:
+Promise< [[Tocs][Tocs]] >
+
+** importFile(/filepath/)
+Imports external file
+
+=Arguments=:
+- *filepath*: /string/
+
+=Results=:
+Promise< /void/ >
+
+** search(/searchQuery/)
+Search
+
+=Arguments=:
+- *searchQuery*: [[SearchQuery][SearchQuery]]
+
+=Results=:
+Promise< /any/ >
+
+** syncDb(undefined)
+Sync all files
+
+=Results=:
+Promise< /any/ >
+
+** syncFile(/id/)
+Syncs file
+
+=Arguments=:
+- *id*: /any/ - file id
+
+=Results=:
+Promise< /any/ >
+
+** updateFile(/id/, /changes/)
+Merges prop to file object
+
+=Arguments=:
+- *id*: /string/ - File id
+- *changes*: Object - New file props to merge
+
+=Results=:
+Promise< /any/ >
+
+** updateNodeById(/id/, /changes/)
+Merges props to node object
+
+=Arguments=:
+- *id*: /string/ - Node id
+- *changes*: Object - New node props to merge
+
+=Results=:
+Promise< /any/ >
 * Types
 ** PlainOrgNode
+:PROPERTIES:
+:CUSTOM_ID: aaa
+:END:
 ** PlainOrgFile
+[[#PlainOrgNode][to plan org node]]
+<<aaa>>
+[[#aaa]]
+
+[[aaa]]
 ** InsertPosition
 ** Realm
 ** FsInterface
@@ -68,221 +282,6 @@ query()
 ** ExternalFileChange
 ** Tocs
 ** SearchQuery
-* Typedoc tools                                                    :noexport:
-
-** setup
-#+name: imports
-#+BEGIN_SRC js :result output :noweb yes
-var R = require('ramda')
-#+END_SRC
-** doc to org
-#+name: typedoc-tools
-#+BEGIN_SRC js :result output :noweb yes
-<<imports>>
-const link = (o) => {
-    if (['Promise', 'Object'].includes(o)) return o
-  return `[[${o}][${o}]]`
-}
-
-const renderType = (o) => {
-    //console.log(o)
-
-    if (o.kindString === 'Variable') return `${o.name}: ${renderType(o.type)}`
-    if (o.kindString === 'Type literal') return `{ ${o.children.map(renderType).join(', ')} }`
-    if (o.type === 'array') return `${renderType(o.elementType)}[]`
-    if (o.type === 'intrinsic') return `/${o.name}/`
-    if (o.type === 'reference') {
-        let typeArguments = ''
-        typeArguments = o.typeArguments ? `< ${o.typeArguments.map(renderType)} >` : ''
-        return `${link(o.name)}${typeArguments}`
-    }
-    if (o.type === 'reflection') {
-        return renderType(o.declaration)
-    }
-}
-
-const renderReturnType = (o) => {
-    //console.log(renderType(o.signatures[0].type))
-    return renderType(o.signatures[0].type)
-}
-
-const renderHeadline = (o) => {
-    if (o.kindString === 'Interface') return `${o.name} interface`
-    if (o.kindString === 'Type alias') return `${o.name} type`
-    if (o.kindString === 'Variable') return `${o.name} interface`
-    return `** ${o.name}(${renderParametersShort(o)}): ${renderReturnType(o)}` }
-
-const renderParameter = (p) => {
-    const text = p.comment.text
-    const comment = (text && text.trim() !== '') ? `- ${text.trim()}` : ''
-    return `- *${p.name}*: ${renderType(p.type)} ${comment}`
-}
-
-const renderParameterInline = (p) => {
-    //console.log(p)
-    return `/${p.name}/`
-}
-const renderSignature = (o) => {
-    // console.log(o)
-    return [getComment(o), renderParametersLong(o)].join('\n')
-}
-const pr = (x) => R.tap(console.log(x))
-
-const getComment = R.pipe(
-    R.prop('signatures'),
-    R.head,
-    R.path(['comment', 'shortText']),
-)
-const renderParameters = type => R.pipe(
-    R.prop('signatures'),
-    R.head,
-    R.prop('parameters'),
-    R.unless(R.isNil, R.pipe(
-        R.map(type === 'long' ? renderParameter : renderParameterInline),
-        R.join(type === 'long' ? '\n' : ', '),
-        R.when(() => type==='long' ,R.concat(R.__, '\n')))),
-    R.when(R.isNil, () => '')
-)
-
-const renderParametersLong = renderParameters('long')
-const renderParametersShort = renderParameters('short')
-
-const getChild = (name) => R.pipe(R.prop('children'), R.find(R.propEq('name', name)))
-
-const asOrg = (l) => [
-    renderHeadline(l),
-    getComment(l),
-    renderParametersLong(l),
-].join('\n')
-
-const asObj = (l) => l
-
-console.log('* Api')
-const printLines = render => lines => {
-    lines.forEach(l => console.log(render(l)))
-}
-#+END_SRC
-
-#+RESULTS: typedoc-tools
-: undefined
-* Api docs generator                                               :noexport:
-#+BEGIN_SRC js :results output raw replace :noweb yes
-<<typedoc-tools>>
-const f = require('/home/keenan/Chaos/documentation.json')
-
-const exportedFuncs = R.pipe(
-    getChild('"index.d"'),
-    getChild('org_mode_connection'),
-    R.path(['type', 'declaration']),
-    getChild('OrgApi'),
-    R.path(['type', 'declaration', 'children']),
-)(f)
-
-printLines(asOrg)(exportedFuncs)
-#+END_SRC
-
-#+RESULTS:
-* Api
-** addFile(/title/): Promise< /void/ >
-Creates empty file in database.
-- *title*: /string/ - New file title
-
-** addNodes(/nodes/, /insertPosition/, /externalChange/, /returnAddedNodes/): Promise< [[PlainOrgNode][PlainOrgNode]][] >
-Add nodes to the tree of nodes
-- *nodes*: [[PlainOrgNode][PlainOrgNode]][]
-- *insertPosition*: [[InsertPosition][InsertPosition]]
-- *externalChange*: /boolean/
-- *returnAddedNodes*: /boolean/
-
-** clearDb(): Promise< /void/ >
-Clears Database.
-
-** configureDb(/realm/): /void/
-Configure database.
-- *realm*: [[Realm][Realm]] - Realm object
-
-** configureFileAccess(/fsIterface/): /void/
-
-- *fsIterface*: [[FsInterface][FsInterface]] - Promisified file access interface
-
-** connectDb(): Promise< /void/ >
-Connect database
-
-** createFileFromString(/name/, /lines/): Promise< /void/ >
-Create file from array of strings.
-- *name*: /string/ - The name of new file
-- *lines*: /string/[] - List of string raw lines
-
-** deleteFileById(/fileId/): Promise< /void/ >
-Delete file from database.
-- *fileId*: /string/ - File id
-
-** deleteNodeById(/nodeId/): Promise< /void/ >
-Deletes node.
-- *nodeId*: /string/
-
-** getAgendaAsPlainObject(/timeRange/, /defaultWarningPeriod/): Promise< [[PlainAgenda][PlainAgenda]] >
-Returns agenda as plain object
-- *timeRange*: [[TimeRange][TimeRange]]
-- *defaultWarningPeriod*: /number/
-
-** getAllFilesAsPlainObject(): [[PlainOrgFile][PlainOrgFile]][]
-Returns all OrgFiles as plain objects
-
-** getAncestorsAsPlainObject(/nodeId/): Promise< [[PlainOrgNode][PlainOrgNode]][] >
-Returns all ancestors of node.
-- *nodeId*: /string/
-
-** getExternallyChangedFiles(): Promise< [[ExternalFileChange][ExternalFileChange]][] >
-Returns ids of externally changed files
-
-** getFileAsPlainObject(/id/): Promise< [[PlainOrgFile][PlainOrgFile]] >
-Returns file and its nodes data as plain object.
-- *id*: /string/ - File id
-
-** getObjects(/model/, /filter/): Promise< [[RealmResults][RealmResults]] >
-Return raw RealmResults object
-- *model*: undefined - Realm model
-- *filter*: /string/ - Realm filter string
-
-** getOrCreateNodeByHeadline(/targedNode/): Promise< [[PlainOrgNode][PlainOrgNode]] >
-Gets node by headline. If node doasnt exists it is created.
-- *targedNode*: { fileId: /string/, headline: /string/ }
-
-** getRelatedNodes(/nodeId/): Promise< [[PlainOrgNode][PlainOrgNode]][] >
-Returns ancestors and descendants
-- *nodeId*: /string/
-
-** getTagsAsPlainObject(): Promise< /string/[] >
-Returns list of all tags
-
-** getTocs(): Promise< [[Tocs][Tocs]] >
-Returns all files with their child nodes
-
-** importFile(/filepath/): Promise< /void/ >
-Imports external file
-- *filepath*: /string/
-
-** search(/searchQuery/): Promise< /any/ >
-Search
-- *searchQuery*: [[SearchQuery][SearchQuery]]
-
-** syncDb(): Promise< /any/ >
-Sync all files
-
-** syncFile(/id/): Promise< /any/ >
-Syncs file
-- *id*: /any/ - file id
-
-** updateFile(/id/, /changes/): Promise< /any/ >
-Merges prop to file object
-- *id*: /string/ - File id
-- *changes*: Object - New file props to merge
-
-** updateNodeById(/id/, /changes/): Promise< /any/ >
-Merges props to node object
-- *id*: /string/ - Node id
-- *changes*: Object - New node props to merge
 * License
 
 This program is free software; you can redistribute it and/or modify

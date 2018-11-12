@@ -111,12 +111,12 @@ declare const org_mode_connection: {
     configureDb(realm: Realm): void;
 
     /**
-     *
+     * Configure file access.
      * @param fsIterface - Promisified file access interface
      */
     configureFileAccess(fsIterface: FsInterface): void;
 
-    /** Connect database */
+    /** Connect database. */
     connectDb(): Promise<void>;
 
     /**
@@ -139,7 +139,7 @@ declare const org_mode_connection: {
     deleteNodeById(nodeId: string): Promise<void>;
 
     /**
-     * Returns agenda as plain object
+     * Returns agenda as plain object.
      * @param timeRange
      * @param defaultWarningPeriod
      */
@@ -148,7 +148,7 @@ declare const org_mode_connection: {
       defaultWarningPeriod: number,
     ): Promise<PlainAgenda>;
 
-    /** Returns all OrgFiles as plain objects*/
+    /** Returns all OrgFiles as plain objects.*/
     getAllFilesAsPlainObject(): PlainOrgFile[];
 
     /**
@@ -167,7 +167,7 @@ declare const org_mode_connection: {
     getFileAsPlainObject(id: string): Promise<PlainOrgFile>;
 
     /**
-     * Return raw RealmResults object
+     * Return raw RealmResults object.
      * @param model - Realm model
      * @param filter - Realm filter string
      */
@@ -186,34 +186,34 @@ declare const org_mode_connection: {
     }): Promise<PlainOrgNode>;
 
     /**
-     * Returns ancestors and descendants
+     * Returns ancestors and descendants.
      * @param nodeId
      */
     getRelatedNodes(nodeId: string): Promise<PlainOrgNode[]>;
 
-    /** Returns list of all tags*/
+    /** Returns list of all tags.*/
     getTagsAsPlainObject(): Promise<string[]>;
 
-    /** Returns all files with their child nodes*/
+    /** Returns all files with their child nodes.*/
     getTocs(): Promise<Tocs>;
 
     /**
-     * Imports external file
+     * Imports external file.
      * @param filepath
      */
     importFile(filepath: string): Promise<void>;
 
     /**
-     * Search
+     * Search.
      * @param searchQuery
      */
     search(searchQuery: SearchQuery): Promise<any>;
 
-    /** Sync all files */
+    /** Sync all files. */
     syncDb(): Promise<any>;
 
     /**
-     * Syncs file
+     * Syncs file.
      * @param id - file id
      */
 
@@ -227,7 +227,7 @@ declare const org_mode_connection: {
     updateFile(id: string, changes: Object): Promise<any>;
 
     /**
-     * Merges props to node object
+     * Merges props to node object.
      * @param id - Node id
      * @param changes - New node props to merge
      */

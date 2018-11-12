@@ -1,0 +1,555 @@
+#+TITLE: org-mode-connection scratchpad
+
+* Installation
+
+#+BEGIN_SRC sh
+cd /tmp
+yarn add realm promisify-node org-mode-connection
+#+END_SRC
+
+* Configuration
+
+** with Node.js
+
+#+name: setup
+ #+BEGIN_SRC js :results output
+var OrgApi = require('org-mode-connection').OrgApi
+const realm = require('realm')
+const promisify = require("promisify-node");
+const fsInterface = promisify("fs")
+
+// Configure
+OrgApi.configureFileAccess(fsInterface);
+OrgApi.configureDb(realm);
+OrgApi.connectDb();
+ #+END_SRC
+
+
+** with React Native
+#+BEGIN_SRC javascript
+import OrgApi from 'org-mode-connection';
+import RNFS from 'react-native-fs';
+import Realm from 'realm';
+
+// Configure
+OrgApi.configureFileAccess(RNFS);
+OrgApi.configureDb(Realm);
+OrgApi.connectDb();
+#+END_SRC
+
+* Usage
+#+BEGIN_SRC js :results output :noweb yes
+<<setup>>
+const query =  async() => {
+    await OrgApi.clearDb()
+    await OrgApi.addFile('/home/keenan/Chaos/js.org')
+    await OrgApi.syncDb()
+    const res = await OrgApi.getAllFilesAsPlainObject()
+    console.log(res)
+    process.exit()
+}
+query()
+#+END_SRC
+
+* Tools
+** prettier
+#+BEGIN_SRC sh :results output
+cd test
+prettier --write "**/*.js"
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+__tests__/Data/Queries.test.js 244ms
+__tests__/Data/Sync.test.js 67ms
+__tests__/Helpers/FileAccess.test.js 7ms
+__tests__/Helpers/Fixtures.test.js 3ms
+__tests__/OrgFormat/AtomicParsers/HeadlineParser.test.js 17ms
+__tests__/OrgFormat/AtomicParsers/NodeContentParser.test.js 46ms
+__tests__/OrgFormat/AtomicParsers/NodeMetadataParser.test.js 65ms
+__tests__/OrgFormat/Parser.test.js 14ms
+__tests__/OrgFormat/Validators.test.js 13ms
+__tests__/perf.test.js 9ms
+.importjs.js 2ms
+coverage/lcov-report/block-navigation.js 13ms
+coverage/lcov-report/prettify.js 205ms
+coverage/lcov-report/sorter.js 35ms
+perf.js 3ms
+src/Data/Db/Db.js 9ms
+src/Data/Db/DbHelper.js 4ms
+src/Data/Models/OrgFile.js 4ms
+src/Data/Models/OrgNode.js 5ms
+src/Data/Models/OrgTag.js 2ms
+src/Data/Models/OrgTimestamp.js 4ms
+src/Data/Queries/Helpers.js 12ms
+src/Data/Queries/index.js 6ms
+src/Data/Queries/PlainObjectQueries.js 36ms
+src/Data/Queries/RealmQueries.js 26ms
+src/Data/Queries/SearchQueries.js 22ms
+src/Data/Queries/UpdateQueries.js 56ms
+src/Data/Sync.js 102ms
+src/Data/Transforms.js 41ms
+src/Helpers/__mocks__/FileAccess.js 6ms
+src/Helpers/Debug.js 4ms
+src/Helpers/FileAccess.js 6ms
+src/Helpers/Fixtures.js 4ms
+src/Helpers/Functions.js 11ms
+src/OrgApi.js 4ms
+src/OrgFormat/AtomicParsers/HeadlineParser.js 7ms
+src/OrgFormat/AtomicParsers/NodeContentParser.js 43ms
+src/OrgFormat/AtomicParsers/NodeMetadataParser.js 9ms
+src/OrgFormat/Export.js 12ms
+src/OrgFormat/GenericParsers/Common.js 10ms
+src/OrgFormat/GenericParsers/HungryLineParser.js 4ms
+src/OrgFormat/GenericParsers/LazyInLineParser.js 6ms
+src/OrgFormat/GenericParsers/LazyLineParser.js 8ms
+src/OrgFormat/GenericParsers/LinesRangeParser.js 10ms
+src/OrgFormat/NodesExtractor.js 10ms
+src/OrgFormat/Parser.js 19ms
+src/OrgFormat/Regex.js 8ms
+src/OrgFormat/Transforms.js 46ms
+src/OrgFormat/Validators.js 4ms
+testTools.js 5ms
+#+end_example
+
+* Transforms
+** dir tree to org mode
+
+#+NAME: to_org
+#+BEGIN_SRC js :results output raw :var data=0 dir=0
+let [input, report] = JSON.parse(data)
+let res = ''
+
+const isDir = (obj) => obj.type === 'directory'
+
+const parse = (obj, path=[]) => {
+    const { type, name } = obj
+    return {
+        name: isDir(obj) ? `/${name}/` : name,
+        type,
+        level: path.length ,
+        path: [ ...path, name ].join('/')
+}}
+
+const printAsOrg = o => console.log(`**${'*'.repeat(o.level)} ${o.name}    [[file:/${o.path}][link]]`)
+
+
+const flat = (path) => (rootObj, ignore=false) => {
+    let children = []
+    if (isDir(rootObj)) {
+        const childrenFlat = flat([...path, rootObj.name])
+        children = rootObj.contents.map(childrenFlat)
+    }
+    // if (ignore) return [].concat(...children) // TODO zapamięć
+    return [parse(rootObj, path)].concat(...children)
+    //return children.unshift(parse(rootObj, path))
+}
+
+flat([dir])(input).forEach(printAsOrg)
+#+END_SRC
+
+#+RESULTS: to_org
+
+* Directories tree in org-mode
+** cwd
+#+NAME: cwd
+#+BEGIN_SRC sh
+cd src
+pwd
+#+END_SRC
+
+#+RESULTS: cwd
+: /home/keenan/devSpace/github/org-mode-connection/src
+** raw tree
+
+#+BEGIN_SRC sh :results output
+cd src
+tree -J
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+[{"type":"directory","name": ".","contents":[
+    {"type":"directory","name":"Data","contents":[
+      {"type":"directory","name":"Db","contents":[
+        {"type":"file","name":"DbHelper.js"},
+        {"type":"file","name":"Db.js"}
+      ]},
+      {"type":"directory","name":"Models","contents":[
+        {"type":"file","name":"OrgFile.js"},
+        {"type":"file","name":"OrgNode.js"},
+        {"type":"file","name":"OrgTag.js"},
+        {"type":"file","name":"OrgTimestamp.js"}
+      ]},
+      {"type":"file","name":"Queries.js"},
+      {"type":"file","name":"Sync.js"},
+      {"type":"file","name":"Transforms.js"}
+    ]},
+    {"type":"directory","name":"Helpers","contents":[
+      {"type":"file","name":"Crc.js"},
+      {"type":"file","name":"Debug.js"},
+      {"type":"file","name":"FileAccess.js"},
+      {"type":"file","name":"Fixtures.js"},
+      {"type":"file","name":"Functions.js"},
+      {"type":"directory","name":"__mocks__","contents":[
+        {"type":"file","name":"FileAccess.js"}
+      ]}
+    ]},
+    {"type":"file","name":"OrgApi.js"},
+    {"type":"directory","name":"OrgFormat","contents":[
+      {"type":"directory","name":"AtomicParsers","contents":[
+        {"type":"file","name":"HeadlineParser.js"},
+        {"type":"file","name":"NodeContentParser.js"},
+        {"type":"file","name":"NodeMetadataParser.js"}
+      ]},
+      {"type":"file","name":"Export.js"},
+      {"type":"directory","name":"GenericParsers","contents":[
+        {"type":"file","name":"Common.js"},
+        {"type":"file","name":"HungryLineParser.js"},
+        {"type":"file","name":"LazyInLineParser.js"},
+        {"type":"file","name":"LazyLineParser.js"},
+        {"type":"file","name":"LinesRangeParser.js"}
+      ]},
+      {"type":"file","name":"NodesExtractor.js"},
+      {"type":"file","name":"Parser.js"},
+      {"type":"file","name":"Regex.js"},
+      {"type":"file","name":"Transforms.js"},
+      {"type":"file","name":"Validators.js"}
+    ]}
+  ]},
+  {"type":"report","directories":8,"files":30}
+]
+#+end_example
+
+** src
+#+BEGIN_SRC sh :results output raw replace :post to_org(data=*this*, dir=cwd)
+cd src
+tree -J
+#+END_SRC
+
+* Typedoc to org-mode tools                                        :noexport:
+
+** setup
+#+name: imports
+#+BEGIN_SRC js :result output :noweb yes
+var R = require('ramda')
+#+END_SRC
+** doc to org
+#+name: typedoc-tools
+#+BEGIN_SRC js :result output :noweb yes
+<<imports>>
+const link = (o) => {
+    if (['Promise', 'Object'].includes(o)) return o
+  return `[[${o}][${o}]]`
+}
+
+const renderType = (o) => {
+    //console.log(o)
+
+    if (o.kindString === 'Variable') return `${o.name}: ${renderType(o.type)}`
+    if (o.kindString === 'Type literal') return `{ ${o.children.map(renderType).join(', ')} }`
+    if (o.type === 'array') return `${renderType(o.elementType)}[]`
+    if (o.type === 'intrinsic') return `/${o.name}/`
+    if (o.type === 'reference') {
+        let typeArguments = ''
+        typeArguments = o.typeArguments ? `< ${o.typeArguments.map(renderType)} >` : ''
+        return `${link(o.name)}${typeArguments}`
+    }
+    if (o.type === 'reflection') {
+        return renderType(o.declaration)
+    }
+}
+
+const renderReturnType = (o) => {
+    //console.log(renderType(o.signatures[0].type))
+    return `=Results=:\n${renderType(o.signatures[0].type)}\n`
+}
+
+const renderHeadline = (o) => {
+    if (o.kindString === 'Interface') return `${o.name} interface`
+    if (o.kindString === 'Type alias') return `${o.name} type`
+    if (o.kindString === 'Variable') return `${o.name} interface`
+    return `** ${o.name}(${renderParametersShort(o)})` }
+
+const renderParameter = (p) => {
+    const text = p.comment.text
+    const comment = (text && text.trim() !== '') ? `- ${text.trim()}` : ''
+    return `- *${p.name}*: ${renderType(p.type)} ${comment}`
+}
+
+const renderParameterInline = (p) => {
+    //console.log(p)
+    return `/${p.name}/`
+}
+const renderSignature = (o) => {
+    // console.log(o)
+    return [getComment(o), renderParametersLong(o)].join('\n')
+}
+const pr = (x) => R.tap(console.log(x))
+
+const getComment = R.pipe(
+    R.prop('signatures'),
+    R.head,
+    R.path(['comment', 'shortText']),
+    R.unless(R.isNil,R.concat(R.__, '\n'))
+)
+const renderParameters = type => R.pipe(
+    R.prop('signatures'),
+    R.head,
+    R.prop('parameters'),
+    R.unless(R.isNil, R.pipe(
+        R.map(type === 'long' ? renderParameter : renderParameterInline),
+        R.join(type === 'long' ? '\n' : ', '),
+        R.when(() => type==='long' ,R.concat('=Arguments=:\n')),
+        R.when(() => type==='long' ,R.concat(R.__, '\n')))),
+)
+
+const renderParametersLong = renderParameters('long')
+const renderParametersShort = renderParameters('short')
+
+const getChild = (name) => R.pipe(R.prop('children'), R.find(R.propEq('name', name)))
+
+const asOrg = (l) => [
+    renderHeadline(l),
+    getComment(l),
+    renderParametersLong(l),
+    renderReturnType(l)
+].filter(o => o!==undefined).join('\n')
+
+const asObj = (l) => l
+
+console.log('* Api')
+const printLines = render => lines => {
+    lines.forEach(l => console.log(render(l)))
+}
+#+END_SRC
+
+#+RESULTS: typedoc-tools
+: undefined
+* Api docs generator                                               :noexport:
+#+BEGIN_SRC js :results output raw replace :noweb yes
+<<typedoc-tools>>
+const f = require('/home/keenan/Chaos/documentation.json')
+
+const exportedFuncs = R.pipe(
+    getChild('"index.d"'),
+    getChild('org_mode_connection'),
+    R.path(['type', 'declaration']),
+    getChild('OrgApi'),
+    R.path(['type', 'declaration', 'children']),
+)(f)
+
+printLines(asOrg)(exportedFuncs)
+#+END_SRC
+
+#+RESULTS:
+* Api
+** addFile(/title/)
+Creates empty file in database.
+
+=Arguments=:
+- *title*: /string/ - New file title
+
+=Results=:
+Promise< /void/ >
+
+** addNodes(/nodes/, /insertPosition/, /externalChange/, /returnAddedNodes/)
+Add nodes to the tree of nodes
+
+=Arguments=:
+- *nodes*: [[PlainOrgNode][PlainOrgNode]][]
+- *insertPosition*: [[InsertPosition][InsertPosition]]
+- *externalChange*: /boolean/
+- *returnAddedNodes*: /boolean/
+
+=Results=:
+Promise< [[PlainOrgNode][PlainOrgNode]][] >
+
+** clearDb(undefined)
+Clears Database.
+
+=Results=:
+Promise< /void/ >
+
+** configureDb(/realm/)
+Configure database.
+
+=Arguments=:
+- *realm*: [[Realm][Realm]] - Realm object
+
+=Results=:
+/void/
+
+** configureFileAccess(/fsIterface/)
+=Arguments=:
+- *fsIterface*: [[FsInterface][FsInterface]] - Promisified file access interface
+
+=Results=:
+/void/
+
+** connectDb(undefined)
+Connect database
+
+=Results=:
+Promise< /void/ >
+
+** createFileFromString(/name/, /lines/)
+Create file from array of strings.
+
+=Arguments=:
+- *name*: /string/ - The name of new file
+- *lines*: /string/[] - List of string raw lines
+
+=Results=:
+Promise< /void/ >
+
+** deleteFileById(/fileId/)
+Delete file from database.
+
+=Arguments=:
+- *fileId*: /string/ - File id
+
+=Results=:
+Promise< /void/ >
+
+** deleteNodeById(/nodeId/)
+Deletes node.
+
+=Arguments=:
+- *nodeId*: /string/
+
+=Results=:
+Promise< /void/ >
+
+** getAgendaAsPlainObject(/timeRange/, /defaultWarningPeriod/)
+Returns agenda as plain object
+
+=Arguments=:
+- *timeRange*: [[TimeRange][TimeRange]]
+- *defaultWarningPeriod*: /number/
+
+=Results=:
+Promise< [[PlainAgenda][PlainAgenda]] >
+
+** getAllFilesAsPlainObject(undefined)
+Returns all OrgFiles as plain objects
+
+=Results=:
+[[PlainOrgFile][PlainOrgFile]][]
+
+** getAncestorsAsPlainObject(/nodeId/)
+Returns all ancestors of node.
+
+=Arguments=:
+- *nodeId*: /string/
+
+=Results=:
+Promise< [[PlainOrgNode][PlainOrgNode]][] >
+
+** getExternallyChangedFiles(undefined)
+Returns ids of externally changed files
+
+=Results=:
+Promise< [[ExternalFileChange][ExternalFileChange]][] >
+
+** getFileAsPlainObject(/id/)
+Returns file and its nodes data as plain object.
+
+=Arguments=:
+- *id*: /string/ - File id
+
+=Results=:
+Promise< [[PlainOrgFile][PlainOrgFile]] >
+
+** getObjects(/model/, /filter/)
+Return raw RealmResults object
+
+=Arguments=:
+- *model*: undefined - Realm model
+- *filter*: /string/ - Realm filter string
+
+=Results=:
+Promise< [[RealmResults][RealmResults]] >
+
+** getOrCreateNodeByHeadline(/targedNode/)
+Gets node by headline. If node doasnt exists it is created.
+
+=Arguments=:
+- *targedNode*: { fileId: /string/, headline: /string/ }
+
+=Results=:
+Promise< [[PlainOrgNode][PlainOrgNode]] >
+
+** getRelatedNodes(/nodeId/)
+Returns ancestors and descendants
+
+=Arguments=:
+- *nodeId*: /string/
+
+=Results=:
+Promise< [[PlainOrgNode][PlainOrgNode]][] >
+
+** getTagsAsPlainObject(undefined)
+Returns list of all tags
+
+=Results=:
+Promise< /string/[] >
+
+** getTocs(undefined)
+Returns all files with their child nodes
+
+=Results=:
+Promise< [[Tocs][Tocs]] >
+
+** importFile(/filepath/)
+Imports external file
+
+=Arguments=:
+- *filepath*: /string/
+
+=Results=:
+Promise< /void/ >
+
+** search(/searchQuery/)
+Search
+
+=Arguments=:
+- *searchQuery*: [[SearchQuery][SearchQuery]]
+
+=Results=:
+Promise< /any/ >
+
+** syncDb(undefined)
+Sync all files
+
+=Results=:
+Promise< /any/ >
+
+** syncFile(/id/)
+Syncs file
+
+=Arguments=:
+- *id*: /any/ - file id
+
+=Results=:
+Promise< /any/ >
+
+** updateFile(/id/, /changes/)
+Merges prop to file object
+
+=Arguments=:
+- *id*: /string/ - File id
+- *changes*: Object - New file props to merge
+
+=Results=:
+Promise< /any/ >
+
+** updateNodeById(/id/, /changes/)
+Merges props to node object
+
+=Arguments=:
+- *id*: /string/ - Node id
+- *changes*: Object - New node props to merge
+
+=Results=:
+Promise< /any/ >
