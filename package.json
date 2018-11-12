@@ -58,7 +58,7 @@
     "build": "babel ./src --out-dir dist",
     "serve": "nodemon -w src --exec babel ./src --out-dir dist --extensions '.ts,.tsx,.js'",
     "start": "nodemon --exec babel-node --extensions '.ts,.tsx,.js' src/index.js",
-    "doc": "nodemon --exec typedoc --out documentation/"
+    "doc": "nodemon --exec typedoc --out ~/Chaos/documentation/ src --ignoreCompilerErrors --includeDeclarations --excludeExternals"
   },
   "author": "Bartłomiej Nankiewicz (https://bartlomiej.nankiewicz@gmail.com)",
   "license": "MIT",

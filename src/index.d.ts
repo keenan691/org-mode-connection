@@ -1,5 +1,8 @@
 export = org_mode_connection
 
+// TODO move types to different file and generate it with org file
+// Most recent types are in experiments.org
+
 // * Types
 
 type SearchResult = {};
@@ -59,22 +62,23 @@ type TimeRange = {
   end: string;
 };
 
+type OrgNode = {
+  name: string;
+}
+
+type InsertPosition = {
+  fileId: string;
+  nodeId?: string;
+  headline?: string;
+}
+
 // * Interfaces
 
-interface FsInterface { }
-
-interface OrgNode {
-  name: string;
+interface FsInterface {
 }
 
 interface RealmOrgNode {
   name: string;
-}
-
-interface InsertPosition {
-  fileId: string;
-  nodeId?: string;
-  headline?: string;
 }
 
 // * Api

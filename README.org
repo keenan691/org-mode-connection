@@ -289,46 +289,140 @@ Merges props to node object
 
 Promise<any>
 * Types
-** PlainOrgNode
-:PROPERTIES:
-:CUSTOM_ID: PlainOrgNode
-:END:
-** PlainOrgFile
-:PROPERTIES:
-:CUSTOM_ID: PlainOrgFile
-:END:
-** InsertPosition
-:PROPERTIES:
-:CUSTOM_ID: InsertPosition
-:END:
-** Realm
-:PROPERTIES:
-:CUSTOM_ID: Realm
-:END:
-** FsInterface
-:PROPERTIES:
-:CUSTOM_ID: FsInterface
-:END:
-** PlainAgenda
-:PROPERTIES:
-:CUSTOM_ID: PlainAgenda
-:END:
-** TimeRange
-:PROPERTIES:
-:CUSTOM_ID: TimeRange
-:END:
 ** ExternalFileChange
 :PROPERTIES:
 :CUSTOM_ID: ExternalFileChange
 :END:
-** Tocs
+#+BEGIN_SRC typescript
+type ExternalFileChange = {
+  id: string;
+  mtime: string;
+};
+#+END_SRC
+
+** FsInterface
 :PROPERTIES:
-:CUSTOM_ID: Tocs
+:CUSTOM_ID: FsInterface
 :END:
+#+BEGIN_SRC typescript
+type FsStat = {
+    mtime: string;
+    ctime: string;
+    name: string;
+    size: string;
+}
+
+interface FsInterface {
+    write(): Promise<boolean>;
+    exists(path: string): Promise<boolean>;
+    read(path: string): Promise<string[]>;
+    stat(path: string): Promise<FsStat>;
+}
+#+END_SRC
+
+** InsertPosition
+:PROPERTIES:
+:CUSTOM_ID: InsertPosition
+:END:
+#+BEGIN_SRC typescript
+type InsertPosition = {
+  fileId: string;
+  nodeId?: string;
+  headline?: string;
+}
+#+END_SRC
+
+** PlainAgenda
+:PROPERTIES:
+:CUSTOM_ID: PlainAgenda
+:END:
+#+BEGIN_SRC typescript
+type PlainAgenda = {
+  nodes: PlainOrgNodesDict;
+  agendaItems: PlainOrgTimestamp[];
+  dayAgendaItems: PlainOrgTimestamp[];
+};
+#+END_SRC
+
+** PlainOrgFile
+:PROPERTIES:
+:CUSTOM_ID: PlainOrgFile
+:END:
+#+BEGIN_SRC typescript
+type PlainOrgFile = {
+  id: string;
+  type: string;
+  name: string;
+  size: string;
+  ctime: string;
+  mtime: string;
+  path: string;
+  title: string;
+  description: string;
+  metadata: string;
+  category: string;
+  lastSync: string;
+  isChanged: boolean;
+  isConflicted: boolean;
+};
+#+END_SRC
+
+** PlainOrgNode
+:PROPERTIES:
+:CUSTOM_ID: PlainOrgNode
+:END:
+#+BEGIN_SRC typescript
+
+#+END_SRC
+
+** Realm
+:PROPERTIES:
+:CUSTOM_ID: Realm
+:END:
+RealmJs object.
+
 ** SearchQuery
 :PROPERTIES:
 :CUSTOM_ID: SearchQuery
 :END:
+#+BEGIN_SRC typescript
+type SearchQuery = {
+  searchTerm: string;
+  todos: any[];
+  tags: any[];
+  priorioty: string;
+  isScheduled: boolean;
+  hasDeadline: boolean;
+};
+#+END_SRC
+
+** TimeRange
+:PROPERTIES:
+:CUSTOM_ID: TimeRange
+:END:
+#+BEGIN_SRC typescript
+type TimeRange = {
+  start: string;
+  end: string;
+};
+#+END_SRC
+
+** Tocs
+:PROPERTIES:
+:CUSTOM_ID: Tocs
+:END:
+#+BEGIN_SRC typescript
+type Tocs = {
+  ids: { [fileId: string]: string[] };
+  data: PlainOrgNodesDict;
+};
+#+END_SRC
+
+** PlainOrgNodesDict
+#+BEGIN_SRC typescript
+type PlainOrgNodesDict = { [nodeId: string]: PlainOrgNode };
+#+END_SRC
+
 * License
 
 This program is free software; you can redistribute it and/or modify
