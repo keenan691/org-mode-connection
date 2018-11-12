@@ -20,8 +20,8 @@ yarn add realm promisify-node org-mode-connection
  #+BEGIN_SRC js :results output
 var OrgApi = require('org-mode-connection').OrgApi
 const realm = require('realm')
-const promisify = require("promisify-node");
-const fsInterface = promisify("fs")
+const promisify = require('promisify-node');
+const fsInterface = promisify('fs')
 
 OrgApi.configureFileAccess(fsInterface);
 OrgApi.configureDb(realm);
@@ -44,7 +44,7 @@ OrgApi.connectDb();
 #+BEGIN_SRC js :results output :noweb yes
 const query =  async() => {
     await OrgApi.clearDb()
-    await OrgApi.addFile('/home/keenan/Chaos/js.org')
+    await OrgApi.addFile('~/org/organizer.org')
     await OrgApi.syncDb()
     const res = await OrgApi.getAllFilesAsPlainObject()
     console.log(res)
