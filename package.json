@@ -3,6 +3,7 @@
   "version": "0.8.3",
   "description": "Read, write, synchronize and query emacs's org-mode files.",
   "main": "dist/index.js",
+  "types": "src/index.d.ts",
   "keywords": [
     "emacs",
     "org mode",
@@ -33,28 +34,31 @@
     "@types/node": "^10.12.5",
     "babel-core": "^7.0.0-bridge.0",
     "babel-jest": "^23.6.0",
+    "documentation": "git://github.com/vicapow/documentation#update-babel-dist",
     "jest": "^23.6.0",
     "nodemon": "^1.18.6",
     "prettier": "^1.15.1",
     "promisify-node": "^0.5.0",
     "realm": "^2.19.0",
     "ts-jest": "^23.10.4",
+    "ts-node": "^7.0.1",
     "tslint": "^5.11.0",
     "tslint-config-prettier": "^1.15.0",
+    "typedoc": "^0.13.0",
     "typescript": "^3.1.6"
   },
-  "types": "../src/index.d.ts",
   "scripts": {
     "clean": "rimraf coverage build tmp",
     "check-types": "tsc",
-    "build-t": "tsc -p tsconfig.release.json",
+    "build-declarations": "tsc -p tsconfig.release.json",
     "build:watch": "tsc -w -p tsconfig.release.json",
     "lint": "tslint -t stylish --project \"tsconfig.json\"",
     "test": "jest --coverage",
     "test:watch": "jest --watch",
-    "build": "babel src --out-dir dist",
-    "start": "babel-node --extensions '.ts,.tsx' src/main.ts",
-    "serve": "nodemon --exec babel-node --extensions '.ts,.tsx,.js' src/main.ts"
+    "build": "babel ./src --out-dir dist",
+    "serve": "nodemon -w src --exec babel ./src --out-dir dist --extensions '.ts,.tsx,.js'",
+    "start": "nodemon --exec babel-node --extensions '.ts,.tsx,.js' src/index.js",
+    "doc": "nodemon --exec typedoc --out documentation/"
   },
   "author": "Bartłomiej Nankiewicz (https://bartlomiej.nankiewicz@gmail.com)",
   "license": "MIT",
@@ -77,6 +81,9 @@
     ]
   },
   "dependencies": {
+    "@types/ramda": "^0.25.41",
+    "documentation": "git://github.com/vicapow/documentation#update-babel-dist",
+    "global": "^4.3.2",
     "moment": "^2.22.2",
     "ramda": "^0.25.0"
   }

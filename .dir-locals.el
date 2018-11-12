@@ -11,13 +11,14 @@
                    (my/defprojectshortcut ?r "src/OrgFormat/Regex.js")
                    (my/defprojectshortcut ?t "src/OrgFormat/Transforms.js")
                    (my/defprojectshortcut ?f "src/Helpers/Functions.js")
-                   (my/defprojectshortcut ?p "src/OrgFormat/Parser.js")
-                   (my/defprojectshortcut ?d "src/Data/Db/Db.js")
-                   (my/defprojectshortcut ?q "src/Data/Queries.js")
-                   (my/defprojectshortcut ?m "src/Data/Models")
-                   (my/defprojectshortcut ?a "src/OrgApi.js")
-                   (my/defprojectshortcut ?e "src/OrgFormat/Export.js")
-                   (my/defprojectshortcut ?s "src/Data/Sync.js")
+                   (my/defprojectshortcut ?p "package.json")
+                   (my/defprojectshortcut ?d "src/index.d.ts")
+                   ;; (my/defprojectshortcut ?d "src/Data/Db/Db.js")
+                   ;; (my/defprojectshortcut ?q "src/Data/Queries.js")
+                   ;; (my/defprojectshortcut ?m "src/Data/Models")
+                   ;; (my/defprojectshortcut ?a "src/OrgApi.js")
+                   ;; (my/defprojectshortcut ?e "src/OrgFormat/Export.js")
+                   ;; (my/defprojectshortcut ?s "src/Data/Sync.js")
 
 ;;;; Helm-projectnav
 

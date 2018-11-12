@@ -1,9 +1,14 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "rootDir": ".",
+    "rootDir": "src",
     "outDir": "build",
-    "removeComments": true
+    "module": "amd",
+    "outFile": "build/types.d.ts",
+    "declarations": true,
+    "allowJs": true,
+    "checkJs": true,
+    "noEmitJs": true
   },
   "include": [
     "src/**/*"

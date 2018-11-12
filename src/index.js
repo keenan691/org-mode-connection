@@ -6,13 +6,18 @@ import NodeContentParser from './OrgFormat/AtomicParsers/NodeContentParser';
 import Queries from './Data/Queries';
 import Sync from './Data/Sync';
 
+
 const Configure = {
   configureFileAccess,
   configureDb,
   connectDb,
 };
 
-const Api = { ...Queries, ...Db, ...Sync, ...Configure };
-export default Api;
+const OrgApi = { ...Queries, ...Db, ...Sync, ...Configure };
 
-export { NodeContentParser, asOrgDate, headlineR };
+export {
+  OrgApi,
+  NodeContentParser,
+  asOrgDate,
+  headlineR
+};

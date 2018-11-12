@@ -98,8 +98,8 @@ const getFileAsPlainObject = id =>
   });
 
 // Return only files fields as plain object, without nodes
-const getAllFilesAsPlainObject = () =>
-  getFiles().then(files => files.map(mapFileToPlainObject));
+const getAllFilesAsPlainObject = () => getFiles().then(files => files.map(mapFileToPlainObject));
+
 
 const getTocs = () => getFiles().then(mapFilesToToc);
 

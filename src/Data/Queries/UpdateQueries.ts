@@ -1,4 +1,5 @@
 // * UpdateQueries
+
 // ** Imports
 
 import R from 'ramda';
@@ -215,7 +216,11 @@ export const addFile = title =>
     })
   );
 
-export const deleteNodeById = nodeId =>
+/**
+ * Deletes node.
+ * @param nodeId - node id
+ */
+export const deleteNodeById = (nodeId: number): void =>
   dbConn.then(realm =>
     realm.write(() => {
       const node = getNodeById(realm, nodeId);

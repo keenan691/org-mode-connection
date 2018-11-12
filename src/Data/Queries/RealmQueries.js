@@ -40,13 +40,20 @@ export const getNodes = (...filter) => getObjects('OrgNode', ...filter);
 
 export const getFiles = async () => {
   const files = await getObjects('OrgFile');
+
+  // return []
+  // const acc = await FileAccess.exists(files[0].path)
+  // console.log(acc)
+  // console.log('DDDDDDDDDDDDDDDDDD')
   const existance = await Promise.all(
-    files.map(f => (f.path === null ? null : FileAccess.exists(f.path)))
+    files.map(f => (f.path === null ? new Promise(r => r(null)) : FileAccess.exists(f.path)))
   );
+
   const phisicallyDeletedFiles = [];
   existance.forEach((val, idx) => {
     if (!val) phisicallyDeletedFiles.push(idx);
   });
+
   if (phisicallyDeletedFiles.length > 0) {
     dbConn.then(realm =>
       realm.write(() =>
@@ -56,6 +63,7 @@ export const getFiles = async () => {
       )
     );
   }
+
   return files;
 };
 
