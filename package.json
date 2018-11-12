@@ -30,11 +30,11 @@
     "@babel/preset-react": "^7.0.0",
     "@babel/preset-typescript": "^7.1.0",
     "@babel/runtime": "^7.1.5",
+    "@types/ramda": "^0.25.41",
     "@types/jest": "^23.3.9",
     "@types/node": "^10.12.5",
     "babel-core": "^7.0.0-bridge.0",
     "babel-jest": "^23.6.0",
-    "documentation": "git://github.com/vicapow/documentation#update-babel-dist",
     "jest": "^23.6.0",
     "nodemon": "^1.18.6",
     "prettier": "^1.15.1",
@@ -81,8 +81,6 @@
     ]
   },
   "dependencies": {
-    "@types/ramda": "^0.25.41",
-    "documentation": "git://github.com/vicapow/documentation#update-babel-dist",
     "global": "^4.3.2",
     "moment": "^2.22.2",
     "ramda": "^0.25.0"
