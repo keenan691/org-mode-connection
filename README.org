@@ -23,7 +23,6 @@ const realm = require('realm')
 const promisify = require("promisify-node");
 const fsInterface = promisify("fs")
 
-// Configure
 OrgApi.configureFileAccess(fsInterface);
 OrgApi.configureDb(realm);
 OrgApi.connectDb();
@@ -36,7 +35,6 @@ import OrgApi from 'org-mode-connection';
 import RNFS from 'react-native-fs';
 import Realm from 'realm';
 
-// Configure
 OrgApi.configureFileAccess(RNFS);
 OrgApi.configureDb(Realm);
 OrgApi.connectDb();
