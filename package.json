@@ -1,6 +1,6 @@
 {
   "name": "org-mode-connection",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "description": "Read, write, synchronize and query emacs's org-mode files.",
   "main": "dist/index.js",
   "types": "src/index.d.ts",
