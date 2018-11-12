@@ -54,17 +54,6 @@ const query =  async() => {
 query()
 #+END_SRC
 
-#+BEGIN_SRC js :results output :noweb yes
-const query =  async() => {
-    await OrgApi.clearDb()
-    await OrgApi.addFile('~/org/organizer.org')
-    await OrgApi.syncDb()
-    const res = await OrgApi.getAllFilesAsPlainObject()
-    console.log(res)
-}
-query()
-#+END_SRC
-
 ** Parsing node content
 #+name: parse-example-content
 #+BEGIN_SRC js :results output code :noweb yes
@@ -75,7 +64,6 @@ console.log("// Parsed lines:\n", res, "\n")
 console.log("// Content of the first line:\n", res[0].content)
 #+END_SRC
 
-#+RESULTS: parse-example-content
 #+BEGIN_SRC js
 // Parsed lines:
  [ { type: 'regularLine',
