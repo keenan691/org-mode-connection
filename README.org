@@ -335,10 +335,15 @@ type InsertPosition = {
 :CUSTOM_ID: PlainAgenda
 :END:
 #+BEGIN_SRC typescript
+type NodeTimestamp = {
+  type: string;
+  nodeId: string;
+}
+
 type PlainAgenda = {
   nodes: PlainOrgNodesDict;
-  agendaItems: PlainOrgTimestamp[];
-  dayAgendaItems: PlainOrgTimestamp[];
+  agendaItems: NodeTimestamp[];
+  dayAgendaItems: NodeTimestamp[];
 };
 #+END_SRC
 
@@ -349,7 +354,6 @@ type PlainAgenda = {
 #+BEGIN_SRC typescript
 type PlainOrgFile = {
   id: string;
-  type: string;
   name: string;
   size: string;
   ctime: string;
@@ -365,12 +369,41 @@ type PlainOrgFile = {
 };
 #+END_SRC
 
+** PlainOrgTimestamp
+:PROPERTIES:
+:CUSTOM_ID: PlainOrgTimestamp
+:END:
+#+BEGIN_SRC typescript
+type PlainOrgTimestamp = {
+    type: "active" | "inActive" | "scheduled" | "deadline";
+    date: string;
+    dateRangeEnd: string;
+    dateRangeWithTime: boolean;
+    dateWithTime: boolean;
+    warningPeriod: string;
+    repeater:  string;
+}
+#+END_SRC
+
 ** PlainOrgNode
 :PROPERTIES:
 :CUSTOM_ID: PlainOrgNode
 :END:
 #+BEGIN_SRC typescript
-
+type PlainOrgNode = {
+    id: string;
+    level: number;
+    position: number;
+    headline: string;
+    content?: string;
+    fileId: string;
+    category?: string;
+    todo?: string;
+    priority?: string;
+    drawers: string;
+    tags: string[]
+    timestamps: PlainOrgTimestamp[]
+}
 #+END_SRC
 
 ** Realm
