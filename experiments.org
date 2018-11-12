@@ -240,7 +240,7 @@ var R = require('ramda')
 <<imports>>
 const link = (o) => {
     if (['Promise', 'Object'].includes(o)) return o
-  return `[[${o}][${o}]]`
+  return `[[#${o}][${o}]]`
 }
 
 const renderType = (o) => {
@@ -249,10 +249,10 @@ const renderType = (o) => {
     if (o.kindString === 'Variable') return `${o.name}: ${renderType(o.type)}`
     if (o.kindString === 'Type literal') return `{ ${o.children.map(renderType).join(', ')} }`
     if (o.type === 'array') return `${renderType(o.elementType)}[]`
-    if (o.type === 'intrinsic') return `/${o.name}/`
+    if (o.type === 'intrinsic') return `${o.name}`
     if (o.type === 'reference') {
         let typeArguments = ''
-        typeArguments = o.typeArguments ? `< ${o.typeArguments.map(renderType)} >` : ''
+        typeArguments = o.typeArguments ? `<${o.typeArguments.map(renderType)}>` : ''
         return `${link(o.name)}${typeArguments}`
     }
     if (o.type === 'reflection') {
@@ -262,14 +262,15 @@ const renderType = (o) => {
 
 const renderReturnType = (o) => {
     //console.log(renderType(o.signatures[0].type))
-    return `=Results=:\n${renderType(o.signatures[0].type)}\n`
+    return `=Results=:\n\n${renderType(o.signatures[0].type)}\n`
 }
 
 const renderHeadline = (o) => {
     if (o.kindString === 'Interface') return `${o.name} interface`
     if (o.kindString === 'Type alias') return `${o.name} type`
     if (o.kindString === 'Variable') return `${o.name} interface`
-    return `** ${o.name}(${renderParametersShort(o)})` }
+    const parameters = renderParametersShort(o) || ''
+    return `** ${o.name}(${parameters})` }
 
 const renderParameter = (p) => {
     const text = p.comment.text
@@ -348,208 +349,233 @@ printLines(asOrg)(exportedFuncs)
 Creates empty file in database.
 
 =Arguments=:
-- *title*: /string/ - New file title
+- *title*: string - New file title
 
 =Results=:
-Promise< /void/ >
+
+Promise<void>
 
 ** addNodes(/nodes/, /insertPosition/, /externalChange/, /returnAddedNodes/)
 Add nodes to the tree of nodes
 
 =Arguments=:
-- *nodes*: [[PlainOrgNode][PlainOrgNode]][]
-- *insertPosition*: [[InsertPosition][InsertPosition]]
-- *externalChange*: /boolean/
-- *returnAddedNodes*: /boolean/
+- *nodes*: [[#PlainOrgNode][PlainOrgNode]][]
+- *insertPosition*: [[#InsertPosition][InsertPosition]]
+- *externalChange*: boolean
+- *returnAddedNodes*: boolean
 
 =Results=:
-Promise< [[PlainOrgNode][PlainOrgNode]][] >
 
-** clearDb(undefined)
+Promise<[[#PlainOrgNode][PlainOrgNode]][]>
+
+** clearDb()
 Clears Database.
 
 =Results=:
-Promise< /void/ >
+
+Promise<void>
 
 ** configureDb(/realm/)
 Configure database.
 
 =Arguments=:
-- *realm*: [[Realm][Realm]] - Realm object
+- *realm*: [[#Realm][Realm]] - Realm object
 
 =Results=:
-/void/
+
+void
 
 ** configureFileAccess(/fsIterface/)
 =Arguments=:
-- *fsIterface*: [[FsInterface][FsInterface]] - Promisified file access interface
+- *fsIterface*: [[#FsInterface][FsInterface]] - Promisified file access interface
 
 =Results=:
-/void/
 
-** connectDb(undefined)
+void
+
+** connectDb()
 Connect database
 
 =Results=:
-Promise< /void/ >
+
+Promise<void>
 
 ** createFileFromString(/name/, /lines/)
 Create file from array of strings.
 
 =Arguments=:
-- *name*: /string/ - The name of new file
-- *lines*: /string/[] - List of string raw lines
+- *name*: string - The name of new file
+- *lines*: string[] - List of string raw lines
 
 =Results=:
-Promise< /void/ >
+
+Promise<void>
 
 ** deleteFileById(/fileId/)
 Delete file from database.
 
 =Arguments=:
-- *fileId*: /string/ - File id
+- *fileId*: string - File id
 
 =Results=:
-Promise< /void/ >
+
+Promise<void>
 
 ** deleteNodeById(/nodeId/)
 Deletes node.
 
 =Arguments=:
-- *nodeId*: /string/
+- *nodeId*: string
 
 =Results=:
-Promise< /void/ >
+
+Promise<void>
 
 ** getAgendaAsPlainObject(/timeRange/, /defaultWarningPeriod/)
 Returns agenda as plain object
 
 =Arguments=:
-- *timeRange*: [[TimeRange][TimeRange]]
-- *defaultWarningPeriod*: /number/
+- *timeRange*: [[#TimeRange][TimeRange]]
+- *defaultWarningPeriod*: number
 
 =Results=:
-Promise< [[PlainAgenda][PlainAgenda]] >
 
-** getAllFilesAsPlainObject(undefined)
+Promise<[[#PlainAgenda][PlainAgenda]]>
+
+** getAllFilesAsPlainObject()
 Returns all OrgFiles as plain objects
 
 =Results=:
-[[PlainOrgFile][PlainOrgFile]][]
+
+[[#PlainOrgFile][PlainOrgFile]][]
 
 ** getAncestorsAsPlainObject(/nodeId/)
 Returns all ancestors of node.
 
 =Arguments=:
-- *nodeId*: /string/
+- *nodeId*: string
 
 =Results=:
-Promise< [[PlainOrgNode][PlainOrgNode]][] >
 
-** getExternallyChangedFiles(undefined)
+Promise<[[#PlainOrgNode][PlainOrgNode]][]>
+
+** getExternallyChangedFiles()
 Returns ids of externally changed files
 
 =Results=:
-Promise< [[ExternalFileChange][ExternalFileChange]][] >
+
+Promise<[[#ExternalFileChange][ExternalFileChange]][]>
 
 ** getFileAsPlainObject(/id/)
 Returns file and its nodes data as plain object.
 
 =Arguments=:
-- *id*: /string/ - File id
+- *id*: string - File id
 
 =Results=:
-Promise< [[PlainOrgFile][PlainOrgFile]] >
+
+Promise<[[#PlainOrgFile][PlainOrgFile]]>
 
 ** getObjects(/model/, /filter/)
 Return raw RealmResults object
 
 =Arguments=:
 - *model*: undefined - Realm model
-- *filter*: /string/ - Realm filter string
+- *filter*: string - Realm filter string
 
 =Results=:
-Promise< [[RealmResults][RealmResults]] >
+
+Promise<[[#RealmResults][RealmResults]]>
 
 ** getOrCreateNodeByHeadline(/targedNode/)
 Gets node by headline. If node doasnt exists it is created.
 
 =Arguments=:
-- *targedNode*: { fileId: /string/, headline: /string/ }
+- *targedNode*: { fileId: string, headline: string }
 
 =Results=:
-Promise< [[PlainOrgNode][PlainOrgNode]] >
+
+Promise<[[#PlainOrgNode][PlainOrgNode]]>
 
 ** getRelatedNodes(/nodeId/)
 Returns ancestors and descendants
 
 =Arguments=:
-- *nodeId*: /string/
+- *nodeId*: string
 
 =Results=:
-Promise< [[PlainOrgNode][PlainOrgNode]][] >
 
-** getTagsAsPlainObject(undefined)
+Promise<[[#PlainOrgNode][PlainOrgNode]][]>
+
+** getTagsAsPlainObject()
 Returns list of all tags
 
 =Results=:
-Promise< /string/[] >
 
-** getTocs(undefined)
+Promise<string[]>
+
+** getTocs()
 Returns all files with their child nodes
 
 =Results=:
-Promise< [[Tocs][Tocs]] >
+
+Promise<[[#Tocs][Tocs]]>
 
 ** importFile(/filepath/)
 Imports external file
 
 =Arguments=:
-- *filepath*: /string/
+- *filepath*: string
 
 =Results=:
-Promise< /void/ >
+
+Promise<void>
 
 ** search(/searchQuery/)
 Search
 
 =Arguments=:
-- *searchQuery*: [[SearchQuery][SearchQuery]]
+- *searchQuery*: [[#SearchQuery][SearchQuery]]
 
 =Results=:
-Promise< /any/ >
 
-** syncDb(undefined)
+Promise<any>
+
+** syncDb()
 Sync all files
 
 =Results=:
-Promise< /any/ >
+
+Promise<any>
 
 ** syncFile(/id/)
 Syncs file
 
 =Arguments=:
-- *id*: /any/ - file id
+- *id*: any - file id
 
 =Results=:
-Promise< /any/ >
+
+Promise<any>
 
 ** updateFile(/id/, /changes/)
 Merges prop to file object
 
 =Arguments=:
-- *id*: /string/ - File id
+- *id*: string - File id
 - *changes*: Object - New file props to merge
 
 =Results=:
-Promise< /any/ >
+
+Promise<any>
 
 ** updateNodeById(/id/, /changes/)
 Merges props to node object
 
 =Arguments=:
-- *id*: /string/ - Node id
+- *id*: string - Node id
 - *changes*: Object - New node props to merge
 
 =Results=:
-Promise< /any/ >
+
+Promise<any>
