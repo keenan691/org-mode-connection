@@ -287,65 +287,6 @@ Merges props to node object
 
 Promise<any>
 * Types
-** ExternalFileChange
-:PROPERTIES:
-:CUSTOM_ID: ExternalFileChange
-:END:
-#+BEGIN_SRC typescript
-type ExternalFileChange = {
-  id: string;
-  mtime: string;
-};
-#+END_SRC
-
-** FsInterface
-:PROPERTIES:
-:CUSTOM_ID: FsInterface
-:END:
-#+BEGIN_SRC typescript
-type FsStat = {
-    mtime: string;
-    ctime: string;
-    name: string;
-    size: string;
-}
-
-interface FsInterface {
-    write(): Promise<boolean>;
-    exists(path: string): Promise<boolean>;
-    read(path: string): Promise<string[]>;
-    stat(path: string): Promise<FsStat>;
-}
-#+END_SRC
-
-** InsertPosition
-:PROPERTIES:
-:CUSTOM_ID: InsertPosition
-:END:
-#+BEGIN_SRC typescript
-type InsertPosition = {
-  fileId: string;
-  nodeId?: string;
-  headline?: string;
-}
-#+END_SRC
-
-** PlainAgenda
-:PROPERTIES:
-:CUSTOM_ID: PlainAgenda
-:END:
-#+BEGIN_SRC typescript
-type NodeTimestamp = {
-  type: string;
-  nodeId: string;
-}
-
-type PlainAgenda = {
-  nodes: PlainOrgNodesDict;
-  agendaItems: NodeTimestamp[];
-  dayAgendaItems: NodeTimestamp[];
-};
-#+END_SRC
 
 ** PlainOrgFile
 :PROPERTIES:
@@ -369,22 +310,6 @@ type PlainOrgFile = {
 };
 #+END_SRC
 
-** PlainOrgTimestamp
-:PROPERTIES:
-:CUSTOM_ID: PlainOrgTimestamp
-:END:
-#+BEGIN_SRC typescript
-type PlainOrgTimestamp = {
-    type: "active" | "inActive" | "scheduled" | "deadline";
-    date: string;
-    dateRangeEnd: string;
-    dateRangeWithTime: boolean;
-    dateWithTime: boolean;
-    warningPeriod: string;
-    repeater:  string;
-}
-#+END_SRC
-
 ** PlainOrgNode
 :PROPERTIES:
 :CUSTOM_ID: PlainOrgNode
@@ -406,11 +331,38 @@ type PlainOrgNode = {
 }
 #+END_SRC
 
-** Realm
+** PlainOrgTimestamp
 :PROPERTIES:
-:CUSTOM_ID: Realm
+:CUSTOM_ID: PlainOrgTimestamp
 :END:
-RealmJs object.
+#+BEGIN_SRC typescript
+type PlainOrgTimestamp = {
+    type: "active" | "inActive" | "scheduled" | "deadline";
+    date: string;
+    dateRangeEnd: string;
+    dateRangeWithTime: boolean;
+    dateWithTime: boolean;
+    warningPeriod: string;
+    repeater:  string;
+}
+#+END_SRC
+
+** PlainAgenda
+:PROPERTIES:
+:CUSTOM_ID: PlainAgenda
+:END:
+#+BEGIN_SRC typescript
+type NodeTimestamp = {
+  type: string;
+  nodeId: string;
+}
+
+type PlainAgenda = {
+  nodes: PlainOrgNodesDict;
+  agendaItems: NodeTimestamp[];
+  dayAgendaItems: NodeTimestamp[];
+};
+#+END_SRC
 
 ** SearchQuery
 :PROPERTIES:
@@ -425,6 +377,48 @@ type SearchQuery = {
   isScheduled: boolean;
   hasDeadline: boolean;
 };
+#+END_SRC
+
+** FsInterface
+:PROPERTIES:
+:CUSTOM_ID: FsInterface
+:END:
+#+BEGIN_SRC typescript
+type FsStat = {
+    mtime: string;
+    ctime: string;
+    name: string;
+    size: string;
+}
+
+interface FsInterface {
+    write(): Promise<boolean>;
+    exists(path: string): Promise<boolean>;
+    read(path: string): Promise<string[]>;
+    stat(path: string): Promise<FsStat>;
+}
+#+END_SRC
+** ExternalFileChange
+:PROPERTIES:
+:CUSTOM_ID: ExternalFileChange
+:END:
+#+BEGIN_SRC typescript
+type ExternalFileChange = {
+  id: string;
+  mtime: string;
+};
+#+END_SRC
+
+** InsertPosition
+:PROPERTIES:
+:CUSTOM_ID: InsertPosition
+:END:
+#+BEGIN_SRC typescript
+type InsertPosition = {
+  fileId: string;
+  nodeId?: string;
+  headline?: string;
+}
 #+END_SRC
 
 ** TimeRange
@@ -453,6 +447,12 @@ type Tocs = {
 #+BEGIN_SRC typescript
 type PlainOrgNodesDict = { [nodeId: string]: PlainOrgNode };
 #+END_SRC
+
+** Realm
+:PROPERTIES:
+:CUSTOM_ID: Realm
+:END:
+RealmJs object.
 
 * License
 
