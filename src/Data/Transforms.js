@@ -82,7 +82,6 @@ export const mapNodeToSearchResult = n => ({
   content:
     !R.isNil(n.content) &&
     n.content.slice(0, n.content.length < 100 ? n.content.length : 100).trim(),
-  // content: '',
   fileId: n.file.id,
   todo: n.todo,
   priority: n.priority,
