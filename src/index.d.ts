@@ -1,4 +1,108 @@
-export = org_mode_connection
+export = org_mode_connection;
+export as namespace org_mode_connection;
+
+// * Shape
+
+declare namespace org_mode_connection {
+  // Helper types
+  export type ExternalFileChange = { id: string; mtime: string; };
+  export type InsertPosition = { fileId: string; nodeId?: string; headline?: string; };
+  export type PlainOrgNodesDict = { [nodeId: string]: PlainOrgNode };
+  export type PlainOrgTag = { name: string; }
+  export type PlainOrgTimestampShort = { type: TimestampType, nodeId: string }
+  export type RealmResults = {};
+  export type TimeRange = { start: string; end: string; };
+  export type TimestampType = "active" | "inActive" | "scheduled" | "deadline" | "closed";
+
+  // Main types
+
+  export type PlainOrgNode = {
+    id: string;
+    fileId: string;
+    category: string;
+    content: string;
+    drawers: string;
+    hasChildren: boolean;
+    headline: string;
+    level: number;
+    position: number;
+    priority: string;
+    tags: PlainOrgTag[];
+    timestamps: PlainOrgTimestamp[]
+    todo: string;
+  };
+
+  export type PlainOrgTimestamp = {
+    type: TimestampType;
+    warningPeriod: string;
+    dateRangeWithTime: boolean;
+    dateWithTime: boolean;
+    repeater: string;
+    date: string;
+    dateRangeEnd: string;
+  };
+
+  export type PlainOrgFile = {
+    id: string;
+    type: string;
+    name: string;
+    size: string;
+    ctime: string;
+    mtime: string;
+    path: string;
+    title: string;
+    description: string;
+    metadata: string;
+    category: string;
+    lastSync: string;
+    isChanged: boolean;
+    isConflicted: boolean;
+  };
+
+  export type PlainOrgAgenda = {
+    nodes: PlainOrgNodesDict;
+    agendaItems: PlainOrgTimestampShort[];
+    dayAgendaItems: PlainOrgTimestampShort[];
+  };
+
+  export type SearchQuery = {
+    searchTerm: string;
+    todos: any[];
+    tags: any[];
+    priorioty: string;
+    isScheduled: boolean;
+    hasDeadline: boolean;
+  };
+
+  export type Tocs = {
+    ids: { [fileId: string]: string[] };
+    data: PlainOrgNodesDict;
+  };
+
+  // Contents parser types
+  export interface ParsedInlineObject {
+    type:
+    | 'codeText'
+    | 'strikeThroughText'
+    | 'underlineText'
+    | 'verbatimText'
+    | 'boldText'
+    | 'italicText'
+    | 'regularText'
+    | 'webLink'
+    | 'plain';
+    url: string;
+    content: string;
+    indexStart: number;
+    indexEnd: number;
+    title: string
+  }
+
+  interface ParsedLine {
+    type: 'regularLine' | 'listLine' | 'numericListLine' | 'checkboxLine';
+    content: ParsedInlineObject[];
+  }
+}
 
 // TODO move types to different file and generate it with org file
 // Most recent types are in experiments.org
@@ -7,83 +111,28 @@ export = org_mode_connection
 
 type SearchResult = {};
 
-type SearchQuery = {
-  searchTerm: string;
-  todos: any[];
-  tags: any[];
-  priorioty: string;
-  isScheduled: boolean;
-  hasDeadline: boolean;
-};
-
-type Tocs = {
-  ids: { [fileId: string]: string[] };
-  data: PlainOrgNodesDict;
-};
-
-type ExternalFileChange = {
-  id: string;
-  mtime: string;
-};
-
-type RealmResults = {};
-
-type PlainOrgNode = {};
-
-type PlainOrgNodesDict = { [nodeId: string]: PlainOrgNode };
-
-type PlainOrgTimestamp = {};
-
-type PlainOrgFile = {
-  id: string;
-  type: string;
-  name: string;
-  size: string;
-  ctime: string;
-  mtime: string;
-  path: string;
-  title: string;
-  description: string;
-  metadata: string;
-  category: string;
-  lastSync: string;
-  isChanged: boolean;
-  isConflicted: boolean;
-};
-
-type PlainAgenda = {
-  nodes: PlainOrgNodesDict;
-  agendaItems: PlainOrgTimestamp[];
-  dayAgendaItems: PlainOrgTimestamp[];
-};
-
-type TimeRange = {
-  start: string;
-  end: string;
-};
-
-type OrgNode = {
-  name: string;
-}
-
-type InsertPosition = {
-  fileId: string;
-  nodeId?: string;
-  headline?: string;
-}
 
 // * Interfaces
 
-interface FsInterface {
-}
+// ** External interfaces
+
+interface FsInterface { }
 
 interface RealmOrgNode {
   name: string;
 }
 
+// ** Content parser output
+
 // * Api
 
 declare const org_mode_connection: {
+  /**
+   * Parses node text objects
+   * @param text
+   */
+
+  NodeContentParser(text: string): org_mode_connection.ParsedLine[];
   OrgApi: {
     /**
      * Creates empty file in database.
@@ -99,11 +148,11 @@ declare const org_mode_connection: {
      * @param returnAddedNodes
      */
     addNodes(
-      nodes: PlainOrgNode[],
+      nodes: org_mode_connection.PlainOrgNode[],
       insertPosition: InsertPosition,
       externalChange: boolean,
       returnAddedNodes: boolean,
-    ): Promise<PlainOrgNode[]>;
+    ): Promise<org_mode_connection.PlainOrgNode[]>;
 
     /** Clears Database.*/
     clearDb(): Promise<void>;
@@ -148,27 +197,27 @@ declare const org_mode_connection: {
      * @param defaultWarningPeriod
      */
     getAgendaAsPlainObject(
-      timeRange: TimeRange,
+      timeRange: org_mode_connection.TimeRange,
       defaultWarningPeriod: number,
-    ): Promise<PlainAgenda>;
+    ): Promise<org_mode_connection.PlainOrgAgenda>;
 
     /** Returns all OrgFiles as plain objects.*/
-    getAllFilesAsPlainObject(): PlainOrgFile[];
+    getAllFilesAsPlainObject(): org_mode_connection.PlainOrgFile[];
 
     /**
      * Returns all ancestors of node.
      * @param nodeId
      */
-    getAncestorsAsPlainObject(nodeId: string): Promise<PlainOrgNode[]>;
+    getAncestorsAsPlainObject(nodeId: string): Promise<org_mode_connection.PlainOrgNode[]>;
 
     /** Returns ids of externally changed files*/
-    getExternallyChangedFiles(): Promise<ExternalFileChange[]>;
+    getExternallyChangedFiles(): Promise<org_mode_connection.ExternalFileChange[]>;
 
     /**
      * Returns file and its nodes data as plain object.
      * @param id - File id
      */
-    getFileAsPlainObject(id: string): Promise<PlainOrgFile>;
+    getFileAsPlainObject(id: string): Promise<org_mode_connection.PlainOrgFile>;
 
     /**
      * Return raw RealmResults object.
@@ -178,7 +227,7 @@ declare const org_mode_connection: {
     getObjects(
       model: 'OrgNode' | 'OrgFile' | 'OrgTimestamp' | 'OrgTag',
       filter: string,
-    ): Promise<RealmResults>;
+    ): Promise<org_mode_connection.RealmResults>;
 
     /**
      * Gets node by headline. If node doasnt exists it is created.
@@ -187,19 +236,19 @@ declare const org_mode_connection: {
     getOrCreateNodeByHeadline(targedNode: {
       fileId?: string;
       headline?: string;
-    }): Promise<PlainOrgNode>;
+    }): Promise<org_mode_connection.PlainOrgNode>;
 
     /**
      * Returns ancestors and descendants.
      * @param nodeId
      */
-    getRelatedNodes(nodeId: string): Promise<PlainOrgNode[]>;
+    getRelatedNodes(nodeId: string): Promise<org_mode_connection.PlainOrgNode[]>;
 
     /** Returns list of all tags.*/
     getTagsAsPlainObject(): Promise<string[]>;
 
     /** Returns all files with their child nodes.*/
-    getTocs(): Promise<Tocs>;
+    getTocs(): Promise<org_mode_connection.Tocs>;
 
     /**
      * Imports external file.
@@ -211,7 +260,7 @@ declare const org_mode_connection: {
      * Search.
      * @param searchQuery
      */
-    search(searchQuery: SearchQuery): Promise<any>;
+    search(searchQuery: org_mode_connection.SearchQuery): Promise<any>;
 
     /** Sync all files. */
     syncDb(): Promise<any>;
