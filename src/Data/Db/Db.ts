@@ -1,6 +1,6 @@
 import DbHelper from './DbHelper';
 
-interface Realm { 
+interface Realm {
 }
 
 // * Db
