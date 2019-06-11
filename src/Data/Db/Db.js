@@ -1,10 +1,5 @@
 import DbHelper from './DbHelper';
 
-interface Realm {
-}
-
-// * Db
-
 let Realm = undefined;
 let RealmOptions = {};
 
@@ -12,7 +7,7 @@ let RealmOptions = {};
  * Configure realm database
  * @param realm - realm object
  */
-export const configureDb = (realm: Realm) => {
+export const configureDb = (realm) => {
   Realm = realm;
 };
 

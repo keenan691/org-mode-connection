@@ -220,7 +220,7 @@ export const addFile = title =>
  * Deletes node.
  * @param nodeId - node id
  */
-export const deleteNodeById = (nodeId: number): void =>
+export const deleteNodeById = (nodeId) =>
   dbConn.then(realm =>
     realm.write(() => {
       const node = getNodeById(realm, nodeId);
