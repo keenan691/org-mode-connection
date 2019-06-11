@@ -15,6 +15,7 @@ const Configure = {
 
 const OrgApi = { ...Queries, ...Db, ...Sync, ...Configure };
 
+export default OrgApi
 export {
   OrgApi,
   NodeContentParser,
