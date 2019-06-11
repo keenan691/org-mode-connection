@@ -16,7 +16,7 @@ import {
   preParseNodes,
 } from '../OrgFormat/Parser';
 import { nullWhenEmpty, promisePipe } from '../Helpers/Functions';
-import { prepareNodes, uniqueId } from './Transforms';
+import { prepareNodes, uniqueId, mapFileToPlainObject } from './Transforms';
 import Export, { fileToOrgRepr } from '../OrgFormat/Export';
 import FileAccess from '../Helpers/FileAccess';
 import Queries from './Queries';
@@ -55,25 +55,28 @@ const importFile = (filepath, type = 'agenda') => {
     .then(addToDb);
 };
 
-const createFileFromString = (name, lines, type = 'agenda') => {
-  const parsedObj = parse(lines);
+const createFileFromString = (string, type = 'manual') => {
+  const parsedObj = parse(string.split("\n"));
   // console.tron.log(parsedObj)
-  return Queries.connectDb().then(realm =>
+  let orgFile
+  return connectDb().then(realm => {
     realm.write(() => {
       // Create OrgFile object
-      const orgFile = realm.create('OrgFile', {
+      orgFile = realm.create('OrgFile', {
         id: uniqueId(),
-        lastSync: new Date(),
+        // lastSync: new Date(),
+        type,
         description: parsedObj.file.description,
-        metadata: JSON.stringify({ TITLE: 'readme.org' }),
+        metadata: JSON.stringify(parsedObj.file.metadata),
       });
 
-      // Creating node objects
       prepareNodes(parsedObj.nodes, orgFile).forEach(node => {
         const orgNode = realm.create('OrgNode', node, true);
       });
+
     })
-  );
+    return mapFileToPlainObject(orgFile)
+  });
 };
 
 // * Description
