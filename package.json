@@ -1,6 +1,6 @@
 {
   "name": "org-mode-connection",
-  "version": "0.8.7",
+  "version": "0.8.8",
   "description": "Read, write, synchronize and query emacs's org-mode files.",
   "main": "dist/index.js",
   "types": "src/index.d.ts",
@@ -44,7 +44,7 @@
     "ts-node": "^7.0.1",
     "tslint": "^5.11.0",
     "tslint-config-prettier": "^1.15.0",
-    "typedoc": "^0.13.0",
+    "typedoc": "^0.17.2",
     "typescript": "^3.1.6"
   },
   "scripts": {
