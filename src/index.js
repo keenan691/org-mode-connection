@@ -5,7 +5,7 @@ import Db, { configureDb, connectDb } from './Data/Db/Db';
 import NodeContentParser from './OrgFormat/AtomicParsers/NodeContentParser';
 import Queries from './Data/Queries';
 import Sync from './Data/Sync';
-
+import { parse } from './OrgFormat/Parser';
 
 const Configure = {
   configureFileAccess,
@@ -15,10 +15,5 @@ const Configure = {
 
 const OrgApi = { ...Queries, ...Db, ...Sync, ...Configure };
 
-export default OrgApi
-export {
-  OrgApi,
-  NodeContentParser,
-  asOrgDate,
-  headlineR
-};
+export default OrgApi;
+export { OrgApi, NodeContentParser, asOrgDate, headlineR, parse };

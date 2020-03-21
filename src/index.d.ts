@@ -2,14 +2,23 @@ export = org_mode_connection;
 export as namespace org_mode_connection;
 
 declare namespace org_mode_connection {
-  export type ExternalFileChange = { id: string; mtime: string; };
-  export type InsertPosition = { fileId: string; nodeId?: string; headline?: string; };
+  export type ExternalFileChange = { id: string; mtime: string };
+  export type InsertPosition = {
+    fileId: string;
+    nodeId?: string;
+    headline?: string;
+  };
   export type PlainOrgNodesDict = { [nodeId: string]: PlainOrgNode };
-  export type PlainOrgTag = { name: string; }
-  export type PlainOrgTimestampShort = { type: TimestampType, nodeId: string }
+  export type PlainOrgTag = { name: string };
+  export type PlainOrgTimestampShort = { type: TimestampType; nodeId: string };
   export type RealmResults = {};
-  export type TimeRange = { start: string; end: string; };
-  export type TimestampType = "active" | "inActive" | "scheduled" | "deadline" | "closed";
+  export type TimeRange = { start: string; end: string };
+  export type TimestampType =
+    | 'active'
+    | 'inActive'
+    | 'scheduled'
+    | 'deadline'
+    | 'closed';
 
   export type PlainOrgNode = {
     id: string;
@@ -23,7 +32,7 @@ declare namespace org_mode_connection {
     position: number;
     priority: string;
     tags: PlainOrgTag[];
-    timestamps: PlainOrgTimestamp[]
+    timestamps: PlainOrgTimestamp[];
     todo: string;
   };
 
@@ -76,20 +85,20 @@ declare namespace org_mode_connection {
 
   export interface ParsedInlineObject {
     type:
-    | 'codeText'
-    | 'strikeThroughText'
-    | 'underlineText'
-    | 'verbatimText'
-    | 'boldText'
-    | 'italicText'
-    | 'regularText'
-    | 'webLink'
-    | 'plain';
+      | 'codeText'
+      | 'strikeThroughText'
+      | 'underlineText'
+      | 'verbatimText'
+      | 'boldText'
+      | 'italicText'
+      | 'regularText'
+      | 'webLink'
+      | 'plain';
     url: string;
     content: string;
     indexStart: number;
     indexEnd: number;
-    title: string
+    title: string;
   }
 
   interface ParsedLine {
@@ -103,7 +112,7 @@ declare namespace org_mode_connection {
 
 type SearchResult = {};
 
-interface FsInterface { }
+interface FsInterface {}
 
 interface RealmOrgNode {
   name: string;
@@ -111,6 +120,25 @@ interface RealmOrgNode {
 
 declare const org_mode_connection: {
   NodeContentParser(text: string): org_mode_connection.ParsedLine[];
+  parse(
+    lines: string[],
+  ): {
+    nodes: {
+      todo: string | null;
+      priority: string | null;
+      drawers: string;
+      tags: string[];
+      timestamps: string[];
+      headline: string;
+      level: number;
+      position: number;
+      content: string;
+    }[];
+    file: {
+      metadata: string;
+      description: string;
+    };
+  };
   OrgApi: {
     addFile(title: string): Promise<void>;
     addNodes(
@@ -123,7 +151,7 @@ declare const org_mode_connection: {
     configureDb(realm: Realm): void;
     configureFileAccess(fsIterface: FsInterface): void;
     connectDb(): Promise<void>;
-    createFileFromString(string: string, type: "manual"): Promise<void>;
+    createFileFromString(string: string, type: 'manual'): Promise<void>;
     deleteFileById(fileId: string): Promise<void>;
     deleteNodeById(nodeId: string): Promise<void>;
     getAgendaAsPlainObject(
@@ -131,8 +159,12 @@ declare const org_mode_connection: {
       defaultWarningPeriod: number,
     ): Promise<org_mode_connection.PlainOrgAgenda>;
     getAllFilesAsPlainObject(): org_mode_connection.PlainOrgFile[];
-    getAncestorsAsPlainObject(nodeId: string): Promise<org_mode_connection.PlainOrgNode[]>;
-    getExternallyChangedFiles(): Promise<org_mode_connection.ExternalFileChange[]>;
+    getAncestorsAsPlainObject(
+      nodeId: string,
+    ): Promise<org_mode_connection.PlainOrgNode[]>;
+    getExternallyChangedFiles(): Promise<
+      org_mode_connection.ExternalFileChange[]
+    >;
     getFileAsPlainObject(id: string): Promise<org_mode_connection.PlainOrgFile>;
     getObjects(
       model: 'OrgNode' | 'OrgFile' | 'OrgTimestamp' | 'OrgTag',
@@ -142,7 +174,9 @@ declare const org_mode_connection: {
       fileId?: string;
       headline?: string;
     }): Promise<org_mode_connection.PlainOrgNode>;
-    getRelatedNodes(nodeId: string): Promise<org_mode_connection.PlainOrgNode[]>;
+    getRelatedNodes(
+      nodeId: string,
+    ): Promise<org_mode_connection.PlainOrgNode[]>;
     getTagsAsPlainObject(): Promise<string[]>;
     getTocs(): Promise<org_mode_connection.Tocs>;
     importFile(filepath: string): Promise<void>;
